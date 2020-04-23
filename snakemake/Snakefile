@@ -1,0 +1,50 @@
+import os
+import glob
+
+configfile: "config.yaml"
+
+fastq_suffix1 = "_1.fastq.gz"
+fastq_suffix2 = "_2.fastq.gz"
+
+fastqDir = "../02_fastqs/"
+newBamDir = "./01_mappedReads/"
+
+# grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
+SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)	
+
+for i in range(len(SAMPLES)):
+	SAMPLES[i] = os.path.basename(SAMPLES[i])
+	SAMPLES[i] = SAMPLES[i].replace(fastq_suffix1, "")
+	print(SAMPLES[i])
+
+CLUSTER = json.load(open(config['CLUSTER_JSON']))
+
+
+rule all:
+	input:
+		#expand("01_mappedReads/{sample}_sorted.bam", sample=SAMPLES)
+		expand(newBamDir + "{sample}_sorted.bam", sample=SAMPLES)
+	
+rule bwa_map:
+	input:
+		r1 = fastqDir + "{sample}" + fastq_suffix1,
+		r2 = fastqDir + "{sample}" + fastq_suffix2
+	output: newBamDir + "{sample}.bam"
+	threads: CLUSTER["bwa_map"]["n"]
+	params:
+		rg="@RG\\tID:{sample}\\tPU:{sample}\\tSM:{sample}\\tPL:{sample}\\tLB:{sample}"
+	message: "{params.rg}"
+	shell:
+		"bwa mem -M -t {threads} -R \'{params.rg}\' {config[ref]} {input.r1} {input.r2} | "
+		"/n/home11/bjarnold/samtools-1.9/samtools view -Sb - > {output}"
+
+rule sort_bam:
+	input: newBamDir + "{sample}.bam"
+	output: newBamDir + "{sample}_sorted.bam"
+	threads: CLUSTER["sort_bam"]["n"]
+	# use run with multiple shell() calls to execute multiple shell commands
+	run:
+		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output} SORT_ORDER=coordinate CREATE_INDEX=true")
+		#shell("rm {input}")
+
+

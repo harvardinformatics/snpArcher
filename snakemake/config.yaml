@@ -1,0 +1,8 @@
+#reference sequence
+ref: "../00_genomes/Tguttata"
+
+#information for read groups
+flowcell: "FLOWCELL"
+platform: "ILLUMINA"
+
+CLUSTER_JSON: "./cluster.json"
