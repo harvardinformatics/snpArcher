@@ -1,3 +1,0 @@
-WorkflowError in line 4 of /n/holylfs/LABS/informatics/bjarnold/workshops/shortRead_mapping_variantCalling/snakemake/Snakefile:
-Config file is not valid JSON or YAML. In case of YAML, make sure to not mix whitespace and tab indentation.
-  File "/n/holylfs/LABS/informatics/bjarnold/workshops/shortRead_mapping_variantCalling/snakemake/Snakefile", line 4, in <module>
