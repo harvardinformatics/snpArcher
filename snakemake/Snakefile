@@ -5,31 +5,37 @@ configfile: "config.yaml"
 CLUSTER = json.load(open(config['CLUSTER_JSON']))
 
 # rename variables from config file for clarity downstream
-#fastq_suffix1 = config[fastq_suffix1]
-#fastq_suffix2 = config[fastq_suffix2]
-#fastqDir = config[fastqDir]
-#newBamDir = config[newBamDir]
+fastq_suffix1 = config["fastq_suffix1"]
+fastq_suffix2 = config["fastq_suffix2"]
+fastqDir = config["fastqDir"]
+newBamDir = config["newBamDir"]
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
-SAMPLES = glob.glob(config['fastqDir'] + "*" + config['fastq_suffix1'])	
+SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)	
+
+print(fastq_suffix1)
+print(fastq_suffix2)
+print(fastqDir)
+print(newBamDir)
+print(SAMPLES)
 
 for i in range(len(SAMPLES)):
 	SAMPLES[i] = os.path.basename(SAMPLES[i])
-	SAMPLES[i] = SAMPLES[i].replace(config['fastq_suffix1'], "")
+	SAMPLES[i] = SAMPLES[i].replace(fastq_suffix1, "")
 	print(SAMPLES[i])
 
 
 
 rule all:
 	input:
-		expand(config['newBamDir'] + "{sample}_sorted.bam", sample=SAMPLES)
+		expand(newBamDir + "{sample}_sorted.bam", sample=SAMPLES)
 	
 rule bwa_map:
 	input:
 		ref = config['ref'],
-		r1 = config['fastqDir'] + "{sample}" + config['fastq_suffix1'],
-		r2 = config['fastqDir'] + "{sample}" + config['fastq_suffix2']
-	output: config['newBamDir'] + "{sample}.bam"
+		r1 = fastqDir + "{sample}" + fastq_suffix1,
+		r2 = fastqDir + "{sample}" + fastq_suffix2
+	output: newBamDir + "{sample}.bam"
 	threads: CLUSTER["bwa_map"]["n"]
 	params:
 		rg="@RG\\tID:{sample}\\tPU:{sample}\\tSM:{sample}\\tPL:{sample}\\tLB:{sample}"
@@ -39,12 +45,12 @@ rule bwa_map:
 		"/n/home11/bjarnold/samtools-1.9/samtools view -Sb - > {output}"
 
 rule sort_bam:
-	input: config['newBamDir'] + "{sample}.bam"
-	output: config['newBamDir'] + "{sample}_sorted.bam"
+	input: newBamDir + "{sample}.bam"
+	output: newBamDir + "{sample}_sorted.bam"
 	threads: CLUSTER["sort_bam"]["n"]
 	# use run with multiple shell() calls to execute multiple shell commands
 	run:
-		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={config['newBamDir']}tmp I={input} O={output} SORT_ORDER=coordinate CREATE_INDEX=true")
+		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output} SORT_ORDER=coordinate CREATE_INDEX=true")
 		#shell("rm {input}")
 
 

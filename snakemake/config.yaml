@@ -2,7 +2,7 @@
 ref: "../data/genome/Tgut"
 
 # location of fastq files
-fastqDir: "../data/fastqs/"
+fastqDir: "../data/fastq/"
 # suffix of fastq files
 fastq_suffix1: "_1.fastq.gz"
 fastq_suffix2: "_2.fastq.gz"

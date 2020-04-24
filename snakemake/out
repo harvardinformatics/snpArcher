@@ -1,0 +1,40 @@
+_1.fastq.gz
+_2.fastq.gz
+../data/fastq/
+../01_mappedReads/
+['../data/fastq/ERR1013162_1.fastq.gz', '../data/fastq/ERR1013161_1.fastq.gz', '../data/fastq/ERR1013163_1.fastq.gz']
+ERR1013162
+ERR1013161
+ERR1013163
+Building DAG of jobs...
+Full Traceback (most recent call last):
+  File "/n/home11/bjarnold/miniconda3/lib/python3.6/site-packages/snakemake/__init__.py", line 544, in snakemake
+    export_cwl=export_cwl)
+  File "/n/home11/bjarnold/miniconda3/lib/python3.6/site-packages/snakemake/workflow.py", line 421, in execute
+    dag.init()
+  File "/n/home11/bjarnold/miniconda3/lib/python3.6/site-packages/snakemake/dag.py", line 122, in init
+    job = self.update([job], progress=progress)
+  File "/n/home11/bjarnold/miniconda3/lib/python3.6/site-packages/snakemake/dag.py", line 628, in update
+    raise exceptions[0]
+  File "/n/home11/bjarnold/miniconda3/lib/python3.6/site-packages/snakemake/dag.py", line 600, in update
+    progress=progress)
+  File "/n/home11/bjarnold/miniconda3/lib/python3.6/site-packages/snakemake/dag.py", line 670, in update_
+    raise ex
+  File "/n/home11/bjarnold/miniconda3/lib/python3.6/site-packages/snakemake/dag.py", line 663, in update_
+    progress=progress)
+  File "/n/home11/bjarnold/miniconda3/lib/python3.6/site-packages/snakemake/dag.py", line 628, in update
+    raise exceptions[0]
+  File "/n/home11/bjarnold/miniconda3/lib/python3.6/site-packages/snakemake/dag.py", line 600, in update
+    progress=progress)
+  File "/n/home11/bjarnold/miniconda3/lib/python3.6/site-packages/snakemake/dag.py", line 679, in update_
+    raise MissingInputException(job.rule, missing_input)
+snakemake.exceptions.MissingInputException: Missing input files for rule bwa_map:
+../data/fastq/ERR1013162_sorted_1.fastq.gz
+../data/genome/Tgut
+../data/fastq/ERR1013162_sorted_2.fastq.gz
+
+MissingInputException in line 33 of /n/holylfs/LABS/informatics/bjarnold/workshops/shortRead_mapping_variantCalling/snakemake/Snakefile:
+Missing input files for rule bwa_map:
+../data/fastq/ERR1013162_sorted_1.fastq.gz
+../data/genome/Tgut
+../data/fastq/ERR1013162_sorted_2.fastq.gz

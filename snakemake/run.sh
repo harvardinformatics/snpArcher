@@ -8,6 +8,6 @@
 #SBATCH --mem=4000
 
 
-snakemake --dryrun --jobs 3 --cluster-config cluster.json --cluster "sbatch -J "test" -p {cluster.p} -t {cluster.t} -n {cluster.n} -N {cluster.N} --mem={cluster.mem} "
-#snakemake -p --jobs 300 --cluster-config cluster.json --cluster "sbatch -J "sm_script" -p {cluster.p} -t {cluster.t} -n {cluster.n} -N {cluster.N} --mem={cluster.mem} "
+snakemake --dryrun --verbose --jobs 30 --cluster-config cluster.json --cluster "sbatch -J "test" -p {cluster.p} -t {cluster.t} -n {cluster.n} -N {cluster.N} --mem={cluster.mem} "
+#snakemake -p --jobs 10 --cluster-config cluster.json --cluster "sbatch -J "sm_script" -p {cluster.p} -t {cluster.t} -n {cluster.n} -N {cluster.N} --mem={cluster.mem} "
 
