@@ -28,7 +28,8 @@ for i in range(len(SAMPLES)):
 
 rule all:
 	input:
-		expand(newBamDir + "{sample}_sorted.bam", sample=SAMPLES)
+		#expand(newBamDir + "{sample}_sorted.bam", sample=SAMPLES)
+		expand(newBamDir + "{sample}.bam", sample=SAMPLES)
 	
 rule bwa_map:
 	input:
@@ -44,6 +45,7 @@ rule bwa_map:
 		"bwa mem -M -t {threads} -R \'{params.rg}\' {input.ref} {input.r1} {input.r2} | "
 		"/n/home11/bjarnold/samtools-1.9/samtools view -Sb - > {output}"
 
+"""
 rule sort_bam:
 	input: newBamDir + "{sample}.bam"
 	output: newBamDir + "{sample}_sorted.bam"
@@ -52,5 +54,5 @@ rule sort_bam:
 	run:
 		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output} SORT_ORDER=coordinate CREATE_INDEX=true")
 		#shell("rm {input}")
-
+"""
 

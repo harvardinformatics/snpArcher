@@ -1,7 +1,7 @@
 _1.fastq.gz
 _2.fastq.gz
 ../data/fastq/
-../01_mappedReads/
+01_mappedReads/
 ['../data/fastq/ERR1013162_1.fastq.gz', '../data/fastq/ERR1013161_1.fastq.gz', '../data/fastq/ERR1013163_1.fastq.gz']
 ERR1013162
 ERR1013161
@@ -29,12 +29,8 @@ Full Traceback (most recent call last):
   File "/n/home11/bjarnold/miniconda3/lib/python3.6/site-packages/snakemake/dag.py", line 679, in update_
     raise MissingInputException(job.rule, missing_input)
 snakemake.exceptions.MissingInputException: Missing input files for rule bwa_map:
-../data/fastq/ERR1013162_sorted_1.fastq.gz
 ../data/genome/Tgut
-../data/fastq/ERR1013162_sorted_2.fastq.gz
 
-MissingInputException in line 33 of /n/holylfs/LABS/informatics/bjarnold/workshops/shortRead_mapping_variantCalling/snakemake/Snakefile:
+MissingInputException in line 34 of /n/holylfs/LABS/informatics/bjarnold/workshops/shortRead_mapping_variantCalling/snakemake/Snakefile:
 Missing input files for rule bwa_map:
-../data/fastq/ERR1013162_sorted_1.fastq.gz
 ../data/genome/Tgut
-../data/fastq/ERR1013162_sorted_2.fastq.gz
