@@ -3,11 +3,12 @@ import glob
 
 configfile: "config.yaml"
 
-fastq_suffix1 = "_1.fastq.gz"
-fastq_suffix2 = "_2.fastq.gz"
-
-fastqDir = "../data/fastqs/"
-newBamDir = "../01_mappedReads/"
+# rename variables from config file for clarity downstream
+ref = config[ref]
+fastq_suffix1 = config[fastq_suffix1]
+fastq_suffix2 = config[fastq_suffix2]
+fastqDir = config[fastqDir]
+newBamDir = config[newBamDir]
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
 SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)	
@@ -34,7 +35,7 @@ rule bwa_map:
 		rg="@RG\\tID:{sample}\\tPU:{sample}\\tSM:{sample}\\tPL:{sample}\\tLB:{sample}"
 	message: "{params.rg}"
 	shell:
-		"bwa mem -M -t {threads} -R \'{params.rg}\' {config[ref]} {input.r1} {input.r2} | "
+		"bwa mem -M -t {threads} -R \'{params.rg}\' {ref} {input.r1} {input.r2} | "
 		"/n/home11/bjarnold/samtools-1.9/samtools view -Sb - > {output}"
 
 rule sort_bam:
