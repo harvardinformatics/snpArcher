@@ -6,8 +6,8 @@ configfile: "config.yaml"
 fastq_suffix1 = "_1.fastq.gz"
 fastq_suffix2 = "_2.fastq.gz"
 
-fastqDir = "../02_fastqs/"
-newBamDir = "./01_mappedReads/"
+fastqDir = "../data/fastqs/"
+newBamDir = "../01_mappedReads/"
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
 SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)	
@@ -22,7 +22,6 @@ CLUSTER = json.load(open(config['CLUSTER_JSON']))
 
 rule all:
 	input:
-		#expand("01_mappedReads/{sample}_sorted.bam", sample=SAMPLES)
 		expand(newBamDir + "{sample}_sorted.bam", sample=SAMPLES)
 	
 rule bwa_map:

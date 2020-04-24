@@ -1,5 +1,5 @@
 #reference sequence
-ref: "../00_genomes/Tguttata"
+ref: "../data/genome/Tgut_subseg_renamed.fa"
 
 #information for read groups
 flowcell: "FLOWCELL"
