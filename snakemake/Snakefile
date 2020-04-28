@@ -19,6 +19,7 @@ print(fastqDir)
 print(newBamDir)
 print(SAMPLES)
 
+print("SAMPLES:")
 for i in range(len(SAMPLES)):
 	SAMPLES[i] = os.path.basename(SAMPLES[i])
 	SAMPLES[i] = SAMPLES[i].replace(fastq_suffix1, "")

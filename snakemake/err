@@ -1,0 +1,45 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cluster nodes: 10
+Job counts:
+	count	jobs
+	1	all
+	3	bwa_map
+	4
+
+[Mon Apr 27 21:17:36 2020]
+Job 2: @RG\tID:ERR1013161\tPU:ERR1013161\tSM:ERR1013161\tPL:ERR1013161\tLB:ERR1013161
+
+bwa mem -M -t 3 -R '@RG\tID:ERR1013161\tPU:ERR1013161\tSM:ERR1013161\tPL:ERR1013161\tLB:ERR1013161' ../data/genome/Tgut_subseg_renamed.fa ../data/fastq/ERR1013161_1.fastq.gz ../data/fastq/ERR1013161_2.fastq.gz | /n/home11/bjarnold/samtools-1.9/samtools view -Sb - > 01_mappedReads/ERR1013161.bam
+Submitted job 2 with external jobid 'Submitted batch job 54340266'.
+
+[Mon Apr 27 21:17:36 2020]
+Job 3: @RG\tID:ERR1013163\tPU:ERR1013163\tSM:ERR1013163\tPL:ERR1013163\tLB:ERR1013163
+
+bwa mem -M -t 3 -R '@RG\tID:ERR1013163\tPU:ERR1013163\tSM:ERR1013163\tPL:ERR1013163\tLB:ERR1013163' ../data/genome/Tgut_subseg_renamed.fa ../data/fastq/ERR1013163_1.fastq.gz ../data/fastq/ERR1013163_2.fastq.gz | /n/home11/bjarnold/samtools-1.9/samtools view -Sb - > 01_mappedReads/ERR1013163.bam
+Submitted job 3 with external jobid 'Submitted batch job 54340269'.
+
+[Mon Apr 27 21:17:36 2020]
+Job 1: @RG\tID:ERR1013162\tPU:ERR1013162\tSM:ERR1013162\tPL:ERR1013162\tLB:ERR1013162
+
+bwa mem -M -t 3 -R '@RG\tID:ERR1013162\tPU:ERR1013162\tSM:ERR1013162\tPL:ERR1013162\tLB:ERR1013162' ../data/genome/Tgut_subseg_renamed.fa ../data/fastq/ERR1013162_1.fastq.gz ../data/fastq/ERR1013162_2.fastq.gz | /n/home11/bjarnold/samtools-1.9/samtools view -Sb - > 01_mappedReads/ERR1013162.bam
+Submitted job 1 with external jobid 'Submitted batch job 54340271'.
+[Mon Apr 27 21:17:56 2020]
+Finished job 2.
+1 of 4 steps (25%) done
+[Mon Apr 27 21:17:56 2020]
+Finished job 1.
+2 of 4 steps (50%) done
+[Mon Apr 27 21:18:06 2020]
+Finished job 3.
+3 of 4 steps (75%) done
+
+[Mon Apr 27 21:18:06 2020]
+localrule all:
+    input: 01_mappedReads/ERR1013162.bam, 01_mappedReads/ERR1013161.bam, 01_mappedReads/ERR1013163.bam
+    jobid: 0
+
+[Mon Apr 27 21:18:06 2020]
+Finished job 0.
+4 of 4 steps (100%) done
+Complete log: /n/holylfs/LABS/informatics/bjarnold/workshops/shortRead_mapping_variantCalling/snakemake/.snakemake/log/2020-04-27T211735.777014.snakemake.log

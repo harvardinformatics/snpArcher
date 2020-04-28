@@ -1,1 +1,2 @@
 data_preparation/
+.snakemake*

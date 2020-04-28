@@ -1,5 +1,5 @@
 # reference genome; note this is the prefix used during bwa indexing
-ref: "../data/genome/Tgut"
+ref: "../data/genome/Tgut_subseg_renamed.fa"
 
 # location of fastq files
 fastqDir: "../data/fastq/"
