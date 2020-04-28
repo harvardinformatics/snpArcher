@@ -29,8 +29,8 @@ for i in range(len(SAMPLES)):
 
 rule all:
 	input:
-		#expand(newBamDir + "{sample}_sorted.bam", sample=SAMPLES)
-		expand(newBamDir + "{sample}.bam", sample=SAMPLES)
+		expand(newBamDir + "{sample}_dedup.cov", sample=SAMPLES)
+		#expand(newBamDir + "{sample}.bam", sample=SAMPLES)
 	
 rule bwa_map:
 	input:
@@ -46,7 +46,6 @@ rule bwa_map:
 		"bwa mem -M -t {threads} -R \'{params.rg}\' {input.ref} {input.r1} {input.r2} | "
 		"/n/home11/bjarnold/samtools-1.9/samtools view -Sb - > {output}"
 
-"""
 rule sort_bam:
 	input: newBamDir + "{sample}.bam"
 	output: newBamDir + "{sample}_sorted.bam"
@@ -54,6 +53,14 @@ rule sort_bam:
 	# use run with multiple shell() calls to execute multiple shell commands
 	run:
 		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output} SORT_ORDER=coordinate CREATE_INDEX=true")
-		#shell("rm {input}")
-"""
+		shell("rm {input}")
+
+rule dedup:
+	input: newBamDir + "{sample}_sorted.bam"
+	output: newBamDir + "{sample}_dedup.bam",
+		newBamDir + "{sample}_dedup.cov"
+	threads: CLUSTER["dedup"]["n"]
+	run:
+		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input} O={output[0]} METRICS_FILE={output[0]}.dedupMetrics.txt REMOVE_DUPLICATES=false TAGGING_POLICY=All")
+		shell("/n/home11/bjarnold/samtools-1.9/samtools stats --coverage 0,1000,1 {output[0]} | grep ^COV | cut -f 2- > {output[1]}")
 
