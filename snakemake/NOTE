@@ -1,0 +1,1 @@
+at the moment you are thinking the deduplication step does not require resorting the BAM file, so you just rename the index from the previous step.

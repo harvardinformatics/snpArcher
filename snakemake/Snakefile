@@ -48,19 +48,24 @@ rule bwa_map:
 
 rule sort_bam:
 	input: newBamDir + "{sample}.bam"
-	output: newBamDir + "{sample}_sorted.bam"
+	output: newBamDir + "{sample}_sorted.bam",
+		newBamDir + "{sample}_sorted.bai"
 	threads: CLUSTER["sort_bam"]["n"]
 	# use run with multiple shell() calls to execute multiple shell commands
 	run:
-		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output} SORT_ORDER=coordinate CREATE_INDEX=true")
+		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true")
 		shell("rm {input}")
 
 rule dedup:
-	input: newBamDir + "{sample}_sorted.bam"
+	input: newBamDir + "{sample}_sorted.bam",
+		newBamDir + "{sample}_sorted.bai"
 	output: newBamDir + "{sample}_dedup.bam",
+		newBamDir + "{sample}_dedup.bai",
 		newBamDir + "{sample}_dedup.cov"
 	threads: CLUSTER["dedup"]["n"]
 	run:
-		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input} O={output[0]} METRICS_FILE={output[0]}.dedupMetrics.txt REMOVE_DUPLICATES=false TAGGING_POLICY=All")
-		shell("/n/home11/bjarnold/samtools-1.9/samtools stats --coverage 0,1000,1 {output[0]} | grep ^COV | cut -f 3- > {output[1]}")
+		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input[0]} O={output[0]} METRICS_FILE={output[0]}.dedupMetrics.txt REMOVE_DUPLICATES=false TAGGING_POLICY=All")
+		shell("rm {input[0]}")
+		shell("mv {input[1]} {output[1]}") # rename index file; marking duplicates should change this
+		shell("/n/home11/bjarnold/samtools-1.9/samtools stats --coverage 0,1000,1 {output[0]} | grep ^COV | cut -f 3- > {output[2]}")
 
