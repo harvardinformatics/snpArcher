@@ -1,5 +1,7 @@
 import os
 import glob
+import re
+from collections import defaultdict
 
 configfile: "config.yaml"
 CLUSTER = json.load(open(config['CLUSTER_JSON']))
@@ -30,7 +32,8 @@ for i in range(len(SAMPLES)):
 
 rule all:
 	input:
-		expand(sumstatDir + "{sample}_AlnSumMets.txt", sample=SAMPLES)
+		#expand(sumstatDir + "{sample}_AlnSumMets.txt", sample=SAMPLES)
+		"sumstats.txt"
 	
 rule bwa_map:
 	input:
@@ -78,3 +81,69 @@ rule bam_sumstats:
 		shell("/n/home11/bjarnold/samtools-1.9/samtools stats --coverage 0,1000,1 {input[0]} | grep ^COV | cut -f 3- > {output[0]}")
 		shell("java -jar /n/home11/bjarnold/picard.jar CollectAlignmentSummaryMetrics I={input[0]} R={input.ref} O={output[1]}")
 		
+rule collect_sumstats:
+	input:
+		dedupFiles = expand(sumstatDir + "{sample}_dedupMetrics.txt", sample=SAMPLES),
+		alnSumMetsFiles = expand(sumstatDir + "{sample}_AlnSumMets.txt", sample=SAMPLES)	
+	output:
+		"sumstats.txt"
+	run:
+		#print(input.dedupFiles)
+		#print(input.alnSumMetsFiles)
+		PercentDuplicates = collectDedupMetrics(input.dedupFiles)
+		PercentHQreads, PercentHQbases = collectAlnSumMets(input.alnSumMetsFiles)
+		printStats(PercentDuplicates, PercentHQreads, PercentHQbases)
+
+####
+# python helper functions
+###
+
+def collectDedupMetrics(dedupFiles):
+
+	PercentDuplicates = defaultdict(float)
+	for fn in dedupFiles:
+		sample = os.path.basename(fn)
+		sample = sample.replace("_dedupMetrics.txt", "")
+		f = open(fn, 'r')
+		lines = f.readlines()
+		for i in range(len(lines)):
+			if lines[i].startswith("LIBRARY"):
+				info = lines[i+1]
+				info = info.split()
+				percDup = info[8]
+				#print(percDup)
+				PercentDuplicates[sample] = percDup
+		f.close()
+	return(PercentDuplicates)
+
+
+def collectAlnSumMets(alnSumMetsFiles):
+
+	PercentHQreads = defaultdict(float)
+	PercentHQbases = defaultdict(float)
+
+	for fn in alnSumMetsFiles:
+		sample = os.path.basename(fn)
+		sample = sample.replace("_AlnSumMets.txt", "")
+		f = open(fn, 'r')
+		for line in f:
+			if line.startswith("PAIR"):
+				line = line.split()
+				totalReads = int(line[1])
+				totalAlignedBases = int(line[7])
+				HQreads = int(line[8])
+				totalAlignedHQ20bases = int(line[10])
+				PercentHQreads[sample] = HQreads/totalReads
+				PercentHQbases[sample] = totalAlignedHQ20bases/totalAlignedBases
+		f.close()
+	return(PercentHQreads, PercentHQbases)
+
+
+def printStats(PercentDuplicates, PercentHQreads, PercentHQbases):
+
+	o = open("sumstats.txt", 'w')
+	print("sample", "PercentDuplicates", "PercentHQalignedReads", "PercentHQ20bases", file=o)
+	for sample in PercentDuplicates:
+		print(sample, PercentDuplicates[sample], PercentHQreads[sample], PercentHQbases[sample], file=o)
+
+
