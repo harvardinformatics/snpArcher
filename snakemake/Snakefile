@@ -29,8 +29,7 @@ for i in range(len(SAMPLES)):
 
 rule all:
 	input:
-		expand(newBamDir + "{sample}_dedup.cov", sample=SAMPLES)
-		#expand(newBamDir + "{sample}.bam", sample=SAMPLES)
+		expand(newBamDir + "{sample}_AlnSumMets.txt", sample=SAMPLES)
 	
 rule bwa_map:
 	input:
@@ -59,15 +58,21 @@ rule sort_bam:
 rule dedup:
 	input: newBamDir + "{sample}_sorted.bam",
 		newBamDir + "{sample}_sorted.bai",
-		ref = config['ref']
 	output: newBamDir + "{sample}_dedup.bam",
 		newBamDir + "{sample}_dedup.bai",
-		newBamDir + "{sample}_dedup.cov"
 	threads: CLUSTER["dedup"]["n"]
 	run:
 		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input[0]} O={output[0]} METRICS_FILE={output[0]}.dedupMetrics.txt REMOVE_DUPLICATES=false TAGGING_POLICY=All")
 		shell("rm {input[0]}")
 		shell("mv {input[1]} {output[1]}") # rename index file; marking duplicates should change this
-		shell("/n/home11/bjarnold/samtools-1.9/samtools stats --coverage 0,1000,1 {output[0]} | grep ^COV | cut -f 3- > {output[2]}")
-		shell("java -jar /n/home11/bjarnold/picard.jar CollectAlignmentSummaryMetrics I={output[0]} R={input.ref} O={output[0]}_AlnSumMets.txt")
 
+rule bam_sumstats:
+	input: newBamDir + "{sample}_dedup.bam",
+		ref = config['ref']
+
+	output: newBamDir + "{sample}.cov",
+		newBamDir + "{sample}_AlnSumMets.txt"
+	run:
+		shell("/n/home11/bjarnold/samtools-1.9/samtools stats --coverage 0,1000,1 {input[0]} | grep ^COV | cut -f 3- > {output[0]}")
+		shell("java -jar /n/home11/bjarnold/picard.jar CollectAlignmentSummaryMetrics I={input[0]} R={input.ref} O={output[1]}")
+		
