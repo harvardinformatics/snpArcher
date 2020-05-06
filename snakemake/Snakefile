@@ -58,7 +58,8 @@ rule sort_bam:
 
 rule dedup:
 	input: newBamDir + "{sample}_sorted.bam",
-		newBamDir + "{sample}_sorted.bai"
+		newBamDir + "{sample}_sorted.bai",
+		ref = config['ref']
 	output: newBamDir + "{sample}_dedup.bam",
 		newBamDir + "{sample}_dedup.bai",
 		newBamDir + "{sample}_dedup.cov"
@@ -68,4 +69,5 @@ rule dedup:
 		shell("rm {input[0]}")
 		shell("mv {input[1]} {output[1]}") # rename index file; marking duplicates should change this
 		shell("/n/home11/bjarnold/samtools-1.9/samtools stats --coverage 0,1000,1 {output[0]} | grep ^COV | cut -f 3- > {output[2]}")
+		shell("java -jar /n/home11/bjarnold/picard.jar CollectAlignmentSummaryMetrics I={output[0]} R={input.ref} O={output[0]}_AlnSumMets.txt")
 
