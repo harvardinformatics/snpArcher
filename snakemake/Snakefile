@@ -62,5 +62,5 @@ rule dedup:
 	threads: CLUSTER["dedup"]["n"]
 	run:
 		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input} O={output[0]} METRICS_FILE={output[0]}.dedupMetrics.txt REMOVE_DUPLICATES=false TAGGING_POLICY=All")
-		shell("/n/home11/bjarnold/samtools-1.9/samtools stats --coverage 0,1000,1 {output[0]} | grep ^COV | cut -f 2- > {output[1]}")
+		shell("/n/home11/bjarnold/samtools-1.9/samtools stats --coverage 0,1000,1 {output[0]} | grep ^COV | cut -f 3- > {output[1]}")
 
