@@ -9,6 +9,7 @@ fastq_suffix2: "_2.fastq.gz"
 
 # location of new BAM files
 newBamDir: "01_mappedReads/"
+sumstatDir: "02_sumstats/"
 
 #information for read groups
 flowcell: "FLOWCELL"

@@ -9,6 +9,7 @@ fastq_suffix1 = config["fastq_suffix1"]
 fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
 newBamDir = config["newBamDir"]
+sumstatDir = config["sumstatDir"]
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
 SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)	
@@ -29,7 +30,7 @@ for i in range(len(SAMPLES)):
 
 rule all:
 	input:
-		expand(newBamDir + "{sample}_AlnSumMets.txt", sample=SAMPLES)
+		expand(sumstatDir + "{sample}_AlnSumMets.txt", sample=SAMPLES)
 	
 rule bwa_map:
 	input:
@@ -59,19 +60,20 @@ rule dedup:
 	input: newBamDir + "{sample}_sorted.bam",
 		newBamDir + "{sample}_sorted.bai",
 	output: newBamDir + "{sample}_dedup.bam",
-		newBamDir + "{sample}_dedup.bai",
+		sumstatDir + "{sample}_dedupMetrics.txt",
+		newBamDir + "{sample}_dedup.bai"
 	threads: CLUSTER["dedup"]["n"]
 	run:
-		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input[0]} O={output[0]} METRICS_FILE={output[0]}.dedupMetrics.txt REMOVE_DUPLICATES=false TAGGING_POLICY=All")
+		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input[0]} O={output[0]} METRICS_FILE={output[1]} REMOVE_DUPLICATES=false TAGGING_POLICY=All")
 		shell("rm {input[0]}")
-		shell("mv {input[1]} {output[1]}") # rename index file; marking duplicates should change this
+		shell("mv {input[1]} {output[2]}") # rename index file; marking duplicates should change this
 
 rule bam_sumstats:
 	input: newBamDir + "{sample}_dedup.bam",
 		ref = config['ref']
 
-	output: newBamDir + "{sample}.cov",
-		newBamDir + "{sample}_AlnSumMets.txt"
+	output: sumstatDir + "{sample}.cov",
+		sumstatDir + "{sample}_AlnSumMets.txt"
 	run:
 		shell("/n/home11/bjarnold/samtools-1.9/samtools stats --coverage 0,1000,1 {input[0]} | grep ^COV | cut -f 3- > {output[0]}")
 		shell("java -jar /n/home11/bjarnold/picard.jar CollectAlignmentSummaryMetrics I={input[0]} R={input.ref} O={output[1]}")
