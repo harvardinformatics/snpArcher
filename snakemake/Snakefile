@@ -77,10 +77,11 @@ rule bam_sumstats:
 	input: newBamDir + "{sample}_dedup.bam",
 		ref = config['ref']
 
-	output: sumstatDir + "{sample}.cov",
+	output: sumstatDir + "{sample}_coverage.txt",
 		sumstatDir + "{sample}_AlnSumMets.txt"
 	run:
-		shell("/n/home11/bjarnold/programs/samtools-1.10/samtools stats --coverage 0,1000,1 {input[0]} | grep ^COV | cut -f 3- > {output[0]}")
+		shell("/n/home11/bjarnold/programs/samtools-1.10/samtools coverage --output {output[0]} {input[0]}")
+		#shell("/n/home11/bjarnold/programs/samtools-1.10/samtools stats --coverage 0,1000,1 {input[0]} | grep ^COV | cut -f 3- > {output[0]}")
 		shell("java -jar /n/home11/bjarnold/picard.jar CollectAlignmentSummaryMetrics I={input[0]} R={input.ref} O={output[1]}")
 		
 rule collect_sumstats:
