@@ -29,6 +29,9 @@ for i in range(len(SAMPLES)):
 	print(SAMPLES[i])
 
 
+###
+# workflow with rules
+###
 
 rule all:
 	input:
@@ -44,10 +47,9 @@ rule bwa_map:
 	threads: CLUSTER["bwa_map"]["n"]
 	params:
 		rg="@RG\\tID:{sample}\\tPU:{sample}\\tSM:{sample}\\tPL:{sample}\\tLB:{sample}"
-	message: "{params.rg}"
 	shell:
 		"bwa mem -M -t {threads} -R \'{params.rg}\' {input.ref} {input.r1} {input.r2} | "
-		"/n/home11/bjarnold/samtools-1.9/samtools view -Sb - > {output}"
+		"/n/home11/bjarnold/programs/samtools-1.10/samtools view -Sb - > {output}"
 
 rule sort_bam:
 	input: newBamDir + "{sample}.bam"
@@ -78,7 +80,7 @@ rule bam_sumstats:
 	output: sumstatDir + "{sample}.cov",
 		sumstatDir + "{sample}_AlnSumMets.txt"
 	run:
-		shell("/n/home11/bjarnold/samtools-1.9/samtools stats --coverage 0,1000,1 {input[0]} | grep ^COV | cut -f 3- > {output[0]}")
+		shell("/n/home11/bjarnold/programs/samtools-1.10/samtools stats --coverage 0,1000,1 {input[0]} | grep ^COV | cut -f 3- > {output[0]}")
 		shell("java -jar /n/home11/bjarnold/picard.jar CollectAlignmentSummaryMetrics I={input[0]} R={input.ref} O={output[1]}")
 		
 rule collect_sumstats:
