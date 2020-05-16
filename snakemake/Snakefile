@@ -43,8 +43,10 @@ rule bwa_map:
 		ref = config['ref'],
 		r1 = fastqDir + "{sample}" + fastq_suffix1,
 		r2 = fastqDir + "{sample}" + fastq_suffix2
-	output: newBamDir + "{sample}.bam"
-	threads: CLUSTER["bwa_map"]["n"]
+	output: 
+		newBamDir + "{sample}.bam"
+	threads: 
+		CLUSTER["bwa_map"]["n"]
 	params:
 		rg="@RG\\tID:{sample}\\tPU:{sample}\\tSM:{sample}\\tPL:{sample}\\tLB:{sample}"
 	shell:
@@ -52,50 +54,58 @@ rule bwa_map:
 		"/n/home11/bjarnold/programs/samtools-1.10/samtools view -Sb - > {output}"
 
 rule sort_bam:
-	input: newBamDir + "{sample}.bam"
-	output: newBamDir + "{sample}_sorted.bam",
+	input: 
+		newBamDir + "{sample}.bam"
+	output: 
+		newBamDir + "{sample}_sorted.bam",
 		newBamDir + "{sample}_sorted.bai"
-	threads: CLUSTER["sort_bam"]["n"]
+	threads: 
+		CLUSTER["sort_bam"]["n"]
 	# use run with multiple shell() calls to execute multiple shell commands
 	run:
 		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true")
 		shell("rm {input}")
 
 rule dedup:
-	input: newBamDir + "{sample}_sorted.bam",
+	input: 
+		newBamDir + "{sample}_sorted.bam",
 		newBamDir + "{sample}_sorted.bai",
-	output: newBamDir + "{sample}_dedup.bam",
+	output:
+		newBamDir + "{sample}_dedup.bam",
 		sumstatDir + "{sample}_dedupMetrics.txt",
 		newBamDir + "{sample}_dedup.bai"
-	threads: CLUSTER["dedup"]["n"]
+	threads: 
+		CLUSTER["dedup"]["n"]
 	run:
 		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input[0]} O={output[0]} METRICS_FILE={output[1]} REMOVE_DUPLICATES=false TAGGING_POLICY=All")
 		shell("rm {input[0]}")
 		shell("mv {input[1]} {output[2]}") # rename index file; marking duplicates should change this
 
 rule bam_sumstats:
-	input: newBamDir + "{sample}_dedup.bam",
+	input: 
+		newBamDir + "{sample}_dedup.bam",
 		ref = config['ref']
 
-	output: sumstatDir + "{sample}_coverage.txt",
+	output: 
+		sumstatDir + "{sample}_coverage.txt",
 		sumstatDir + "{sample}_AlnSumMets.txt"
 	run:
 		shell("/n/home11/bjarnold/programs/samtools-1.10/samtools coverage --output {output[0]} {input[0]}")
-		#shell("/n/home11/bjarnold/programs/samtools-1.10/samtools stats --coverage 0,1000,1 {input[0]} | grep ^COV | cut -f 3- > {output[0]}")
 		shell("java -jar /n/home11/bjarnold/picard.jar CollectAlignmentSummaryMetrics I={input[0]} R={input.ref} O={output[1]}")
 		
 rule collect_sumstats:
 	input:
 		dedupFiles = expand(sumstatDir + "{sample}_dedupMetrics.txt", sample=SAMPLES),
-		alnSumMetsFiles = expand(sumstatDir + "{sample}_AlnSumMets.txt", sample=SAMPLES)	
+		alnSumMetsFiles = expand(sumstatDir + "{sample}_AlnSumMets.txt", sample=SAMPLES),
+		coverageFiles = expand(sumstatDir + "{sample}_coverage.txt", sample=SAMPLES)	
 	output:
 		"sumstats.txt"
 	run:
-		#print(input.dedupFiles)
-		#print(input.alnSumMetsFiles)
 		PercentDuplicates = collectDedupMetrics(input.dedupFiles)
 		PercentHQreads, PercentHQbases = collectAlnSumMets(input.alnSumMetsFiles)
-		printStats(PercentDuplicates, PercentHQreads, PercentHQbases)
+		SeqDepths, CoveredBases = collectCoverageMetrics(input.coverageFiles)
+
+		printStats(PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases)
 
 ####
 # python helper functions
@@ -141,12 +151,39 @@ def collectAlnSumMets(alnSumMetsFiles):
 		f.close()
 	return(PercentHQreads, PercentHQbases)
 
+def collectCoverageMetrics(coverageFiles):
 
-def printStats(PercentDuplicates, PercentHQreads, PercentHQbases):
+	SeqDepths = defaultdict(float)
+	CoveredBases = defaultdict(float)
+
+	for fn in coverageFiles:
+		# these files contain coverage data by scaffold; take weighted average
+		sample = os.path.basename(fn)
+		sample = sample.replace("_coverage.txt", "")
+		numSites = []
+		covbases = 0
+		depths = [] # samtools coverage function prints depth per scaffold
+		f = open(fn, 'r')
+		for line in f:
+			if not line.startswith("#rname"):
+				line = line.split()
+				numSites.append( int(line[2]) - int(line[1]) + 1 )
+				depths.append( float(line[6]) )
+				covbases +=  float(line[4])
+		f.close()
+		total = sum(numSites)
+		depthsMean = 0
+		for i in range(len(depths)):
+			depthsMean += depths[i]*numSites[i]/(total)
+		SeqDepths[sample] = depthsMean
+		CoveredBases[sample] = covbases
+	return(SeqDepths, CoveredBases)
+
+def printStats(PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases):
 
 	o = open("sumstats.txt", 'w')
-	print("sample", "PercentDuplicates", "PercentHQalignedReads", "PercentHQ20bases", file=o)
+	print("sample", "PercentDuplicates", "PercentHQalignedReads", "PercentHQ20bases", "MeanCoverage", "MeanBasesCovered", file=o, sep="\t")
 	for sample in PercentDuplicates:
-		print(sample, PercentDuplicates[sample], PercentHQreads[sample], PercentHQbases[sample], file=o)
+		print(sample, PercentDuplicates[sample], PercentHQreads[sample], PercentHQbases[sample], SeqDepths[sample], CoveredBases[sample], file=o, sep="\t")
 
 
