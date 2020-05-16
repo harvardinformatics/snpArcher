@@ -1,0 +1,18 @@
+# reference genome; note this is the prefix used during bwa indexing
+ref: "../data/genome/Tgut_subseg_renamed.fa"
+
+# location of fastq files
+fastqDir: "../data/fastq/"
+# suffix of fastq files
+fastq_suffix1: "_1.fastq.gz"
+fastq_suffix2: "_2.fastq.gz"
+
+# location of new BAM files
+newBamDir: "01_mappedReads/"
+sumstatDir: "02_sumstats/"
+
+#information for read groups
+flowcell: "FLOWCELL"
+platform: "ILLUMINA"
+
+CLUSTER_JSON: "./cluster.json"
