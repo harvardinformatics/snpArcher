@@ -1,9 +1,0 @@
-_1.fastq.gz
-_2.fastq.gz
-../data/fastq/
-01_mappedReads/
-['../data/fastq/ERR1013162_1.fastq.gz', '../data/fastq/ERR1013161_1.fastq.gz', '../data/fastq/ERR1013163_1.fastq.gz']
-SAMPLES:
-ERR1013162
-ERR1013161
-ERR1013163
