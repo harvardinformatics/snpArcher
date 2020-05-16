@@ -35,7 +35,6 @@ for i in range(len(SAMPLES)):
 
 rule all:
 	input:
-		#expand(sumstatDir + "{sample}_AlnSumMets.txt", sample=SAMPLES)
 		"sumstats.txt"
 	
 rule bwa_map:
@@ -48,7 +47,7 @@ rule bwa_map:
 	threads: 
 		CLUSTER["bwa_map"]["n"]
 	params:
-		rg="@RG\\tID:{sample}\\tPU:{sample}\\tSM:{sample}\\tPL:{sample}\\tLB:{sample}"
+		rg="@RG\\tID:{sample}\\tSM:{sample}\\tPL:ILLUMINA"
 	shell:
 		"bwa mem -M -t {threads} -R \'{params.rg}\' {input.ref} {input.r1} {input.r2} | "
 		"/n/home11/bjarnold/programs/samtools-1.10/samtools view -Sb - > {output}"
