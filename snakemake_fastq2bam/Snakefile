@@ -72,13 +72,14 @@ rule dedup:
 	output:
 		newBamDir + "{sample}_dedup.bam",
 		sumstatDir + "{sample}_dedupMetrics.txt",
-		newBamDir + "{sample}_dedup.bai"
+		newBamDir + "{sample}_dedup_sorted.bam"
 	threads: 
 		CLUSTER["dedup"]["n"]
 	run:
 		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input[0]} O={output[0]} METRICS_FILE={output[1]} REMOVE_DUPLICATES=false TAGGING_POLICY=All")
-		shell("rm {input[0]}")
-		shell("mv {input[1]} {output[2]}") # rename index file; marking duplicates should change this
+		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={output[0]} O={output[2]} SORT_ORDER=coordinate CREATE_INDEX=true")
+		#shell("rm {input[0]}")
+		#shell("mv {input[1]} {output[2]}") # rename index file; marking duplicates should change this
 
 rule bam_sumstats:
 	input: 
