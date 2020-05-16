@@ -1,0 +1,57 @@
+import os
+import glob
+import re
+from collections import defaultdict
+
+configfile: "config.yaml"
+CLUSTER = json.load(open(config['CLUSTER_JSON']))
+
+# rename variables from config file for clarity downstream
+fastq_suffix1 = config["fastq_suffix1"]
+fastq_suffix2 = config["fastq_suffix2"]
+fastqDir = config["fastqDir"]
+bamDir = config["bamDir"]
+gvcfDir = config["gvcfDir"]
+
+# grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
+SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)	
+print(SAMPLES)
+
+print("SAMPLES:")
+for i in range(len(SAMPLES)):
+	SAMPLES[i] = os.path.basename(SAMPLES[i])
+	SAMPLES[i] = SAMPLES[i].replace(fastq_suffix1, "")
+	print(SAMPLES[i])
+
+###
+# workflow with rules
+###
+
+rule all:
+	input:
+		expand(gvcfDir + "{sample}.raw.g.vcf", sample=SAMPLES)
+	
+rule gvcf:
+	input:
+		ref = config['ref'],
+		bam = bamDir + "{sample}_dedup.bam",
+		list = config['list']
+	output: 
+		gvcfDir + "{sample}.raw.g.vcf"
+	resources: 
+		cpus = CLUSTER["gvcf"]["n"],
+		mem_gb = int(CLUSTER["gvcf"]["mem"]/1000)
+	params:
+		minPrun = 1,
+		minDang = 1
+	shell:
+		"module load jdk/1.8.0_45-fasrc01\n"
+		"/n/home11/bjarnold/gatk-4.1.0.0/gatk HaplotypeCaller "
+		"--java-options \"-Xmx{resources.mem_gb}g -XX:ParallelGCThreads={resources.cpus}\" "
+		"-R {input.ref} "
+		"-I {input.bam} "
+		"-O {output[0]} "
+		"-L {input.list} "
+		"--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang} "	
+
+
