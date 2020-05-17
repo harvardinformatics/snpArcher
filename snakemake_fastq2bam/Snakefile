@@ -56,62 +56,56 @@ rule sort_bam:
 	input: 
 		newBamDir + "{sample}.bam"
 	output: 
-		bam = newBamDir + "{sample}_sorted.bam",
-		bamIndex = newBamDir + "{sample}_sorted.bai"
+		newBamDir + "{sample}_sorted.bam",
+		newBamDir + "{sample}_sorted.bai"
+	threads: 
+		CLUSTER["sort_bam"]["n"]
 	# use run with multiple shell() calls to execute multiple shell commands
 	run:
-		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output.bam} SORT_ORDER=coordinate CREATE_INDEX=true")
+		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true")
 		shell("rm {input}")
 
 rule dedup:
 	input: 
-		newBamDir + "{sample}_sorted.bam"
-		#newBamDir + "{sample}_sorted.bai"
+		newBamDir + "{sample}_sorted.bam",
+		newBamDir + "{sample}_sorted.bai",
 	output:
-		dedupBam = newBamDir + "{sample}_dedup.bam",
-		dedupMet = sumstatDir + "{sample}_dedupMetrics.txt"
-		#dedupBamSort = newBamDir + "{sample}_dedup_sorted.bam"
+		newBamDir + "{sample}_dedup.bam",
+		sumstatDir + "{sample}_dedupMetrics.txt",
+		newBamDir + "{sample}_dedup_sorted.bam"
+	threads: 
+		CLUSTER["dedup"]["n"]
 	run:
-		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All")
-		#shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={output.dedupBam} O={output.dedupBamSort} SORT_ORDER=coordinate CREATE_INDEX=true")
-
-rule dedup_sort:
-	input: 
-		newBamDir + "{sample}_dedup.bam"
-	output:
-		dedupBamSort = newBamDir + "{sample}_dedup_sorted.bam"
-	run:
-		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output.dedupBamSort} SORT_ORDER=coordinate CREATE_INDEX=true")
+		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input[0]} O={output[0]} METRICS_FILE={output[1]} REMOVE_DUPLICATES=false TAGGING_POLICY=All")
+		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={output[0]} O={output[2]} SORT_ORDER=coordinate CREATE_INDEX=true")
+		#shell("rm {input[0]}")
+		#shell("mv {input[1]} {output[2]}") # rename index file; marking duplicates should change this
 
 rule bam_sumstats:
 	input: 
-		bam = newBamDir + "{sample}_dedup_sorted.bam",
+		newBamDir + "{sample}_dedup.bam",
 		ref = config['ref']
-	output: 
-		cov = sumstatDir + "{sample}_coverage.txt",
-		alnSum = sumstatDir + "{sample}_AlnSumMets.txt",
-		val = sumstatDir + "{sample}_validate.txt"
 
+	output: 
+		sumstatDir + "{sample}_coverage.txt",
+		sumstatDir + "{sample}_AlnSumMets.txt"
 	run:
-		shell("/n/home11/bjarnold/programs/samtools-1.10/samtools coverage --output {output.cov} {input.bam}")
-		shell("java -jar /n/home11/bjarnold/picard.jar CollectAlignmentSummaryMetrics I={input.bam} R={input.ref} O={output.alnSum}")
-		shell("java -jar /n/home11/bjarnold/picard.jar ValidateSamFile I={input.bam} R={input.ref} O={output.val}")
+		shell("/n/home11/bjarnold/programs/samtools-1.10/samtools coverage --output {output[0]} {input[0]}")
+		shell("java -jar /n/home11/bjarnold/picard.jar CollectAlignmentSummaryMetrics I={input[0]} R={input.ref} O={output[1]}")
 		
 rule collect_sumstats:
 	input:
 		dedupFiles = expand(sumstatDir + "{sample}_dedupMetrics.txt", sample=SAMPLES),
 		alnSumMetsFiles = expand(sumstatDir + "{sample}_AlnSumMets.txt", sample=SAMPLES),
-		coverageFiles = expand(sumstatDir + "{sample}_coverage.txt", sample=SAMPLES),	
-		validateFiles = expand(sumstatDir + "{sample}_validate.txt", sample=SAMPLES)
+		coverageFiles = expand(sumstatDir + "{sample}_coverage.txt", sample=SAMPLES)	
 	output:
 		"sumstats.txt"
 	run:
 		PercentDuplicates = collectDedupMetrics(input.dedupFiles)
 		PercentHQreads, PercentHQbases = collectAlnSumMets(input.alnSumMetsFiles)
 		SeqDepths, CoveredBases = collectCoverageMetrics(input.coverageFiles)
-		validateSams = collectValidationStatus(input.validateFiles)
 
-		printStats(PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams)
+		printStats(PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases)
 
 ####
 # python helper functions
@@ -185,33 +179,11 @@ def collectCoverageMetrics(coverageFiles):
 		CoveredBases[sample] = covbases
 	return(SeqDepths, CoveredBases)
 
-def collectValidationStatus(validateFiles):
-
-	validateSams = defaultdict(float)
-
-	for fn in validateFiles:
-		sample = os.path.basename(fn)
-		sample = sample.replace("_validate.txt", "")
-		f = open(fn, 'r')
-		status = "FALSE"
-		for line in f:
-			if "No errors found" not in line:
-				status = "TRUE"
-		f.close()
-		validateSams[sample] = status
-	return(validateSams)
-
-def printStats(PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams):
+def printStats(PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases):
 
 	o = open("sumstats.txt", 'w')
-	print("sample", "PercentDuplicates", "PercentHQalignedReads", "PercentHQ20bases", "MeanCoverage", "MeanBasesCovered", "validBAM", file=o, sep="\t")
+	print("sample", "PercentDuplicates", "PercentHQalignedReads", "PercentHQ20bases", "MeanCoverage", "MeanBasesCovered", file=o, sep="\t")
 	for sample in PercentDuplicates:
-		print(sample,file=o, end="\t")
-		print(PercentDuplicates[sample], file=o, end="\t")
-		print(PercentHQreads[sample], file=o, end="\t")
-		print(PercentHQbases[sample], file=o, end="\t")
-		print(SeqDepths[sample], file=o, end="\t")
-		print(CoveredBases[sample], file=o, end="\t")
-		print(validateSams[sample], file=o)
+		print(sample, PercentDuplicates[sample], PercentHQreads[sample], PercentHQbases[sample], SeqDepths[sample], CoveredBases[sample], file=o, sep="\t")
 
 
