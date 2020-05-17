@@ -1,5 +1,3 @@
-add in ValidateSamFile step
-
 for calculating summary statistics I made a separate rule to keep things simple... but is it bad to submit a job for something that may not take very long?
 
 Also, readgroup info has ILLUMINA hardcoded into it... probably OK given the bwa protocol, but had troubles messing with this!
