@@ -87,7 +87,8 @@ rule bam_sumstats:
 	run:
 		shell("/n/home11/bjarnold/programs/samtools-1.10/samtools coverage --output {output.cov} {input.bam}")
 		shell("java -jar /n/home11/bjarnold/picard.jar CollectAlignmentSummaryMetrics I={input.bam} R={input.ref} O={output.alnSum}")
-		# snakemake does not like when the following command exits with a status larger than 0, which occurs if BAM not valid
+		# The following ValidateSamFile exits with non-zero status when a BAM file contains errors, 
+		# causing snakemake to exit and remove these output files.  I cirumvent this by appending "|| true".
 		shell("java -jar /n/home11/bjarnold/picard.jar ValidateSamFile I={input.bam} R={input.ref} O={output.val} || true")
 		
 rule collect_sumstats:
