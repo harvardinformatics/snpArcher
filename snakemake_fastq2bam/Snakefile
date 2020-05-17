@@ -56,8 +56,8 @@ rule sort_bam:
 	input: 
 		newBamDir + "{sample}.bam"
 	output: 
-		newBamDir + "{sample}_sorted.bam",
-		newBamDir + "{sample}_sorted.bai"
+		temp(newBamDir + "{sample}_sorted.bam"),
+		temp(newBamDir + "{sample}_sorted.bai")
 	# use run with multiple shell() calls to execute multiple shell commands
 	run:
 		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true")
@@ -68,17 +68,17 @@ rule dedup:
 		newBamDir + "{sample}_sorted.bam",
 		newBamDir + "{sample}_sorted.bai"
 	output:
-		newBamDir + "{sample}_dedup.bam",
-		sumstatDir + "{sample}_dedupMetrics.txt",
-		newBamDir + "{sample}_dedup_sort.bam"
+		dedupBam = temp(newBamDir + "{sample}_dedup.bam"),
+		dedupMet = sumstatDir + "{sample}_dedupMetrics.txt",
+		dedupBamSort = newBamDir + "{sample}_dedupSort.bam"
 	run:
-		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input[0]} O={output[0]} METRICS_FILE={output[1]} REMOVE_DUPLICATES=false TAGGING_POLICY=All")
-		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={output[0]} O={output[2]} SORT_ORDER=coordinate CREATE_INDEX=true")
-		shell("rm {input[0]} {input[1]}")
+		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All")
+		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={output.dedupBam} O={output.dedupBamSort} SORT_ORDER=coordinate CREATE_INDEX=true")
+		#shell("rm {input[0]} {input[1]}")
 
 rule bam_sumstats:
 	input: 
-		newBamDir + "{sample}_dedup_sort.bam",
+		newBamDir + "{sample}_dedupSort.bam",
 		ref = config['ref']
 
 	output: 
