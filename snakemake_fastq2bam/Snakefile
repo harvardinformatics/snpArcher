@@ -58,8 +58,6 @@ rule sort_bam:
 	output: 
 		newBamDir + "{sample}_sorted.bam",
 		newBamDir + "{sample}_sorted.bai"
-	threads: 
-		CLUSTER["sort_bam"]["n"]
 	# use run with multiple shell() calls to execute multiple shell commands
 	run:
 		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true")
@@ -68,22 +66,19 @@ rule sort_bam:
 rule dedup:
 	input: 
 		newBamDir + "{sample}_sorted.bam",
-		newBamDir + "{sample}_sorted.bai",
+		newBamDir + "{sample}_sorted.bai"
 	output:
 		newBamDir + "{sample}_dedup.bam",
 		sumstatDir + "{sample}_dedupMetrics.txt",
-		newBamDir + "{sample}_dedup_sorted.bam"
-	threads: 
-		CLUSTER["dedup"]["n"]
+		newBamDir + "{sample}_dedup_sort.bam"
 	run:
 		shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input[0]} O={output[0]} METRICS_FILE={output[1]} REMOVE_DUPLICATES=false TAGGING_POLICY=All")
 		shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={output[0]} O={output[2]} SORT_ORDER=coordinate CREATE_INDEX=true")
-		#shell("rm {input[0]}")
-		#shell("mv {input[1]} {output[2]}") # rename index file; marking duplicates should change this
+		shell("rm {input[0]} {input[1]}")
 
 rule bam_sumstats:
 	input: 
-		newBamDir + "{sample}_dedup.bam",
+		newBamDir + "{sample}_dedup_sort.bam",
 		ref = config['ref']
 
 	output: 
@@ -122,7 +117,7 @@ def collectDedupMetrics(dedupFiles):
 		for i in range(len(lines)):
 			if lines[i].startswith("LIBRARY"):
 				info = lines[i+1]
-				info = info.split()
+				info = info.split("\t")
 				percDup = info[8]
 				#print(percDup)
 				PercentDuplicates[sample] = percDup
