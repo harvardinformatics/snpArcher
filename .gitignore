@@ -7,3 +7,12 @@ snakemake_fastq2bam/slurm-*.out
 snakemake_fastq2bam/sumstats.txt
 snakemake_fastq2bam/out
 snakemake_fastq2bam/err
+
+snakemake_bam2vcf_GATK/01_gvcfs/
+snakemake_bam2vcf_GATK/slurm-*.out
+snakemake_bam2vcf_GATK/out
+snakemake_bam2vcf_GATK/err
+
+
+
+
