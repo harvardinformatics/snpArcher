@@ -14,6 +14,8 @@ bamDir = config["bamDir"]
 gvcfDir = config["gvcfDir"]
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
+SAMPLES = "ERR1013161"
+"""
 SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)	
 print(SAMPLES)
 
@@ -22,6 +24,7 @@ for i in range(len(SAMPLES)):
 	SAMPLES[i] = os.path.basename(SAMPLES[i])
 	SAMPLES[i] = SAMPLES[i].replace(fastq_suffix1, "")
 	print(SAMPLES[i])
+"""
 
 ###
 # workflow with rules
@@ -34,7 +37,7 @@ rule all:
 rule gvcf:
 	input:
 		ref = config['ref'],
-		bam = bamDir + "{sample}_dedup.bam",
+		bam = bamDir + "{sample}_dedupSort.bam",
 		list = config['list']
 	output: 
 		gvcfDir + "{sample}.raw.g.vcf"
