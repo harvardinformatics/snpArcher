@@ -12,6 +12,7 @@ fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
 bamDir = config["bamDir"]
 gvcfDir = config["gvcfDir"]
+listDir = config["listDir"]
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
 SAMPLES = "ERR1013161"
@@ -25,6 +26,13 @@ for i in range(len(SAMPLES)):
 	SAMPLES[i] = SAMPLES[i].replace(fastq_suffix1, "")
 	print(SAMPLES[i])
 """
+LISTS = glob.glob(listDir + "*.list")	
+for i in range(len(LISTS)):
+	LISTS[i] = os.path.basename(LISTS[i])
+	LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
+	#LISTS[i] = LISTS[i].replace("list", "", 2)
+	#LISTS[i] = LISTS[i].replace(".", "")
+print(LISTS)
 
 ###
 # workflow with rules
@@ -32,15 +40,15 @@ for i in range(len(SAMPLES)):
 
 rule all:
 	input:
-		expand(gvcfDir + "{sample}.raw.g.vcf", sample=SAMPLES)
+		expand(gvcfDir + "{sample}_{list}.raw.g.vcf", sample=SAMPLES, list=LISTS)
 	
 rule gvcf:
 	input:
 		ref = config['ref'],
 		bam = bamDir + "{sample}_dedupSort.bam",
-		list = config['list']
+		l = listDir + "list{list}.list"
 	output: 
-		gvcfDir + "{sample}.raw.g.vcf"
+		gvcf = gvcfDir + "{sample}_{list}.raw.g.vcf"
 	resources: 
 		cpus = CLUSTER["gvcf"]["n"],
 		mem_gb = int(CLUSTER["gvcf"]["mem"]/1000)
@@ -53,8 +61,8 @@ rule gvcf:
 		"--java-options \"-Xmx{resources.mem_gb}g -XX:ParallelGCThreads={resources.cpus}\" "
 		"-R {input.ref} "
 		"-I {input.bam} "
-		"-O {output[0]} "
-		"-L {input.list} "
+		"-O {output.gvcf} "
+		"-L {input.l} "
 		"--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang} "	
 
 
