@@ -12,6 +12,7 @@ gvcfDir: "01_gvcfs/"
 dbDir: "02_genomicsDB/"
 vcfDir: "03_vcfs/"
 
-list: "../data/lists_all/list0.list"
+#list: "../data/lists_all/list0.list"
+listDir: "../data/lists_byScaffold/"
 
 CLUSTER_JSON: "./cluster.json"
