@@ -12,10 +12,11 @@ fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
 bamDir = config["bamDir"]
 gvcfDir = config["gvcfDir"]
+dbDir = config["dbDir"]
 listDir = config["listDir"]
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
-SAMPLES = "ERR1013161"
+SAMPLES = ["ERR1013161"]
 """
 SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)	
 print(SAMPLES)
@@ -34,35 +35,71 @@ for i in range(len(LISTS)):
 	#LISTS[i] = LISTS[i].replace(".", "")
 print(LISTS)
 
+# this directory needs to be made beforehand since it is specified within GATK
+os.system("mkdir -p " + dbDir + "tmp")
+
 ###
 # workflow with rules
 ###
 
 rule all:
 	input:
-		expand(gvcfDir + "{sample}_{list}.raw.g.vcf", sample=SAMPLES, list=LISTS)
+		#expand(gvcfDir + "{sample}_{list}.raw.g.vcf", sample=SAMPLES, list=LISTS)
+		expand(dbDir + "DB_list{list}", list=LISTS)
 	
-rule gvcf:
+rule bam2gvcf:
 	input:
 		ref = config['ref'],
 		bam = bamDir + "{sample}_dedupSort.bam",
 		l = listDir + "list{list}.list"
 	output: 
-		gvcf = gvcfDir + "{sample}_{list}.raw.g.vcf"
+		gvcf = gvcfDir + "{sample}_{list}.raw.g.vcf",
 	resources: 
-		cpus = CLUSTER["gvcf"]["n"],
-		mem_gb = int(CLUSTER["gvcf"]["mem"]/1000)
+		cpus = CLUSTER["bam2gvcf"]["n"],
+		mem_gb = int(CLUSTER["bam2gvcf"]["mem"]/1000)
 	params:
 		minPrun = 1,
 		minDang = 1
-	shell:
-		"module load jdk/1.8.0_45-fasrc01\n"
-		"/n/home11/bjarnold/gatk-4.1.0.0/gatk HaplotypeCaller "
-		"--java-options \"-Xmx{resources.mem_gb}g -XX:ParallelGCThreads={resources.cpus}\" "
-		"-R {input.ref} "
-		"-I {input.bam} "
-		"-O {output.gvcf} "
-		"-L {input.l} "
-		"--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang} "	
+	run:
+		command = """module load jdk/1.8.0_45-fasrc01
+		/n/home11/bjarnold/gatk-4.1.0.0/gatk HaplotypeCaller \
+		--java-options \"-Xmx{resources.mem_gb}g -XX:ParallelGCThreads={resources.cpus}\" \
+		-R {input.ref} \
+		-I {input.bam} \
+		-O {output.gvcf} \
+		-L {input.l} \
+		--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang}"""
+
+		shell(command)
+
+rule gvcf2DB:
+	input:
+		# this waits for all gvcfs to be finished, whereas ou really only need to wait for all samples from a particular list to be finished
+		expand(gvcfDir + "{sample}_{list}.raw.g.vcf", sample=SAMPLES, list=LISTS),
+		l = listDir + "list{list}.list"
+	output: 
+		DBmapfile = dbDir + "DB_mapfile{list}",
+		DB = directory(dbDir + "DB_list{list}")
+	resources: 
+		mem_gb = int(CLUSTER["gvcf2DB"]["mem"]/1000)
+	run:
+		makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir)
+		
+		command="""module load jdk/1.8.0_45-fasrc01
+		/n/home11/bjarnold/gatk-4.1.0.0/gatk GenomicsDBImport \
+		--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" \
+		--genomicsdb-workspace-path {output.DB} \
+		-L {input.l} \
+		--tmp-dir={dbDir}tmp \
+		--sample-name-map {output.DBmapfile}"""
+
+		shell(command)
 
 
+
+def makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir):
+	for l in LISTS:
+		f=open(dbDir + "DB_mapfile" + l, 'w')
+		for s in SAMPLES:
+			print(s, gvcfDir + s+"_"+l+".raw.g.vcf", sep="\t", file=f)
+		f.close()

@@ -8,6 +8,8 @@
 #SBATCH --mem=1000
 
 rm -r 01_gvcfs
+rm -r 02_genomicsDB
+rm -r .snakemake
 rm slurm-*.out
 rm out
 rm err
