@@ -48,6 +48,10 @@ rule all:
 		expand(dbDir + "DB_list{list}", list=LISTS)
 	
 rule bam2gvcf:
+	"""
+	This rule scatters analyses over two dimensions: sample name and list file. For each BAM file, one per sample,
+	a GVCF is created for all the scaffolds present in a given list file.
+	"""
 	input:
 		ref = config['ref'],
 		bam = bamDir + "{sample}_dedupSort.bam",
@@ -73,8 +77,14 @@ rule bam2gvcf:
 		shell(command)
 
 rule gvcf2DB:
+	"""
+	This rule gathers results for a given list file name, so the workflow is now scattered in only a single dimension. 
+	Here we take many gvcfs for a particular list of scaffolds and combine them into a GenomicsDB.
+	Samples are thus gathered by a shared list name, but lists are still scattered.
+	"""
 	input:
-		# this waits for all gvcfs to be finished, whereas ou really only need to wait for all samples from a particular list to be finished
+		# NOTE: this waits for all gvcfs to be finished, whereas ou really only need to wait 
+		# for all samples from a particular list to be finished
 		expand(gvcfDir + "{sample}_{list}.raw.g.vcf", sample=SAMPLES, list=LISTS),
 		l = listDir + "list{list}.list"
 	output: 
@@ -96,6 +106,10 @@ rule gvcf2DB:
 		shell(command)
 
 
+
+####
+# python helper functions
+###
 
 def makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir):
 	for l in LISTS:
