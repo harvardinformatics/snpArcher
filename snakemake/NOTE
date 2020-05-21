@@ -1,5 +1,0 @@
-at the moment you are thinking the deduplication step does not require resorting the BAM file, so you just rename the index from the previous step.
-
-for calculating summary statistics I made a separate rule to keep things simple... but is it bad to submit a job for something that may not take very long?
-
-
