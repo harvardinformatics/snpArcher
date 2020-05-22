@@ -17,7 +17,8 @@ listDir = config["listDir"]
 vcfDir = config["vcfDir"]
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
-#SAMPLES = ["ERR1013163"]
+SAMPLES = ["ERR1013163"]
+"""
 SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)	
 print(SAMPLES)
 
@@ -26,13 +27,12 @@ for i in range(len(SAMPLES)):
 	SAMPLES[i] = os.path.basename(SAMPLES[i])
 	SAMPLES[i] = SAMPLES[i].replace(fastq_suffix1, "")
 	print(SAMPLES[i])
+"""
 
 LISTS = glob.glob(listDir + "*.list")	
 for i in range(len(LISTS)):
 	LISTS[i] = os.path.basename(LISTS[i])
 	LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
-	#LISTS[i] = LISTS[i].replace("list", "", 2)
-	#LISTS[i] = LISTS[i].replace(".", "")
 LISTS=sorted(LISTS)
 print(LISTS)
 
@@ -46,7 +46,6 @@ os.system("mkdir -p " + vcfDir + "tmp")
 
 rule all:
 	input:
-		#vcf = "Combined.vcf"
 		vcfFiltered = "Combined_hardFiltered.vcf"
 	
 rule bam2gvcf:
@@ -59,7 +58,7 @@ rule bam2gvcf:
 		bam = bamDir + "{sample}_dedupSort.bam",
 		l = listDir + "list{list}.list"
 	output: 
-		gvcf = gvcfDir + "{sample}_{list}.raw.g.vcf",
+		gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf",
 	resources: 
 		cpus = CLUSTER["bam2gvcf"]["n"],
 		mem_gb = int(CLUSTER["bam2gvcf"]["mem"]/1000)
@@ -87,16 +86,20 @@ rule gvcf2DB:
 	input:
 		# NOTE: this waits for all gvcfs to be finished, whereas ou really only need to wait 
 		# for all samples from a particular list to be finished
-		expand(gvcfDir + "{sample}_{list}.raw.g.vcf", sample=SAMPLES, list=LISTS),
+		gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf", sample=SAMPLES, list=LISTS),
 		l = listDir + "list{list}.list"
 	output: 
 		DBmapfile = dbDir + "DB_mapfile{list}",
-		DB = directory(dbDir + "DB_list{list}")
+		DB = directory(dbDir + "DB_L{list}")
 	resources: 
 		mem_gb = int(CLUSTER["gvcf2DB"]["mem"]/1000)
 	run:
-		makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir)
+		#makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir)
 		
+		#gvcfList = "" 
+		#for i in input.gvcfs:
+		#	if wildcards.sample in i:
+		#		gvcfList = gvcfList + "-V {} ".format(i)
 		command="""module load jdk/1.8.0_45-fasrc01
 		/n/home11/bjarnold/gatk-4.1.0.0/gatk GenomicsDBImport \
 		--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" \
@@ -104,6 +107,7 @@ rule gvcf2DB:
 		-L {input.l} \
 		--tmp-dir={dbDir}tmp \
 		--sample-name-map {output.DBmapfile}"""
+		#{gvcfList}"""
 
 		shell(command)
 
@@ -113,10 +117,10 @@ rule DB2vcf:
 	are still scattered.
 	"""
 	input:
-		DB = directory(dbDir + "DB_list{list}"),
+		DB = directory(dbDir + "DB_L{list}"),
 		ref = config['ref']
 	output: 
-		vcf = vcfDir + "{list}.vcf"
+		vcf = vcfDir + "L{list}.vcf"
 	resources: 
 		mem_gb = int(CLUSTER["DB2vcf"]["mem"]/1000)
 	run:
@@ -135,7 +139,7 @@ rule gatherVcfs:
 	This rule gathers all of the VCFs, one per list, into one final VCF
 	"""
 	input:
-		vcfs = expand(vcfDir + "{list}.vcf", list=LISTS),
+		vcfs = expand(vcfDir + "L{list}.vcf", list=LISTS),
 		ref = config['ref']
 	output: 
 		vcf = "Combined.vcf",
@@ -155,7 +159,8 @@ rule gatherVcfs:
 		shell(command1)
 		shell("sleep 10") # the variant filtration step was failing in an unreproducible way, so added this in case
 		# Hard filter Combined.vcf
-		command2="""/n/home11/bjarnold/gatk-4.1.0.0/gatk VariantFiltration \
+		command2="""module load jdk/1.8.0_45-fasrc01
+		/n/home11/bjarnold/gatk-4.1.0.0/gatk VariantFiltration \
 		-R {input.ref} \
 		-V {output.vcf} \
 		--output {output.vcfFiltered} \
@@ -173,5 +178,5 @@ def makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir):
 	for l in LISTS:
 		f=open(dbDir + "DB_mapfile" + l, 'w')
 		for s in SAMPLES:
-			print(s, gvcfDir + s+"_"+l+".raw.g.vcf", sep="\t", file=f)
+			print(s, gvcfDir + s+"_L"+l+".raw.g.vcf", sep="\t", file=f)
 		f.close()

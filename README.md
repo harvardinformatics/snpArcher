@@ -2,8 +2,6 @@ This is a snakemake pipeline to go from fastq's to VCFs.
 
 TO DO:
 
-rename slurm-\*.out files to something more informative?
-
 clean up snakemake files, partitioning rules into separate .smk files. Follow other guidelines that pros do.
 Label rules 01\_, 02\_, etc.
 
