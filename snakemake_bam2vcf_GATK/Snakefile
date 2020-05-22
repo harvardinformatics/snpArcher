@@ -34,6 +34,7 @@ for i in range(len(LISTS)):
 	LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
 	#LISTS[i] = LISTS[i].replace("list", "", 2)
 	#LISTS[i] = LISTS[i].replace(".", "")
+LISTS=sorted(LISTS)
 print(LISTS)
 
 # this directory needs to be made beforehand since it is specified within GATK
@@ -48,7 +49,8 @@ rule all:
 	input:
 		#expand(gvcfDir + "{sample}_{list}.raw.g.vcf", sample=SAMPLES, list=LISTS)
 		#expand(dbDir + "DB_list{list}", list=LISTS)
-		expand(vcfDir + "{list}.vcf", list=LISTS)
+		#expand(vcfDir + "{list}.vcf", list=LISTS)
+		vcf = "Combined.vcf"
 	
 rule bam2gvcf:
 	"""
@@ -131,30 +133,27 @@ rule DB2vcf:
 
 		shell(command)
 
-"""
 rule gatherVcfs:
 	"""
 	This rule gathers all of the VCFs, one per list, into one final VCF
 	"""
 	input:
-		DB = directory(dbDir + "DB_list{list}"),
-		ref = config['ref']
+		vcfs = expand(vcfDir + "{list}.vcf", list=LISTS)
 	output: 
-		vcf = vcfDir + "{list}.vcf"
+		vcf = "Combined.vcf"
 	resources: 
-		mem_gb = int(CLUSTER["DB2vcf"]["mem"]/1000)
+		mem_gb = int(CLUSTER["gatherVcfs"]["mem"]/1000)
 	run:
+		
+		vcfList = "" 
+		for i in input.vcfs:
+			vcfList = vcfList + "-I {} ".format(i)
 		command="""module load jdk/1.8.0_45-fasrc01
-		/n/home11/bjarnold/gatk-4.1.0.0/gatk GenotypeGVCFs \
-		--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" \
-		-R {input.ref} \
-		-V gendb://{input.DB} \
-		-O {output.vcf} \
-		--tmp-dir={vcfDir}tmp"""
+		/n/home11/bjarnold/gatk-4.1.0.0/gatk GatherVcfs \
+		{vcfList} \
+		-O {output.vcf}"""
 
 		shell(command)
-"""
-
 
 ####
 # python helper functions

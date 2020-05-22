@@ -14,6 +14,7 @@ snakemake_bam2vcf_GATK/03_vcfs/
 snakemake_bam2vcf_GATK/slurm-*.out
 snakemake_bam2vcf_GATK/out
 snakemake_bam2vcf_GATK/err
+snakemake_bam2vcf_GATK/Combined*
 
 
 
