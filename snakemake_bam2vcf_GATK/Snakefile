@@ -17,8 +17,7 @@ listDir = config["listDir"]
 vcfDir = config["vcfDir"]
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
-SAMPLES = ["ERR1013161"]
-"""
+#SAMPLES = ["ERR1013163"]
 SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)	
 print(SAMPLES)
 
@@ -27,7 +26,7 @@ for i in range(len(SAMPLES)):
 	SAMPLES[i] = os.path.basename(SAMPLES[i])
 	SAMPLES[i] = SAMPLES[i].replace(fastq_suffix1, "")
 	print(SAMPLES[i])
-"""
+
 LISTS = glob.glob(listDir + "*.list")	
 for i in range(len(LISTS)):
 	LISTS[i] = os.path.basename(LISTS[i])
@@ -154,7 +153,7 @@ rule gatherVcfs:
 		-O {output.vcf}"""
 
 		shell(command1)
-
+		shell("sleep 10") # the variant filtration step was failing in an unreproducible way, so added this in case
 		# Hard filter Combined.vcf
 		command2="""/n/home11/bjarnold/gatk-4.1.0.0/gatk VariantFiltration \
 		-R {input.ref} \

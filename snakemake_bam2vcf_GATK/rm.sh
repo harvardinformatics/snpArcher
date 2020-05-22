@@ -11,6 +11,7 @@ rm -r 01_gvcfs
 rm -r 02_genomicsDB
 rm -r 03_vcfs
 rm -r .snakemake
+rm Combined*
 rm slurm-*.out
 rm out
 rm err
