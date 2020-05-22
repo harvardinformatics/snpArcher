@@ -2,6 +2,7 @@ import os
 import glob
 import re
 from collections import defaultdict
+import helperFun
 
 configfile: "config.yaml"
 CLUSTER = json.load(open(config['CLUSTER_JSON']))
@@ -39,6 +40,7 @@ print(LISTS)
 # this directory needs to be made beforehand since it is specified within GATK
 os.system("mkdir -p " + dbDir + "tmp")
 os.system("mkdir -p " + vcfDir + "tmp")
+helperFun.makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir)
 
 ###
 # workflow with rules
@@ -87,27 +89,21 @@ rule gvcf2DB:
 		# NOTE: this waits for all gvcfs to be finished, whereas ou really only need to wait 
 		# for all samples from a particular list to be finished
 		gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf", sample=SAMPLES, list=LISTS),
-		l = listDir + "list{list}.list"
+		l = listDir + "list{list}.list",
+		DBmapfile = dbDir + "DB_mapfile{list}"
 	output: 
-		DBmapfile = dbDir + "DB_mapfile{list}",
 		DB = directory(dbDir + "DB_L{list}")
 	resources: 
 		mem_gb = int(CLUSTER["gvcf2DB"]["mem"]/1000)
 	run:
-		#makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir)
 		
-		#gvcfList = "" 
-		#for i in input.gvcfs:
-		#	if wildcards.sample in i:
-		#		gvcfList = gvcfList + "-V {} ".format(i)
 		command="""module load jdk/1.8.0_45-fasrc01
 		/n/home11/bjarnold/gatk-4.1.0.0/gatk GenomicsDBImport \
 		--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" \
 		--genomicsdb-workspace-path {output.DB} \
 		-L {input.l} \
 		--tmp-dir={dbDir}tmp \
-		--sample-name-map {output.DBmapfile}"""
-		#{gvcfList}"""
+		--sample-name-map {input.DBmapfile}"""
 
 		shell(command)
 
@@ -170,13 +166,4 @@ rule gatherVcfs:
 
 		shell(command2)
 
-####
-# python helper functions
-###
 
-def makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir):
-	for l in LISTS:
-		f=open(dbDir + "DB_mapfile" + l, 'w')
-		for s in SAMPLES:
-			print(s, gvcfDir + s+"_L"+l+".raw.g.vcf", sep="\t", file=f)
-		f.close()
