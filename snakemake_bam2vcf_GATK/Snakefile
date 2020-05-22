@@ -14,6 +14,7 @@ bamDir = config["bamDir"]
 gvcfDir = config["gvcfDir"]
 dbDir = config["dbDir"]
 listDir = config["listDir"]
+vcfDir = config["vcfDir"]
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
 SAMPLES = ["ERR1013161"]
@@ -37,6 +38,7 @@ print(LISTS)
 
 # this directory needs to be made beforehand since it is specified within GATK
 os.system("mkdir -p " + dbDir + "tmp")
+os.system("mkdir -p " + vcfDir + "tmp")
 
 ###
 # workflow with rules
@@ -45,7 +47,8 @@ os.system("mkdir -p " + dbDir + "tmp")
 rule all:
 	input:
 		#expand(gvcfDir + "{sample}_{list}.raw.g.vcf", sample=SAMPLES, list=LISTS)
-		expand(dbDir + "DB_list{list}", list=LISTS)
+		#expand(dbDir + "DB_list{list}", list=LISTS)
+		expand(vcfDir + "{list}.vcf", list=LISTS)
 	
 rule bam2gvcf:
 	"""
@@ -105,6 +108,52 @@ rule gvcf2DB:
 
 		shell(command)
 
+rule DB2vcf:
+	"""
+	This rule uses the genomic databases from the previous step (gvcf2DB) to create VCF files, one per list file. Thus, lists
+	are still scattered.
+	"""
+	input:
+		DB = directory(dbDir + "DB_list{list}"),
+		ref = config['ref']
+	output: 
+		vcf = vcfDir + "{list}.vcf"
+	resources: 
+		mem_gb = int(CLUSTER["DB2vcf"]["mem"]/1000)
+	run:
+		command="""module load jdk/1.8.0_45-fasrc01
+		/n/home11/bjarnold/gatk-4.1.0.0/gatk GenotypeGVCFs \
+		--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" \
+		-R {input.ref} \
+		-V gendb://{input.DB} \
+		-O {output.vcf} \
+		--tmp-dir={vcfDir}tmp"""
+
+		shell(command)
+
+"""
+rule gatherVcfs:
+	"""
+	This rule gathers all of the VCFs, one per list, into one final VCF
+	"""
+	input:
+		DB = directory(dbDir + "DB_list{list}"),
+		ref = config['ref']
+	output: 
+		vcf = vcfDir + "{list}.vcf"
+	resources: 
+		mem_gb = int(CLUSTER["DB2vcf"]["mem"]/1000)
+	run:
+		command="""module load jdk/1.8.0_45-fasrc01
+		/n/home11/bjarnold/gatk-4.1.0.0/gatk GenotypeGVCFs \
+		--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" \
+		-R {input.ref} \
+		-V gendb://{input.DB} \
+		-O {output.vcf} \
+		--tmp-dir={vcfDir}tmp"""
+
+		shell(command)
+"""
 
 
 ####
