@@ -15,6 +15,7 @@ snakemake_bam2vcf_GATK/slurm-*.out
 snakemake_bam2vcf_GATK/out
 snakemake_bam2vcf_GATK/err
 snakemake_bam2vcf_GATK/Combined*
+snakemake_bam2vcf_GATK/__pycache__/
 
 
 
