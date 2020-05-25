@@ -1,6 +1,15 @@
 data_preparation/
 .snakemake*
 
+# indexing and creating a sequence dictionary gets done within pipeline
+data/genome/*.sa
+data/genome/*.pac
+data/genome/*.bwt
+data/genome/*.ann
+data/genome/*.amb
+data/genome/*.fai
+data/genome/*.dict
+
 snakemake_fastq2bam/01_mappedReads/
 snakemake_fastq2bam/02_sumstats/
 snakemake_fastq2bam/slurm-*.out
