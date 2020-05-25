@@ -37,11 +37,29 @@ rule all:
     input:
         "sumstats.txt"
 	
+rule index_ref:
+    input:
+        ref = config['ref']
+    output: 
+       config['ref'] + ".sa",
+       config['ref'] + ".pac",
+       config['ref'] + ".bwt",
+       config['ref'] + ".ann",
+       config['ref'] + ".amb"
+    shell:
+        "bwa index {input.ref}"
+
 rule bwa_map:
     input:
         ref = config['ref'],
         r1 = fastqDir + "{sample}" + fastq_suffix1,
-        r2 = fastqDir + "{sample}" + fastq_suffix2
+        r2 = fastqDir + "{sample}" + fastq_suffix2,
+        # the following files are bwa index files that aren't directly input into command below, but needed
+        sa = config['ref'] + ".sa",
+        pac = config['ref'] + ".pac",
+        bwt = config['ref'] + ".bwt",
+        ann = config['ref'] + ".ann",
+        amb = config['ref'] + ".amb"
     output: 
         newBamDir + "{sample}.bam"
     threads: 
