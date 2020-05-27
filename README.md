@@ -2,10 +2,14 @@ This is a snakemake pipeline to go from fastq's to VCFs.
 
 TO DO:
 
+make a script that takes as input a 2-column file: scaffold name and scaffold size, and have it output a series of list files to divide up the genome. You may have already done this for the elephant project.
+
+post VCF stuff: relatedness (vcftools), missingness (vcftools), PCA, NJ tree
+
 clean up snakemake files, partitioning rules into separate .smk files. Follow other guidelines that pros do.
 Label rules 01\_, 02\_, etc.
 
-call programs not in your home directory
+call programs not in your home directory: use --use-conda along with conda: option in snakefile
 
 use profile instead of cluster.json file.
 
