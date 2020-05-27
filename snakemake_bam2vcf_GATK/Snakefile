@@ -53,7 +53,7 @@ rule all:
     input:
         vcfFiltered = "Combined_hardFiltered.vcf"
 	
-rule 1_processRef:
+rule processRef:
     """
     This rule generates a .dict and .fai file from the reference genome, which are required for GATK to run properly.
     """
@@ -66,7 +66,7 @@ rule 1_processRef:
         shell("/n/home11/bjarnold/programs/samtools-1.10/samtools faidx {input.ref} --output {output.fai}") 
         shell("java -jar /n/home11/bjarnold/picard.jar CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dict}")
 
-rule 02_bam2gvcf:
+rule bam2gvcf:
     """
     This rule scatters analyses over two dimensions: sample name and list file. For each BAM file, one per sample,
     a GVCF is created for all the scaffolds present in a given list file.
@@ -80,8 +80,8 @@ rule 02_bam2gvcf:
     output: 
         gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf",
     resources: 
-        cpus = CLUSTER["02_bam2gvcf"]["n"],
-        mem_gb = int(CLUSTER["02_bam2gvcf"]["mem"]/1000)
+        cpus = CLUSTER["bam2gvcf"]["n"],
+        mem_gb = int(CLUSTER["bam2gvcf"]["mem"]/1000)
     params:
         minPrun = 1,
         minDang = 1
@@ -97,7 +97,7 @@ rule 02_bam2gvcf:
 
         shell(command)
 
-rule 03_gvcf2DB:
+rule gvcf2DB:
     """
     This rule gathers results for a given list file name, so the workflow is now scattered in only a single dimension. 
     Here we take many gvcfs for a particular list of scaffolds and combine them into a GenomicsDB.
@@ -112,7 +112,7 @@ rule 03_gvcf2DB:
     output: 
         DB = directory(dbDir + "DB_L{list}")
     resources: 
-        mem_gb = int(CLUSTER["03_gvcf2DB"]["mem"]/1000)
+        mem_gb = int(CLUSTER["gvcf2DB"]["mem"]/1000)
     run:
         command="""module load jdk/1.8.0_45-fasrc01
         /n/home11/bjarnold/gatk-4.1.0.0/gatk GenomicsDBImport \
@@ -124,7 +124,7 @@ rule 03_gvcf2DB:
 
         shell(command)
 
-rule 04_DB2vcf:
+rule DB2vcf:
     """
     This rule uses the genomic databases from the previous step (gvcf2DB) to create VCF files, one per list file. Thus, lists
     are still scattered.
@@ -135,7 +135,7 @@ rule 04_DB2vcf:
     output: 
         vcf = vcfDir + "L{list}.vcf"
     resources: 
-        mem_gb = int(CLUSTER["04_DB2vcf"]["mem"]/1000)
+        mem_gb = int(CLUSTER["DB2vcf"]["mem"]/1000)
     run:
         command="""module load jdk/1.8.0_45-fasrc01
         /n/home11/bjarnold/gatk-4.1.0.0/gatk GenotypeGVCFs \
@@ -147,7 +147,7 @@ rule 04_DB2vcf:
 
         shell(command)
 
-rule 05_gatherVcfs:
+rule gatherVcfs:
     """
     This rule gathers all of the VCFs, one per list, into one final VCF
     """
@@ -158,7 +158,7 @@ rule 05_gatherVcfs:
         vcf = "Combined.vcf",
         vcfFiltered = "Combined_hardFiltered.vcf"
     resources: 
-        mem_gb = int(CLUSTER["05_gatherVcfs"]["mem"]/1000)
+        mem_gb = int(CLUSTER["gatherVcfs"]["mem"]/1000)
     run:
         # combine VCFs	
         vcfList = "" 

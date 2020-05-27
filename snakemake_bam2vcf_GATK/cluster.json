@@ -7,7 +7,7 @@
 	"N": "1",
         "mem": "9000"
     },
-    "01_processRef":
+    "bam2gvcf":
     {
 	"p": "holy-info",
         "t": 5000,
@@ -15,15 +15,7 @@
 	"N": 1,
         "mem": 15000
     },
-    "02_bam2gvcf":
-    {
-	"p": "holy-info",
-        "t": 5000,
-	"n": 10,
-	"N": 1,
-        "mem": 15000
-    },
-    "03_gvcf2DB":
+    "gvcf2DB":
     {
 	"p": "holy-info",
         "t": 5000,
@@ -31,7 +23,7 @@
 	"N": 1,
         "mem": 30000
     },
-    "04_DB2vcf":
+    "DB2vcf":
     {
 	"p": "holy-info",
         "t": 5000,
@@ -39,7 +31,7 @@
 	"N": 1,
         "mem": 30000
     },
-    "05_gatherVcfs":
+    "gatherVcfs":
     {
 	"p": "holy-info",
         "t": 5000,
