@@ -1,3 +1,0 @@
-
-# WORKFLOW: bam->gvcf, gvcf->DB, DB->vcf, combine VCFs 
-# write with list containing all scaffold, then parallelize to multiscaffold

@@ -10,7 +10,7 @@ CLUSTER = json.load(open(config['CLUSTER_JSON']))
 fastq_suffix1 = config["fastq_suffix1"]
 fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
-newBamDir = config["newBamDir"]
+bamDir = config["bamDir"]
 sumstatDir = config["sumstatDir"]
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
@@ -19,7 +19,7 @@ SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)
 print(fastq_suffix1)
 print(fastq_suffix2)
 print(fastqDir)
-print(newBamDir)
+print(bamDir)
 print(SAMPLES)
 
 print("SAMPLES:")
@@ -61,7 +61,7 @@ rule bwa_map:
         ann = config['ref'] + ".ann",
         amb = config['ref'] + ".amb"
     output: 
-        newBamDir + "{sample}.bam"
+        bamDir + "{sample}.bam"
     threads: 
         CLUSTER["bwa_map"]["n"]
     params:
@@ -72,29 +72,29 @@ rule bwa_map:
 
 rule sort_bam:
     input: 
-        newBamDir + "{sample}.bam"
+        bamDir + "{sample}.bam"
     output: 
-        temp(newBamDir + "{sample}_sorted.bam"),
-        temp(newBamDir + "{sample}_sorted.bai")
+        temp(bamDir + "{sample}_sorted.bam"),
+        temp(bamDir + "{sample}_sorted.bai")
     run:
-        shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true")
+        shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={bamDir}tmp I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true")
         shell("rm {input}")
 
 rule dedup:
     input: 
-        newBamDir + "{sample}_sorted.bam",
-        newBamDir + "{sample}_sorted.bai"
+        bamDir + "{sample}_sorted.bam",
+        bamDir + "{sample}_sorted.bai"
     output:
-        dedupBam = temp(newBamDir + "{sample}_dedup.bam"),
+        dedupBam = temp(bamDir + "{sample}_dedup.bam"),
         dedupMet = sumstatDir + "{sample}_dedupMetrics.txt",
-        dedupBamSort = newBamDir + "{sample}_dedupSort.bam"
+        dedupBamSort = bamDir + "{sample}_dedupSort.bam"
     run:
-        shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={newBamDir}tmp I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All")
-        shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={newBamDir}tmp I={output.dedupBam} O={output.dedupBamSort} SORT_ORDER=coordinate CREATE_INDEX=true")
+        shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={bamDir}tmp I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All")
+        shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={bamDir}tmp I={output.dedupBam} O={output.dedupBamSort} SORT_ORDER=coordinate CREATE_INDEX=true")
 
 rule bam_sumstats:
     input: 
-        bam = newBamDir + "{sample}_dedupSort.bam",
+        bam = bamDir + "{sample}_dedupSort.bam",
         ref = config['ref']
 
     output: 
