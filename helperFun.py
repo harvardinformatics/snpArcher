@@ -2,6 +2,103 @@
 import glob
 import os
 import re
+from collections import defaultdict
+
+def collectDedupMetrics(dedupFiles):
+
+    PercentDuplicates = defaultdict(float)
+    for fn in dedupFiles:
+        sample = os.path.basename(fn)
+        sample = sample.replace("_dedupMetrics.txt", "")
+        f = open(fn, 'r')
+        lines = f.readlines()
+        for i in range(len(lines)):
+            if lines[i].startswith("LIBRARY"):
+                info = lines[i+1]
+                info = info.split("\t")
+                percDup = info[8]
+                #print(percDup)
+                PercentDuplicates[sample] = percDup
+        f.close()
+    return(PercentDuplicates)
+
+def collectAlnSumMets(alnSumMetsFiles):
+
+    PercentHQreads = defaultdict(float)
+    PercentHQbases = defaultdict(float)
+
+    for fn in alnSumMetsFiles:
+        sample = os.path.basename(fn)
+        sample = sample.replace("_AlnSumMets.txt", "")
+        f = open(fn, 'r')
+        for line in f:
+            if line.startswith("PAIR"):
+                line = line.split()
+                totalReads = int(line[1])
+                totalAlignedBases = int(line[7])
+                HQreads = int(line[8])
+                totalAlignedHQ20bases = int(line[10])
+                PercentHQreads[sample] = HQreads/totalReads
+                PercentHQbases[sample] = totalAlignedHQ20bases/totalAlignedBases
+        f.close()
+    return(PercentHQreads, PercentHQbases)
+
+def collectValidationStatus(validateFiles):
+
+    validateSams = defaultdict(float)
+
+    for fn in validateFiles:
+        sample = os.path.basename(fn)
+        sample = sample.replace("_validate.txt", "")
+        f = open(fn, 'r')
+        status = "FALSE"
+        for line in f:
+            if "No errors found" in line:
+                status = "TRUE"
+        f.close()
+        validateSams[sample] = status
+    return(validateSams)
+
+def collectCoverageMetrics(coverageFiles):
+
+    SeqDepths = defaultdict(float)
+    CoveredBases = defaultdict(float)
+
+    for fn in coverageFiles:
+        # these files contain coverage data by scaffold; take weighted average
+        sample = os.path.basename(fn)
+        sample = sample.replace("_coverage.txt", "")
+        numSites = []
+        covbases = 0
+        depths = [] # samtools coverage function prints depth per scaffold
+        f = open(fn, 'r')
+        for line in f:
+            if not line.startswith("#rname"):
+                line = line.split()
+                numSites.append( int(line[2]) - int(line[1]) + 1 )
+                depths.append( float(line[6]) )
+                covbases +=  float(line[4])
+        f.close()
+        total = sum(numSites)
+        depthsMean = 0
+        for i in range(len(depths)):
+            depthsMean += depths[i]*numSites[i]/(total)
+        SeqDepths[sample] = depthsMean
+        CoveredBases[sample] = covbases
+    return(SeqDepths, CoveredBases)
+
+def printBamSumStats(PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams):
+
+    o = open("bam_sumstats.txt", 'w')
+    print("sample", "PercentDuplicates", "PercentHQalignedReads", "PercentHQ20bases", "MeanCoverage", "MeanBasesCovered", "validBAM", file=o, sep="\t")
+    for sample in PercentDuplicates:
+        print(sample,file=o, end="\t")
+        print(PercentDuplicates[sample], file=o, end="\t")
+        print(PercentHQreads[sample], file=o, end="\t")
+        print(PercentHQbases[sample], file=o, end="\t")
+        print(SeqDepths[sample], file=o, end="\t")
+        print(CoveredBases[sample], file=o, end="\t")
+        print(validateSams[sample], file=o)
 
 def getRefBaseName(ref):
     if ".fasta" in ref:
