@@ -1,18 +1,11 @@
 import os
-import glob
-import re
 from collections import defaultdict
 import helperFun
 
 configfile: "config.yaml"
 CLUSTER = json.load(open(config['CLUSTER_JSON']))
 
-if ".fasta" in config["ref"]:
-    refBasename = config["ref"].replace(".fasta", "")
-elif ".fa" in config["ref"]:
-    refBasename = config["ref"].replace(".fa", "")
-
-# rename variables from config file for clarity downstream
+# rename variables from config file for downstream simplicity
 fastq_suffix1 = config["fastq_suffix1"]
 fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
@@ -22,27 +15,18 @@ dbDir = config["dbDir"]
 listDir = config["listDir"]
 vcfDir = config["vcfDir"]
 
+refBaseName = helperFun.getRefBaseName(config["ref"])
+
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
 #SAMPLES = ["ERR1013163"]
-SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)	
-print(SAMPLES)
+SAMPLES = helperFun.getSampleNames(fastqDir, fastq_suffix1)
 
-print("SAMPLES:")
-for i in range(len(SAMPLES)):
-    SAMPLES[i] = os.path.basename(SAMPLES[i])
-    SAMPLES[i] = SAMPLES[i].replace(fastq_suffix1, "")
-    print(SAMPLES[i])
-
-LISTS = glob.glob(listDir + "*.list")	
-for i in range(len(LISTS)):
-    LISTS[i] = os.path.basename(LISTS[i])
-    LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
-LISTS=sorted(LISTS)
-print(LISTS)
+LISTS = helperFun.getListIndices(listDir)
 
 # this directory needs to be made beforehand since it is specified within GATK, which doesn't automatically make directories
 os.system("mkdir -p " + dbDir + "tmp")
 os.system("mkdir -p " + vcfDir + "tmp")
+# we need to create some map files for GenomicsDBImport that contain partition gVCFs by list index 
 helperFun.makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir)
 
 
@@ -52,11 +36,7 @@ rule all:
     input:
         vcfFiltered = "Combined_hardFiltered.vcf"
 
-include: "bam2vcf_rules/processRef.smk"
-include: "bam2vcf_rules/bam2gvcf.smk"
-include: "bam2vcf_rules/gvcf2DB.smk"
-include: "bam2vcf_rules/DB2vcf.smk"
-include: "bam2vcf_rules/gatherVcfs.smk"
+include: "rules/bam2vcf.smk"
 
 
 
