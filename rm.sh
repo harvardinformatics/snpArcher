@@ -8,10 +8,11 @@
 #SBATCH --mem=1000
 
 rm -r 01_mappedReads
-rm -r 02_sumstats
+rm -r 02_bamSumstats
 rm -r 03_gvcfs
 rm -r 04_genomicsDB
 rm -r 05_vcfs
+rm Combined*.vcf
 rm slurm-*.out
 rm out
 rm err
