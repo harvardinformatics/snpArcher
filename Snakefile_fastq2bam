@@ -35,7 +35,7 @@ for i in range(len(SAMPLES)):
 
 rule all:
     input:
-        "sumstats.txt"
+        "bam_sumstats.txt"
 	
 rule index_ref:
     input:
@@ -115,7 +115,7 @@ rule collect_sumstats:
         coverageFiles = expand(sumstatDir + "{sample}_coverage.txt", sample=SAMPLES),
         validateFiles = expand(sumstatDir + "{sample}_validate.txt", sample=SAMPLES)
     output:
-        "sumstats.txt"
+        "bam_sumstats.txt"
     run:
         PercentDuplicates = collectDedupMetrics(input.dedupFiles)
         PercentHQreads, PercentHQbases = collectAlnSumMets(input.alnSumMetsFiles)
@@ -214,7 +214,7 @@ def collectValidationStatus(validateFiles):
 
 def printStats(PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams):
 
-    o = open("sumstats.txt", 'w')
+    o = open("bam_sumstats.txt", 'w')
     print("sample", "PercentDuplicates", "PercentHQalignedReads", "PercentHQ20bases", "MeanCoverage", "MeanBasesCovered", "validBAM", file=o, sep="\t")
     for sample in PercentDuplicates:
         print(sample,file=o, end="\t")

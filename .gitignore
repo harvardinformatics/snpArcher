@@ -12,19 +12,17 @@ data/genome/*.dict
 
 01_mappedReads/
 02_sumstats/
+03_gvcfs/
+04_genomicsDB/
+05_vcfs/
+
 slurm-*.out
-sumstats.txt
+bam_sumstats.txt
+Combined*
 out
 err
+__pycache__
 
-snakemake_bam2vcf_GATK/01_gvcfs/
-snakemake_bam2vcf_GATK/02_genomicsDB/
-snakemake_bam2vcf_GATK/03_vcfs/
-snakemake_bam2vcf_GATK/slurm-*.out
-snakemake_bam2vcf_GATK/out
-snakemake_bam2vcf_GATK/err
-snakemake_bam2vcf_GATK/Combined*
-snakemake_bam2vcf_GATK/__pycache__/
 
 
 
