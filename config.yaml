@@ -1,15 +1,22 @@
 # reference genome; note this is the prefix used during bwa indexing
-ref: "../data/genome/Tgut_subseg_renamed.fa"
+ref: "data/genome/Tgut_subseg_renamed.fa"
 
 # location of fastq files
-fastqDir: "../data/fastq/"
+fastqDir: "data/fastq/"
 # suffix of fastq files
 fastq_suffix1: "_1.fastq.gz"
 fastq_suffix2: "_2.fastq.gz"
 
 # location of new BAM files
-newBamDir: "01_mappedReads/"
-sumstatDir: "02_sumstats/"
+
+bamDir: "01_mappedReads/"
+sumstatDir: "02_bamSumstats/"
+gvcfDir: "03_gvcfs/"
+dbDir: "04_genomicsDB/"
+vcfDir: "05_vcfs/"
+
+#list: "../data/lists_all/list0.list"
+listDir: "data/lists_byScaffold/"
 
 #information for read groups
 flowcell: "FLOWCELL"

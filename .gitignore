@@ -10,12 +10,12 @@ data/genome/*.amb
 data/genome/*.fai
 data/genome/*.dict
 
-snakemake_fastq2bam/01_mappedReads/
-snakemake_fastq2bam/02_sumstats/
-snakemake_fastq2bam/slurm-*.out
-snakemake_fastq2bam/sumstats.txt
-snakemake_fastq2bam/out
-snakemake_fastq2bam/err
+01_mappedReads/
+02_sumstats/
+slurm-*.out
+sumstats.txt
+out
+err
 
 snakemake_bam2vcf_GATK/01_gvcfs/
 snakemake_bam2vcf_GATK/02_genomicsDB/
