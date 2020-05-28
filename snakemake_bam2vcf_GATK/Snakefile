@@ -7,12 +7,12 @@ import helperFun
 configfile: "config.yaml"
 CLUSTER = json.load(open(config['CLUSTER_JSON']))
 
-# rename variables from config file for clarity downstream
 if ".fasta" in config["ref"]:
     refBasename = config["ref"].replace(".fasta", "")
 elif ".fa" in config["ref"]:
     refBasename = config["ref"].replace(".fa", "")
-print(refBasename)
+
+# rename variables from config file for clarity downstream
 fastq_suffix1 = config["fastq_suffix1"]
 fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
@@ -40,147 +40,24 @@ for i in range(len(LISTS)):
 LISTS=sorted(LISTS)
 print(LISTS)
 
-# this directory needs to be made beforehand since it is specified within GATK
+# this directory needs to be made beforehand since it is specified within GATK, which doesn't automatically make directories
 os.system("mkdir -p " + dbDir + "tmp")
 os.system("mkdir -p " + vcfDir + "tmp")
 helperFun.makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir)
 
-###
-# workflow with rules
-###
+
+### workflow ###
 
 rule all:
     input:
         vcfFiltered = "Combined_hardFiltered.vcf"
-	
-rule processRef:
-    """
-    This rule generates a .dict and .fai file from the reference genome, which are required for GATK to run properly.
-    """
-    input:
-        ref = config['ref'],
-    output: 
-        fai = config['ref'] + ".fai",
-        dict = refBasename + ".dict"
-    run:
-        shell("/n/home11/bjarnold/programs/samtools-1.10/samtools faidx {input.ref} --output {output.fai}") 
-        shell("java -jar /n/home11/bjarnold/picard.jar CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dict}")
 
-rule bam2gvcf:
-    """
-    This rule scatters analyses over two dimensions: sample name and list file. For each BAM file, one per sample,
-    a GVCF is created for all the scaffolds present in a given list file.
-    """
-    input:
-        ref = config['ref'],
-        fai = config['ref'] + ".fai",
-        dict = refBasename + ".dict",
-        bam = bamDir + "{sample}_dedupSort.bam",
-        l = listDir + "list{list}.list"
-    output: 
-        gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf",
-    resources: 
-        cpus = CLUSTER["bam2gvcf"]["n"],
-        mem_gb = int(CLUSTER["bam2gvcf"]["mem"]/1000)
-    params:
-        minPrun = 1,
-        minDang = 1
-    run:
-        command = """module load jdk/1.8.0_45-fasrc01
-        /n/home11/bjarnold/gatk-4.1.0.0/gatk HaplotypeCaller \
-        --java-options \"-Xmx{resources.mem_gb}g -XX:ParallelGCThreads={resources.cpus}\" \
-        -R {input.ref} \
-        -I {input.bam} \
-        -O {output.gvcf} \
-        -L {input.l} \
-        --emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang}"""
+include: "bam2vcf_rules/processRef.smk"
+include: "bam2vcf_rules/bam2gvcf.smk"
+include: "bam2vcf_rules/gvcf2DB.smk"
+include: "bam2vcf_rules/DB2vcf.smk"
+include: "bam2vcf_rules/gatherVcfs.smk"
 
-        shell(command)
 
-rule gvcf2DB:
-    """
-    This rule gathers results for a given list file name, so the workflow is now scattered in only a single dimension. 
-    Here we take many gvcfs for a particular list of scaffolds and combine them into a GenomicsDB.
-    Samples are thus gathered by a shared list name, but lists are still scattered.
-    """
-    input:
-        # NOTE: this waits for all gvcfs to be finished, whereas ou really only need to wait 
-        # for all samples from a particular list to be finished
-        gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf", sample=SAMPLES, list=LISTS),
-        l = listDir + "list{list}.list",
-        DBmapfile = dbDir + "DB_mapfile{list}"
-    output: 
-        DB = directory(dbDir + "DB_L{list}")
-    resources: 
-        mem_gb = int(CLUSTER["gvcf2DB"]["mem"]/1000)
-    run:
-        command="""module load jdk/1.8.0_45-fasrc01
-        /n/home11/bjarnold/gatk-4.1.0.0/gatk GenomicsDBImport \
-        --java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" \
-        --genomicsdb-workspace-path {output.DB} \
-        -L {input.l} \
-        --tmp-dir={dbDir}tmp \
-        --sample-name-map {input.DBmapfile}"""
-
-        shell(command)
-
-rule DB2vcf:
-    """
-    This rule uses the genomic databases from the previous step (gvcf2DB) to create VCF files, one per list file. Thus, lists
-    are still scattered.
-    """
-    input:
-        DB = directory(dbDir + "DB_L{list}"),
-        ref = config['ref']
-    output: 
-        vcf = vcfDir + "L{list}.vcf"
-    resources: 
-        mem_gb = int(CLUSTER["DB2vcf"]["mem"]/1000)
-    run:
-        command="""module load jdk/1.8.0_45-fasrc01
-        /n/home11/bjarnold/gatk-4.1.0.0/gatk GenotypeGVCFs \
-        --java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" \
-        -R {input.ref} \
-        -V gendb://{input.DB} \
-        -O {output.vcf} \
-        --tmp-dir={vcfDir}tmp"""
-
-        shell(command)
-
-rule gatherVcfs:
-    """
-    This rule gathers all of the VCFs, one per list, into one final VCF
-    """
-    input:
-        vcfs = expand(vcfDir + "L{list}.vcf", list=LISTS),
-        ref = config['ref']
-    output: 
-        vcf = "Combined.vcf",
-        vcfFiltered = "Combined_hardFiltered.vcf"
-    resources: 
-        mem_gb = int(CLUSTER["gatherVcfs"]["mem"]/1000)
-    run:
-        # combine VCFs	
-        vcfList = "" 
-        for i in input.vcfs:
-                vcfList = vcfList + "-I {} ".format(i)
-        command1="""module load jdk/1.8.0_45-fasrc01
-        /n/home11/bjarnold/gatk-4.1.0.0/gatk GatherVcfs \
-        {vcfList} \
-        -O {output.vcf}"""
-
-        shell(command1)
-        shell("sleep 10") # the variant filtration step was failing in an unreproducible way, so added this in case
-        # Hard filter Combined.vcf
-        command2="""module load jdk/1.8.0_45-fasrc01
-        /n/home11/bjarnold/gatk-4.1.0.0/gatk VariantFiltration \
-        -R {input.ref} \
-        -V {output.vcf} \
-        --output {output.vcfFiltered} \
-        --filter-expression \"QD < 2.0 || FS > 60.0 || SOR > 3.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || ExcessHet > 30.0\" \
-        --filter-name \"filteredOut\"
-        """
-
-        shell(command2)
 
 
