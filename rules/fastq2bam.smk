@@ -1,3 +1,5 @@
+localrules: collect_sumstats
+
 rule index_ref:
     input:
         ref = config['ref']
