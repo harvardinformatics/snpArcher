@@ -19,8 +19,6 @@ This is an intentional stopping point to ensure that all BAMs look alright accor
 
 ## TO DO:
 
-DEFINE localrules: !!! for anything that doesn't need to be a job submission
-
 make a script that takes as input a 2-column file: scaffold name and scaffold size, and have it output a series of list files to divide up the genome. You may have already done this for the elephant project.
 
 post VCF stuff: relatedness (vcftools), missingness (vcftools), PCA, NJ tree
