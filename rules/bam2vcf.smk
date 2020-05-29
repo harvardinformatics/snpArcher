@@ -7,9 +7,11 @@ rule processRef:
     output: 
         fai = config['ref'] + ".fai",
         dict = refBaseName + ".dict"
-    run:
-        shell("/n/home11/bjarnold/programs/samtools-1.10/samtools faidx {input.ref} --output {output.fai}") 
-        shell("java -jar /n/home11/bjarnold/picard.jar CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dict}")
+    conda:
+        "../envs/bam2vcf.yml"
+    shell:
+        "samtools faidx {input.ref} --output {output.fai}\n"
+        "picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dict}"
 
 rule bam2gvcf:
     """
@@ -30,17 +32,16 @@ rule bam2gvcf:
     params:
         minPrun = 1,
         minDang = 1
-    run:
-        command = """module load jdk/1.8.0_45-fasrc01
-        /n/home11/bjarnold/gatk-4.1.0.0/gatk HaplotypeCaller \
-        --java-options \"-Xmx{resources.mem_gb}g -XX:ParallelGCThreads={resources.cpus}\" \
-        -R {input.ref} \
-        -I {input.bam} \
-        -O {output.gvcf} \
-        -L {input.l} \
-        --emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang}"""
-
-        shell(command)
+    conda:
+        "../envs/bam2vcf.yml"
+    shell:
+        "gatk HaplotypeCaller "
+        "--java-options \"-Xmx{resources.mem_gb}g -XX:ParallelGCThreads={resources.cpus}\" "
+        "-R {input.ref} "
+        "-I {input.bam} "
+        "-O {output.gvcf} "
+        "-L {input.l} "
+        "--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang}"
 
 rule gvcf2DB:
     """
@@ -58,16 +59,15 @@ rule gvcf2DB:
         DB = directory(dbDir + "DB_L{list}")
     resources: 
         mem_gb = int(CLUSTER["gvcf2DB"]["mem"]/1000)
-    run:
-        command="""module load jdk/1.8.0_45-fasrc01
-        /n/home11/bjarnold/gatk-4.1.0.0/gatk GenomicsDBImport \
-        --java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" \
-        --genomicsdb-workspace-path {output.DB} \
-        -L {input.l} \
-        --tmp-dir={dbDir}tmp \
-        --sample-name-map {input.DBmapfile}"""
-
-        shell(command)
+    conda:
+        "../envs/bam2vcf.yml"
+    shell:
+        "gatk GenomicsDBImport "
+        "--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" "
+        "--genomicsdb-workspace-path {output.DB} "
+        "-L {input.l} "
+        "--tmp-dir={dbDir}tmp "
+        "--sample-name-map {input.DBmapfile}"
 
 rule DB2vcf:
     """
@@ -81,16 +81,15 @@ rule DB2vcf:
         vcf = vcfDir + "L{list}.vcf"
     resources: 
         mem_gb = int(CLUSTER["DB2vcf"]["mem"]/1000)
-    run:
-        command="""module load jdk/1.8.0_45-fasrc01
-        /n/home11/bjarnold/gatk-4.1.0.0/gatk GenotypeGVCFs \
-        --java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" \
-        -R {input.ref} \
-        -V gendb://{input.DB} \
-        -O {output.vcf} \
-        --tmp-dir={vcfDir}tmp"""
-
-        shell(command)
+    conda:
+        "../envs/bam2vcf.yml"
+    shell:
+        "gatk GenotypeGVCFs "
+        "--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" "
+        "-R {input.ref} "
+        "-V gendb://{input.DB} "
+        "-O {output.vcf} "
+        "--tmp-dir={vcfDir}tmp"
 
 rule gatherVcfs:
     """

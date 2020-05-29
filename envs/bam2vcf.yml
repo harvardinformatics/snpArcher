@@ -1,0 +1,8 @@
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+dependencies:
+  - gatk4==4.1.7.0
+  - picard==2.22.8
+  - samtools==1.10
