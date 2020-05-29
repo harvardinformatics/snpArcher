@@ -75,7 +75,8 @@ rule DB2vcf:
     are still scattered.
     """
     input:
-        DB = directory(dbDir + "DB_L{list}"),
+        #DB = directory(dbDir + "DB_L{list}"),
+        DB = dbDir + "DB_L{list}",
         ref = config['ref']
     output: 
         vcf = vcfDir + "L{list}.vcf"
@@ -103,26 +104,24 @@ rule gatherVcfs:
         vcfFiltered = "Combined_hardFiltered.vcf"
     resources: 
         mem_gb = int(CLUSTER["gatherVcfs"]["mem"]/1000)
-    run:
-        # combine VCFs	
-        vcfList = "" 
-        for i in input.vcfs:
-                vcfList = vcfList + "-I {} ".format(i)
-        command1="""module load jdk/1.8.0_45-fasrc01
-        /n/home11/bjarnold/gatk-4.1.0.0/gatk GatherVcfs \
-        {vcfList} \
-        -O {output.vcf}"""
+    conda:
+        "../envs/bam2vcf.yml"
+    shell:
+        "INPUT=\"\" \n"
+        "for ((i=0;i<={lastList};i++)) \n"
+        "do \n"
+        "INPUT=\"${{INPUT}} -I {vcfDir}L${{i}}.vcf\" \n"
+        "done\n"
 
-        shell(command1)
-        shell("sleep 10") # the variant filtration step was failing in an unreproducible way, so added this in case
+        "gatk GatherVcfs "
+        "$INPUT "
+        "-O {output.vcf}\n"
+
+        "sleep 10\n" # the variant filtration step was failing in an unreproducible way, so added this in case
         # Hard filter Combined.vcf
-        command2="""module load jdk/1.8.0_45-fasrc01
-        /n/home11/bjarnold/gatk-4.1.0.0/gatk VariantFiltration \
-        -R {input.ref} \
-        -V {output.vcf} \
-        --output {output.vcfFiltered} \
-        --filter-expression \"QD < 2.0 || FS > 60.0 || SOR > 3.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || ExcessHet > 30.0\" \
-        --filter-name \"filteredOut\"
-        """
-
-        shell(command2)
+        "gatk VariantFiltration "
+        "-R {input.ref} "
+        "-V {output.vcf} "
+        "--output {output.vcfFiltered} "
+        "--filter-expression \"QD < 2.0 || FS > 60.0 || SOR > 3.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || ExcessHet > 30.0\" "
+        "--filter-name \"filteredOut\" "

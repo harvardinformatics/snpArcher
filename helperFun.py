@@ -128,8 +128,12 @@ def getListIndices(listDir):
 
 def makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir):
     for l in LISTS:
-        f=open(dbDir + "DB_mapfile" + l, 'w')
-        for s in SAMPLES:
-            print(s, gvcfDir + s+"_L"+l+".raw.g.vcf", sep="\t", file=f)
-        f.close()
+        fileName = dbDir + "DB_mapfile" + l
+        # only rewrite file if you haven't already; otherwise rerunning the script updates time stamp of these files
+        # causing snakemake to erroneously rerun some steps due to updated input
+        if not os.path.exists(fileName):
+            f=open(fileName, 'w')
+            for s in SAMPLES:
+                print(s, gvcfDir + s+"_L"+l+".raw.g.vcf", sep="\t", file=f)
+            f.close()
 

@@ -22,6 +22,7 @@ refBaseName = helperFun.getRefBaseName(config["ref"])
 SAMPLES = helperFun.getSampleNames(fastqDir, fastq_suffix1)
 
 LISTS = helperFun.getListIndices(listDir)
+lastList = len(LISTS)-1
 
 # this directory needs to be made beforehand since it is specified within GATK, which doesn't automatically make directories
 os.system("mkdir -p " + dbDir + "tmp")
@@ -35,6 +36,7 @@ helperFun.makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir)
 rule all:
     input:
         vcfFiltered = "Combined_hardFiltered.vcf"
+        #DB = expand(dbDir + "DB_L{list}", list=LISTS)
 
 include: "rules/bam2vcf.smk"
 
