@@ -13,6 +13,7 @@ rm -r 03_gvcfs
 rm -r 04_genomicsDB
 rm -r 05_vcfs
 rm Combined*.vcf
+rm Combined*.idx
 rm slurm-*.out
 rm out
 rm err

@@ -1,0 +1,8 @@
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+dependencies:
+  - bwa==0.7.17
+  - picard==2.22.8
+  - samtools==1.10
