@@ -11,8 +11,6 @@ post VCF stuff: relatedness (vcftools), missingness (vcftools), PCA, NJ tree
 
 clean up snakemake files, partitioning rules into separate .smk files. Follow other guidelines that pros do.
 
-call programs not in your home directory: use --use-conda along with conda: option in snakefile
-
 use profile instead of cluster.json file.
 
 add vcf sanity checks with vcftools.
