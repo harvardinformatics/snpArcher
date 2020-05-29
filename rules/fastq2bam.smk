@@ -7,6 +7,8 @@ rule index_ref:
        config['ref'] + ".bwt",
        config['ref'] + ".ann",
        config['ref'] + ".amb"
+    conda:
+        "../envs/fastq2bam.yml"
     shell:
         "bwa index {input.ref}"
 
@@ -27,9 +29,11 @@ rule bwa_map:
         CLUSTER["bwa_map"]["n"]
     params:
         rg="@RG\\tID:{sample}\\tSM:{sample}\\tPL:ILLUMINA"
+    conda:
+        "../envs/fastq2bam.yml"
     shell:
         "bwa mem -M -t {threads} -R \'{params.rg}\' {input.ref} {input.r1} {input.r2} | "
-        "/n/home11/bjarnold/programs/samtools-1.10/samtools view -Sb - > {output}"
+        "samtools view -Sb - > {output}"
 
 rule sort_bam:
     input: 
@@ -37,9 +41,10 @@ rule sort_bam:
     output: 
         temp(bamDir + "{sample}_sorted.bam"),
         temp(bamDir + "{sample}_sorted.bai")
-    run:
-        shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={bamDir}tmp I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true")
-        shell("rm {input}")
+    conda:
+        "../envs/fastq2bam.yml"
+    shell:
+        "picard SortSam I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true"
 
 rule dedup:
     input: 
@@ -49,9 +54,11 @@ rule dedup:
         dedupBam = temp(bamDir + "{sample}_dedup.bam"),
         dedupMet = sumstatDir + "{sample}_dedupMetrics.txt",
         dedupBamSort = bamDir + "{sample}_dedupSort.bam"
-    run:
-        shell("java -jar /n/home11/bjarnold/picard.jar MarkDuplicates TMP_DIR={bamDir}tmp I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All")
-        shell("java -jar /n/home11/bjarnold/picard.jar SortSam TMP_DIR={bamDir}tmp I={output.dedupBam} O={output.dedupBamSort} SORT_ORDER=coordinate CREATE_INDEX=true")
+    conda:
+        "../envs/fastq2bam.yml"
+    shell:
+        "picard MarkDuplicates I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All\n"
+        "picard SortSam I={output.dedupBam} O={output.dedupBamSort} SORT_ORDER=coordinate CREATE_INDEX=true"
 
 rule bam_sumstats:
     input: 
@@ -62,12 +69,14 @@ rule bam_sumstats:
         cov = sumstatDir + "{sample}_coverage.txt",
         alnSum = sumstatDir + "{sample}_AlnSumMets.txt",
         val = sumstatDir + "{sample}_validate.txt"
-    run:
-        shell("/n/home11/bjarnold/programs/samtools-1.10/samtools coverage --output {output.cov} {input.bam}")
-        shell("java -jar /n/home11/bjarnold/picard.jar CollectAlignmentSummaryMetrics I={input.bam} R={input.ref} O={output.alnSum}")
+    conda:
+        "../envs/fastq2bam.yml"
+    shell:
+        "samtools coverage --output {output.cov} {input.bam}\n"
+        "picard CollectAlignmentSummaryMetrics I={input.bam} R={input.ref} O={output.alnSum}\n"
         # The following ValidateSamFile exits with non-zero status when a BAM file contains errors, 
         # causing snakemake to exit and remove these output files.  I cirumvent this by appending "|| true".
-        shell("java -jar /n/home11/bjarnold/picard.jar ValidateSamFile I={input.bam} R={input.ref} O={output.val} || true")
+        "picard ValidateSamFile I={input.bam} R={input.ref} O={output.val} || true"
 		
 rule collect_sumstats:
     input:

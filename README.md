@@ -3,7 +3,7 @@ This is a snakemake pipeline to go from fastq's to VCFs.
 The genome must first be divided into segments so that GATK may be parallelized across these subregions of the genome, making it run significantly faster. This pipeline may not work efficiently for assemblies with many scaffolds (e.g. ~100k or more) as we have observed certain parts of the GATK workflow perform poorly if given lists containing hundreds or thousands of small scaffolds (I have observed only with Loxodonta africana, so may not be general problem). One alternative would be to limit list sizes, with the caveat that this could create many list files. At its peak of resource consumption, the bam -> VCF workflow submits up to (# samples)X(# list files) jobs, unless the number of concurrently running jobs is limited within snakemake by the user. Many list files may thus result in the submission of very many jobs.
 
 
-TO DO:
+## TO DO:
 
 make a script that takes as input a 2-column file: scaffold name and scaffold size, and have it output a series of list files to divide up the genome. You may have already done this for the elephant project.
 
