@@ -90,7 +90,7 @@ def collectCoverageMetrics(coverageFiles):
 def printBamSumStats(PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams):
 
     o = open("bam_sumstats.txt", 'w')
-    print("sample", "PercentDuplicates", "PercentHQalignedReads", "PercentHQ20bases", "MeanCoverage", "MeanBasesCovered", "validBAM", file=o, sep="\t")
+    print("sample", "PercentDuplicates", "PercentHQ20alignedReads", "PercentHQ20bases", "MeanSeqDepth", "BasesCoveredMoreThanOnce", "validBAM", file=o, sep="\t")
     for sample in PercentDuplicates:
         print(sample,file=o, end="\t")
         print(PercentDuplicates[sample], file=o, end="\t")

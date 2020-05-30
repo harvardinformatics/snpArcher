@@ -9,7 +9,14 @@ Although the directionality of the pipeline can be inferred from the rules, here
 
 ![](docs/workflowScheme_fastq2bam.png)
 
-This is an intentional stopping point to ensure that all BAMs look alright according to the numbers in the "sumstats.txt" file. E.g. make sure dequencing depths are around what you expect etc.
+This is an intentional stopping point to ensure that all BAMs look alright according to the metrics in "bam_sumstats.txt". This file contains the following information:
+1. Sample name
+2. Percent of PCR duplicates
+3. Percent of paired-end reads that mapped to the genome with mapping quality greater than 20
+4. Percent of aligned bases that have base qualities greater than 20
+5. Mean sequencing depth per site
+6. Number of bases covered *at least* once
+7. Logical test for whether your BAM file is valid and ready for variant calling. If not, check the appropriate _validate.txt file in the 02_bamSumstats dir.
 
 ### Snakemake pipeline 2: fastq -> BAM
 
