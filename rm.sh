@@ -7,6 +7,7 @@
 #SBATCH -t 40
 #SBATCH --mem=1000
 
+rm -r 00_fastqFiltered
 rm -r 01_mappedReads
 rm -r 02_bamSumstats
 rm -r 03_gvcfs

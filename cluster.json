@@ -7,6 +7,14 @@
 	"N": "1",
         "mem": "9000"
     },
+    "fastp":
+    {
+	"p": "holy-info",
+        "t": 5000,
+	"n": 3,
+	"N": 1,
+        "mem": 5000
+    },
     "bwa_map":
     {
 	"p": "holy-info",

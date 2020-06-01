@@ -1,5 +1,6 @@
 localrules: collect_sumstats
 
+
 rule index_ref:
     input:
         ref = config['ref']
@@ -14,11 +15,30 @@ rule index_ref:
     shell:
         "bwa index {input.ref}"
 
+rule fastp:
+    input:
+        r1 = fastqDir + "{sample}" + fastq_suffix1,
+        r2 = fastqDir + "{sample}" + fastq_suffix2
+    output: 
+        r1 = fastqFilterDir + "{sample}_fastp" + fastq_suffix1,
+        r2 = fastqFilterDir + "{sample}_fastp" + fastq_suffix2,
+        summ = sumstatDir + "{sample}_fastp.out"
+    conda:
+        "../envs/fastq2bam.yml"
+    threads: 
+        CLUSTER["fastp"]["n"]
+    shell:
+        "fastp --in1 {input.r1} --in2 {input.r2} "
+        "--out1 {output.r1} --out2 {output.r2} "
+        "--thread {threads} "
+        "--detect_adapter_for_pe "
+        "2> {output.summ}"
+
 rule bwa_map:
     input:
         ref = config['ref'],
-        r1 = fastqDir + "{sample}" + fastq_suffix1,
-        r2 = fastqDir + "{sample}" + fastq_suffix2,
+        r1 = fastqFilterDir + "{sample}_fastp" + fastq_suffix1,
+        r2 = fastqFilterDir + "{sample}_fastp" + fastq_suffix2,
         # the following files are bwa index files that aren't directly input into command below, but needed
         sa = config['ref'] + ".sa",
         pac = config['ref'] + ".pac",

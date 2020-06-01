@@ -11,6 +11,7 @@ CLUSTER = json.load(open(config['CLUSTER_JSON']))
 fastq_suffix1 = config["fastq_suffix1"]
 fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
+fastqFilterDir = config["fastqFilterDir"]
 bamDir = config["bamDir"]
 sumstatDir = config["sumstatDir"]
 
