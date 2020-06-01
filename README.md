@@ -26,6 +26,8 @@ This is an intentional stopping point to ensure that all BAMs look alright accor
 
 ## TO DO:
 
+Add fastp sumstats to fastq_sumstats.txt. Maybe % reads filtered out, % Q20 reads after filtering, % reads with adapters trimmed, insert size peak
+
 make a script that takes as input a 2-column file: scaffold name and scaffold size, and have it output a series of list files to divide up the genome. You may have already done this for the elephant project.
 
 post VCF stuff: relatedness (vcftools), missingness (vcftools), PCA, NJ tree
