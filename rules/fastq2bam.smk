@@ -73,18 +73,17 @@ rule dedup:
         bamDir + "{sample}_sorted.bam",
         bamDir + "{sample}_sorted.bai"
     output:
-        dedupBam = temp(bamDir + "{sample}_dedup.bam"),
+        dedupBam = bamDir + "{sample}_dedup.bam",
         dedupMet = sumstatDir + "{sample}_dedupMetrics.txt",
-        dedupBamSort = bamDir + "{sample}_dedupSort.bam"
     conda:
         "../envs/fastq2bam.yml"
     shell:
         "picard MarkDuplicates I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All\n"
-        "picard SortSam I={output.dedupBam} O={output.dedupBamSort} SORT_ORDER=coordinate CREATE_INDEX=true"
+        "picard BuildBamIndex I={output.dedupBam} "
 
 rule bam_sumstats:
     input: 
-        bam = bamDir + "{sample}_dedupSort.bam",
+        bam = bamDir + "{sample}_dedup.bam",
         ref = config['ref']
 
     output: 
