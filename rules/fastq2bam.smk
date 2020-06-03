@@ -98,7 +98,8 @@ rule bam_sumstats:
         "picard CollectAlignmentSummaryMetrics I={input.bam} R={input.ref} O={output.alnSum}\n"
         # The following ValidateSamFile exits with non-zero status when a BAM file contains errors, 
         # causing snakemake to exit and remove these output files.  I cirumvent this by appending "|| true".
-        "picard ValidateSamFile I={input.bam} R={input.ref} O={output.val} || true"
+        # I also ignore "INVALID_TAG_NM" because it isn't used by GATK but causes errors at this step
+        "picard ValidateSamFile I={input.bam} R={input.ref} O={output.val} IGNORE=INVALID_TAG_NM || true"
 		
 rule collect_sumstats:
     input:

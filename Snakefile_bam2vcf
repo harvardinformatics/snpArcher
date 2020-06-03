@@ -9,11 +9,13 @@ CLUSTER = json.load(open(config['CLUSTER_JSON']))
 fastq_suffix1 = config["fastq_suffix1"]
 fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
-bamDir = config["bamDir"]
-gvcfDir = config["gvcfDir"]
-dbDir = config["dbDir"]
+
+# this is where Snakemake output will go, specify with baseDir in config.yml
+bamDir = config["baseDir"] + config["bamDir"]
+gvcfDir = config["baseDir"] + config["gvcfDir"]
+dbDir = config["baseDir"] + config["dbDir"]
+vcfDir = config["baseDir"] + config["vcfDir"]
 listDir = config["listDir"]
-vcfDir = config["vcfDir"]
 
 refBaseName = helperFun.getRefBaseName(config["ref"])
 

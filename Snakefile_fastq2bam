@@ -11,9 +11,11 @@ CLUSTER = json.load(open(config['CLUSTER_JSON']))
 fastq_suffix1 = config["fastq_suffix1"]
 fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
-fastqFilterDir = config["fastqFilterDir"]
-bamDir = config["bamDir"]
-sumstatDir = config["sumstatDir"]
+
+# this is where Snakemake output will go, specify with baseDir in config.yml
+fastqFilterDir = config["baseDir"] + config["fastqFilterDir"]
+bamDir = config["baseDir"] + config["bamDir"]
+sumstatDir = config["baseDir"] + config["sumstatDir"]
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
 SAMPLES = helperFun.getSampleNames(fastqDir, fastq_suffix1)
