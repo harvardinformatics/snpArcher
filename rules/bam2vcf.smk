@@ -22,7 +22,7 @@ rule bam2gvcf:
         ref = config['ref'],
         fai = config['ref'] + ".fai",
         dict = refBaseName + ".dict",
-        bam = bamDir + "{sample}_dedupSort.bam",
+        bam = bamDir + "{sample}_dedup.bam",
         l = listDir + "list{list}.list"
     output: 
         gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf",
