@@ -23,6 +23,32 @@ def collectDedupMetrics(dedupFiles):
         f.close()
     return(PercentDuplicates)
 
+def collectFastpOutput(fastpFiles):
+
+    FractionReadsPassFilter = defaultdict(float)
+    NumFilteredReads = defaultdict(int)
+
+    for fn in fastpFiles:
+        sample = os.path.basename(fn)
+        sample = sample.replace("_fastp.out", "")
+        unfiltered = 0
+        filtered = 0
+        f = open(fn, 'r')
+        for line in f:
+            if "before filtering" in line:
+                line = next(f)
+                line = line.split()
+                unfiltered += int(line[2])
+            if "Filtering result" in line:
+                line = next(f)
+                line = line.split()
+                filtered = int(line[3])
+        f.close()
+        FractionReadsPassFilter[sample] = float(filtered/unfiltered)
+        NumFilteredReads[sample] = filtered
+        
+    return(FractionReadsPassFilter, NumFilteredReads)
+
 def collectAlnSumMets(alnSumMetsFiles):
 
     PercentHQreads = defaultdict(float)
@@ -88,12 +114,14 @@ def collectCoverageMetrics(coverageFiles):
         CoveredBases[sample] = covbases
     return(SeqDepths, CoveredBases)
 
-def printBamSumStats(PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams):
+def printBamSumStats(FractionReadsPassFilter, NumFilteredReads, PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams):
 
     o = open("bam_sumstats.txt", 'w')
-    print("sample", "PercentDuplicates", "PercentHQ20alignedReads", "PercentHQ20bases", "MeanSeqDepth", "BasesCoveredMoreThanOnce", "validBAM", file=o, sep="\t")
+    print("sample", "FractionReadsPassFilter", "NumFilteredReads", "PercentDuplicates", "PercentHQ20alignedReads", "PercentHQ20bases", "MeanSeqDepth", "BasesCoveredMoreThanOnce", "validBAM", file=o, sep="\t")
     for sample in PercentDuplicates:
         print(sample,file=o, end="\t")
+        print(FractionReadsPassFilter[sample], file=o, end="\t")
+        print(NumFilteredReads[sample], file=o, end="\t")
         print(PercentDuplicates[sample], file=o, end="\t")
         print(PercentHQreads[sample], file=o, end="\t")
         print(PercentHQbases[sample], file=o, end="\t")
