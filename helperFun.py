@@ -1,6 +1,7 @@
 #!/usr/bin/python -tt
 import glob
 import os
+import sys
 import re
 from collections import defaultdict
 
@@ -105,6 +106,8 @@ def getRefBaseName(ref):
         refBaseName = ref.replace(".fasta", "")
     elif ".fa" in ref:
         refBaseName = ref.replace(".fa", "")
+    elif ".fna" in ref:
+        refBaseName = ref.replace(".fna", "")
     else:
         sys.exit("Your reference genome did not end in \".fasta\" or \".fa\". Please fix this before continuing.")
     return(refBaseName)

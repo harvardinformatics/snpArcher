@@ -7,6 +7,8 @@ fastqDir: "data/fastq/"
 fastq_suffix1: "_1.fastq.gz"
 fastq_suffix2: "_2.fastq.gz"
 
+# for same dir as snakemake pipeline, put ""
+baseDir: ""
 
 fastqFilterDir: "00_fastqFiltered/"
 bamDir: "01_mappedReads/"
