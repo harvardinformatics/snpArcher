@@ -38,6 +38,8 @@ If something in the workflow fails, check the log file and look for the keyword 
 
 ## TO DO:
 
+output log files to separate dir.
+
 can snakemake check if a file is corrupted? if so, remove so that pipeline can be rerun without having to manually remove the file? Saw this for fastp... produced corrupted files but still completed successfully (no exit status greateer than 1?) such that bwa failed.
 
 make streamlined system for eliminating particular samples that just aren't behaving. Currently, you have to remove them from the fastq dir.
