@@ -37,8 +37,8 @@ helperFun.makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir)
 
 rule all:
     input:
-        vcfFiltered = "Combined_hardFiltered.vcf"
-        #DB = expand(dbDir + "DB_L{list}", list=LISTS)
+        missing = "missing_data_per_ind.txt" 
+        #vcfFiltered = "Combined_hardFiltered.vcf"
 
 include: "rules/bam2vcf.smk"
 
