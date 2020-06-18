@@ -38,13 +38,27 @@ If something in the workflow fails, check the log file and look for the keyword 
 
 ## TO DO:
 
+how to make pipeline have less variability across runs? make script that takes vary large scaffolds and creates subintervals?
+
+practice having the snakemake job fail in several ways, e.g. timeout, and provide notes on how to restart the workflow, e.g. using the --unlock command and having snakemake delete incomplete files?
+
+make failed jobs resubmit tasks with more resources! e.g. genomicsDBImport
+resources:
+        mem_mb=lambda wildcards, attempt: attempt * 100
+        # with --restart-times 3, attempt will take on values 1 thru 3
+
+run on other datasets and have other people try to use it
+
+report median depth of BAMs as well, use gzipped VCFs 
+
 output log files to separate dir.
 
 can snakemake check if a file is corrupted? if so, remove so that pipeline can be rerun without having to manually remove the file? Saw this for fastp... produced corrupted files but still completed successfully (no exit status greateer than 1?) such that bwa failed.
 
 make streamlined system for eliminating particular samples that just aren't behaving. Currently, you have to remove them from the fastq dir.
 
-post VCF stuff: relatedness (vcftools), missingness (vcftools), PCA, NJ tree
+post VCF stuff: number of SNPs, number of filtered SNPs, SFS,rrelatedness (vcftools), missingness (vcftools), PCA (the low depth version), NJ tree, SNPs per bp for each scaffold (or any metric that indicates regions of the genome look bad).
+IN GENERAL, ARE THERE WEIRD INDIVIDUALS OR REGIONS OF THE GENOME
 
 use profile instead of cluster.json file.
 

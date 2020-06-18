@@ -125,3 +125,15 @@ rule gatherVcfs:
         "--output {output.vcfFiltered} "
         "--filter-expression \"QD < 2.0 || FS > 60.0 || SOR > 3.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || ExcessHet > 30.0\" "
         "--filter-name \"filteredOut\" "
+
+rule vcftools:
+    input:
+        vcf = "Combined_hardFiltered.vcf"
+    output: 
+        missing = "missing_data_per_ind.txt"
+    resources: 
+        #mem_gb = int(CLUSTER["gatherVcfs"]["mem"]/1000)
+    conda:
+        "../envs/bam2vcf.yml"
+    shell:
+        "vcftools --vcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}"
