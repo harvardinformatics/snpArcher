@@ -62,6 +62,8 @@ rule gvcf2DB:
     conda:
         "../envs/bam2vcf.yml"
     shell:
+        # a forum suggested this next line to remedy sluggish performance
+        "export TILEDB_DISABLE_FILE_LOCKING=1 \n"
         "gatk GenomicsDBImport "
         "--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" "
         "--genomicsdb-workspace-path {output.DB} "

@@ -38,6 +38,8 @@ If something in the workflow fails, check the log file and look for the keyword 
 
 ## TO DO:
 
+have more input checks? e.g., if you specify wrong suffix, an obscure error comes up in the snakemake rules
+
 how to make pipeline have less variability across runs? make script that takes vary large scaffolds and creates subintervals?
 
 practice having the snakemake job fail in several ways, e.g. timeout, and provide notes on how to restart the workflow, e.g. using the --unlock command and having snakemake delete incomplete files?

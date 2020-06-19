@@ -1,8 +1,9 @@
 # reference genome; note this is the prefix used during bwa indexing
-ref: "data/genome/Tgut_subseg_renamed.fa"
+#ref: "data/zebraFinch/genome/Tgut_subseg_renamed.fa"
+ref: "data/BHduck/genome/MU014702.1.fa"
 
 # location of fastq files; make sure the file path ends with a "/"! e.g. /n/home/files/
-fastqDir: "data/fastq/"
+fastqDir: "data/BHduck/fastq/"
 # suffix of fastq files
 fastq_suffix1: "_1.fastq.gz"
 fastq_suffix2: "_2.fastq.gz"
@@ -17,8 +18,7 @@ gvcfDir: "03_gvcfs/"
 dbDir: "04_genomicsDB/"
 vcfDir: "05_vcfs/"
 
-#list: "../data/lists_all/list0.list"
-listDir: "data/lists_byScaffold/"
+listDir: "data/BHduck/lists/"
 
 #information for read groups
 flowcell: "FLOWCELL"
