@@ -6,6 +6,7 @@ configfile: "config.yaml"
 CLUSTER = json.load(open(config['CLUSTER_JSON']))
 
 # rename variables from config file for downstream simplicity
+ref = config["ref"]
 fastq_suffix1 = config["fastq_suffix1"]
 fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
@@ -16,6 +17,9 @@ gvcfDir = config["baseDir"] + config["gvcfDir"]
 dbDir = config["baseDir"] + config["dbDir"]
 vcfDir = config["baseDir"] + config["vcfDir"]
 listDir = config["listDir"]
+maxIntervalLen = int(config["maxIntervalLen"])
+maxBpPerList = int(config["maxBpPerList"])
+maxIntervalsPerList = int(config["maxIntervalsPerList"])
 
 refBaseName = helperFun.getRefBaseName(config["ref"])
 
@@ -23,7 +27,9 @@ refBaseName = helperFun.getRefBaseName(config["ref"])
 #SAMPLES = ["ERR1013163"]
 SAMPLES = helperFun.getSampleNames(fastqDir, fastq_suffix1)
 
-LISTS = helperFun.getListIndices(listDir)
+
+os.system("mkdir " + listDir)
+LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, ref)
 lastList = len(LISTS)-1
 
 # this directory needs to be made beforehand since it is specified within GATK, which doesn't automatically make directories

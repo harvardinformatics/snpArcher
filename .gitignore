@@ -17,10 +17,13 @@ data/genome/*.dict
 04_genomicsDB/
 05_vcfs/
 
+lists/
+
 fastp.*
 
 slurm-*.out
 bam_sumstats.txt
+missing_data_per_ind.txt
 Combined*
 out
 err
