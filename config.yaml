@@ -18,7 +18,11 @@ gvcfDir: "03_gvcfs/"
 dbDir: "04_genomicsDB/"
 vcfDir: "05_vcfs/"
 
-listDir: "data/BHduck/lists/"
+#listDir: "data/BHduck/lists/"
+listDir: "lists/"
+maxIntervalLen: 400000
+maxBpPerList: 400000
+maxIntervalsPerList: 200
 
 #information for read groups
 flowcell: "FLOWCELL"

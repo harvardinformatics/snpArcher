@@ -148,7 +148,81 @@ def getSampleNames(fastqDir, fastq_suffix1):
     print(SAMPLES)
     return(SAMPLES)
 
-def getListIndices(listDir):
+def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, ref):
+    # This function ruins picard's ScatterIntervalsByNs using many MAX_TO_MERGE values to 
+    # find the optimal way to balance the interval lengths (none too long) with the number
+    # of intervals (not too many)
+
+    # only create list files if they don't already exist; updating file creation dates can restart workflow!
+    if len(glob.glob(listDir + "*.list")) == 0:
+        NsPassed = []
+        maxLengthObserved = 0
+        # run picard's ScatterIntervalsByNs using many MAX_TO_MERGE values
+        for Ns in range(10000, 150000, 10000):
+            command = "picard ScatterIntervalsByNs " 
+            command = command + f"REFERENCE={ref} " 
+            command = command + f"OUTPUT_TYPE=ACGT OUTPUT=Ns{Ns}.interval_list "
+            command = command + f"MAX_TO_MERGE={Ns} 2> out\n"
+            os.system(command)
+        # analyze picard output, recording the maximum interval length for each scattering
+        for Ns in range(10000, 150000, 10000):
+            f = open(f"Ns{Ns}.interval_list", 'r')
+            for line in f:
+                line = line.split()
+                if not line[0].startswith("@"):
+                    length = int(line[2]) - int(line[1])
+                    if length > maxLengthObserved:
+                        maxLengthObserved = length
+            if maxLengthObserved <= maxIntervalLen:
+                NsPassed.append(Ns)
+            f.close()
+        if NsPassed:
+            print(NsPassed[-1])
+        else:
+            sys.exit("error in interval files creation")
+
+        # take optimal interval_list and use to generate GATK list files
+        NsForSplitting = NsPassed[-1]
+        runningSumBp = 0
+        runningSum_intervals = 0
+        current_intervals = []
+        listFile_index = 0
+        f = open(f"Ns{NsForSplitting}.interval_list", 'r')
+        for line in f:
+            line = line.split()
+            # skip file header, starts with @
+            if not line[0].startswith("@"):
+                scaff = line[0]
+                start = int(line[1])
+                stop = int(line[2])
+                intervalLen = (stop - start)
+                # does adding the next interval put us over the maximum values for our two thresholds?
+                if (runningSumBp + intervalLen) >= maxBpPerList or (runningSum_intervals + 1) >= maxIntervalsPerList:
+                    # flush out current_intervals into a list file
+                    printIntervalsToListFile(listDir, listFile_index, current_intervals)
+                    #out = open(f"{listDir}list{listFile_index}.list", 'w')
+                    #for i in current_intervals:
+                    #    print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
+                    #out.close()
+                    # re-initialize data for next list file
+                    current_intervals = [ (scaff, start, stop) ]
+                    runningSumBp = intervalLen
+                    runningSum_intervals = 1 
+                    listFile_index += 1
+                else:
+                    current_intervals.append( (scaff, start, stop) )
+                    runningSum_intervals += 1
+                    runningSumBp += intervalLen
+        # if part-way through the loop above ran out of intervals to print, print whatever remains
+        if current_intervals:
+            printIntervalsToListFile(listDir, listFile_index, current_intervals)
+            #out = open(f"{listDir}list{listFile_index}.list", 'w')
+            #for i in current_intervals:
+            #    print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
+            #out.close()
+        os.system("rm Ns*.interval_list")
+
+    # get list file indices
     LISTS = glob.glob(listDir + "*.list")	
     for i in range(len(LISTS)):
         LISTS[i] = os.path.basename(LISTS[i])
@@ -156,6 +230,12 @@ def getListIndices(listDir):
     LISTS=sorted(LISTS)
     print(LISTS)
     return(LISTS)
+
+def printIntervalsToListFile(listDir, listFile_index, current_intervals):
+    out = open(f"{listDir}list{listFile_index}.list", 'w')
+    for i in current_intervals:
+        print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
+    out.close()
 
 def makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir):
     for l in LISTS:
