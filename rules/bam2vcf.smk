@@ -27,8 +27,9 @@ rule bam2gvcf:
     output: 
         gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf",
     resources: 
-        cpus = CLUSTER["bam2gvcf"]["n"],
-        mem_gb = int(CLUSTER["bam2gvcf"]["mem"]/1000)
+        #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
+        # subtract that memory here
+        mem_gb = int(CLUSTER["bam2gvcf"]["mem"]/1000 - int(5))
     params:
         minPrun = 1,
         minDang = 1
@@ -36,7 +37,7 @@ rule bam2gvcf:
         "../envs/bam2vcf.yml"
     shell:
         "gatk HaplotypeCaller "
-        "--java-options \"-Xmx{resources.mem_gb}g -XX:ParallelGCThreads={resources.cpus}\" "
+        "--java-options \"-Xmx{resources.mem_gb}g\" "
         "-R {input.ref} "
         "-I {input.bam} "
         "-O {output.gvcf} "
@@ -58,7 +59,8 @@ rule gvcf2DB:
     output: 
         DB = directory(dbDir + "DB_L{list}")
     resources: 
-        mem_gb = int(CLUSTER["gvcf2DB"]["mem"]/1000)
+        cpus = CLUSTER["gvcf2DB"]["n"],
+        mem_gb = int(CLUSTER["gvcf2DB"]["mem"]/1000 - int(5))
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -69,7 +71,8 @@ rule gvcf2DB:
         "--genomicsdb-workspace-path {output.DB} "
         "-L {input.l} "
         "--tmp-dir={dbDir}tmp "
-        "--sample-name-map {input.DBmapfile}"
+        "--sample-name-map {input.DBmapfile} "
+        "--reader-threads {resources.cpus} \n"
 
 rule DB2vcf:
     """
@@ -83,7 +86,7 @@ rule DB2vcf:
     output: 
         vcf = vcfDir + "L{list}.vcf"
     resources: 
-        mem_gb = int(CLUSTER["DB2vcf"]["mem"]/1000)
+        mem_gb = int(CLUSTER["DB2vcf"]["mem"]/1000 - int(5))
     conda:
         "../envs/bam2vcf.yml"
     shell:
