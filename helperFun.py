@@ -179,7 +179,9 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
         if NsPassed:
             print(NsPassed[-1])
         else:
-            sys.exit("error in interval files creation")
+            print("exiting: observed interval lengths were too long based on what you specified for maxIntervalLen")
+            print("you may want to increase maxIntervalLen and try again")
+            sys.exit(1)
 
         # take optimal interval_list and use to generate GATK list files
         NsForSplitting = NsPassed[-1]

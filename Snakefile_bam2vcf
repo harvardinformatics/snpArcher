@@ -28,7 +28,8 @@ refBaseName = helperFun.getRefBaseName(config["ref"])
 SAMPLES = helperFun.getSampleNames(fastqDir, fastq_suffix1)
 
 
-os.system("mkdir " + listDir)
+if not os.path.isdir(listDir):
+    os.system("mkdir " + listDir)
 LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, ref)
 lastList = len(LISTS)-1
 
