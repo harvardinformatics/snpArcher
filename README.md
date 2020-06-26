@@ -38,6 +38,8 @@ If something in the workflow fails, check the log file and look for the keyword 
 
 ## TO DO:
 
+have option for low seq depth that uses particular tools? E.g. relatedness also depends on depth
+
 have more input checks? e.g., if you specify wrong suffix, an obscure error comes up in the snakemake rules
 
 how to make pipeline have less variability across runs? make script that takes vary large scaffolds and creates subintervals?

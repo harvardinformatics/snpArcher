@@ -64,7 +64,8 @@ rule gvcf2DB:
     conda:
         "../envs/bam2vcf.yml"
     shell:
-        # a forum suggested this next line to remedy sluggish performance
+        # NOTE: reader-threads > 1 useless if you specify multiple intervals
+        # a forum suggested TILEDB_DISABLE_FILE_LOCKING=1 to remedy sluggish performance
         "export TILEDB_DISABLE_FILE_LOCKING=1 \n"
         "gatk GenomicsDBImport "
         "--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" "
