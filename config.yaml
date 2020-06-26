@@ -20,9 +20,10 @@ vcfDir: "05_vcfs/"
 
 #listDir: "data/BHduck/lists/"
 listDir: "lists/"
-maxIntervalLen: 400000
-maxBpPerList: 400000
+maxIntervalLen: 200000
+maxBpPerList: 200000
 maxIntervalsPerList: 200
+minNmer: 100
 
 #information for read groups
 flowcell: "FLOWCELL"

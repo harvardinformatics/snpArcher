@@ -20,6 +20,7 @@ listDir = config["listDir"]
 maxIntervalLen = int(config["maxIntervalLen"])
 maxBpPerList = int(config["maxBpPerList"])
 maxIntervalsPerList = int(config["maxIntervalsPerList"])
+minNmer = config["minNmer"]
 
 refBaseName = helperFun.getRefBaseName(config["ref"])
 
@@ -30,7 +31,7 @@ SAMPLES = helperFun.getSampleNames(fastqDir, fastq_suffix1)
 
 if not os.path.isdir(listDir):
     os.system("mkdir " + listDir)
-LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, ref)
+LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref)
 lastList = len(LISTS)-1
 
 # this directory needs to be made beforehand since it is specified within GATK, which doesn't automatically make directories
