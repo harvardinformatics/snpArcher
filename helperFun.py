@@ -286,6 +286,10 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
                 start = intv[0]
                 stop = intv[1]
                 intervalLen = (stop - start + 1)
+                if len(current_intervals) == 0:
+                    # if you decide lower maxBpPerList below maxIntervalLength, it's possible tohave an uninitialized
+                    # current_intervals that doesn't make it to subsequent else statement
+                    current_intervals = [ (scaff, start, stop) ]
                 # does adding the next interval put us over the maximum values for our two thresholds?
                 if (runningSumBp + intervalLen) >= maxBpPerList or (runningSum_intervals + 1) >= maxIntervalsPerList:
                     # flush out current_intervals into a list file
@@ -344,6 +348,6 @@ def makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir):
         if not os.path.exists(fileName):
             f=open(fileName, 'w')
             for s in SAMPLES:
-                print(s, gvcfDir + s+"_L"+l+".raw.g.vcf", sep="\t", file=f)
+                print(s, gvcfDir + s+"_L"+l+".raw.g.vcf.gz", sep="\t", file=f)
             f.close()
 

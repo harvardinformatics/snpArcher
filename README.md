@@ -38,6 +38,19 @@ If something in the workflow fails, check the log file and look for the keyword 
 
 ## TO DO:
 
+make sure all programs updated!! GATK actively changing and bugs being fixed all the time!!
+
+resubmit failed jobs; for genomicsdbImport, resubmit with more mem too 
+make failed jobs resubmit tasks with more resources! e.g. genomicsDBImport
+also resubmit haplotypecaller jobs that fail for inexplicable reasons, maybe with 30% more memory?
+resources:
+        mem_mb=lambda wildcards, attempt: attempt * 100
+        # with --restart-times 3, attempt will take on values 1 thru 3
+
+have some recommendations about requesting memory/time, maybe even running it on a few individuals first to see what bam2gvcf takes. recommend serial_requeue for bam2gvcf since it doesn't take long? this is also the step that submits the most jobs by far, so keeping resource requests light is important. Also keep in mind that a few (3) Gb gets subtracted from what you request, since jave needs a few extra to run things in the background. CHANGE SCHEMATICS TO HAVE SUGESTED QUEUE, RESOURCE ALLOCATION, suggest low-pending-time queue for bam2vcf. SOme jobs submitted to serial_requeue may fail for strange reasons (e.g. "ModuleNotFoundError"), but resubmitting them by restarting the snakemake pipeline should do the trick.
+
+make bam2vcf workflow more flexible; e.g. it assumes bams names sample_dedup.bam, but users may have bams with diff names; picard scatterByNs requires indexed genome and dequence dict, but this gets done in fastq2bam. To see how to do this best, you could practice on other datasets, starting at the BAM stage.
+
 have option for low seq depth that uses particular tools? E.g. relatedness also depends on depth
 
 have more input checks? e.g., if you specify wrong suffix, an obscure error comes up in the snakemake rules
@@ -46,10 +59,6 @@ how to make pipeline have less variability across runs? make script that takes v
 
 practice having the snakemake job fail in several ways, e.g. timeout, and provide notes on how to restart the workflow, e.g. using the --unlock command and having snakemake delete incomplete files?
 
-make failed jobs resubmit tasks with more resources! e.g. genomicsDBImport
-resources:
-        mem_mb=lambda wildcards, attempt: attempt * 100
-        # with --restart-times 3, attempt will take on values 1 thru 3
 
 run on other datasets and have other people try to use it
 
