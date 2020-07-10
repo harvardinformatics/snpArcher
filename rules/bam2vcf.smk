@@ -25,11 +25,12 @@ rule bam2gvcf:
         bam = bamDir + "{sample}_dedup.bam",
         l = listDir + "list{list}.list"
     output: 
-        gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf",
+        gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz",
+        gvcf_idx = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi"
     resources: 
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
         # subtract that memory here
-        mem_gb = int(CLUSTER["bam2gvcf"]["mem"]/1000 - int(5))
+        mem_gb = int(CLUSTER["bam2gvcf"]["mem"]/1000 - int(3))
     params:
         minPrun = 1,
         minDang = 1
@@ -53,7 +54,8 @@ rule gvcf2DB:
     input:
         # NOTE: this waits for all gvcfs to be finished, whereas ou really only need to wait 
         # for all samples from a particular list to be finished
-        gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf", sample=SAMPLES, list=LISTS),
+        gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz", sample=SAMPLES, list=LISTS),
+        gvcfs_idx = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi", sample=SAMPLES, list=LISTS),
         l = listDir + "list{list}.list",
         DBmapfile = dbDir + "DB_mapfile{list}"
     output: 
@@ -71,7 +73,7 @@ rule gvcf2DB:
         "--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" "
         "--genomicsdb-workspace-path {output.DB} "
         "-L {input.l} "
-        "--tmp-dir={dbDir}tmp "
+        "--tmp-dir {dbDir}tmp "
         "--sample-name-map {input.DBmapfile} "
         "--reader-threads {resources.cpus} \n"
 
@@ -96,7 +98,7 @@ rule DB2vcf:
         "-R {input.ref} "
         "-V gendb://{input.DB} "
         "-O {output.vcf} "
-        "--tmp-dir={vcfDir}tmp"
+        "--tmp-dir {vcfDir}tmp"
 
 rule gatherVcfs:
     """

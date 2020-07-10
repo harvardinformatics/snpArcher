@@ -3,7 +3,7 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - gatk4==4.1.7.0
+  - gatk4==4.1.8.0
   - picard==2.22.8
   - samtools==1.10
   - vcftools==0.1.16
