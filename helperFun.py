@@ -148,7 +148,25 @@ def getSampleNames(fastqDir, fastq_suffix1):
     print(SAMPLES)
     return(SAMPLES)
 
-def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref):
+def createSeqDictGetScaffOrder(ref, refBaseName):
+    seqDict = refBaseName + ".dict"
+    if not os.path.isfile(seqDict):
+        os.system(f"picard CreateSequenceDictionary REFERENCE={ref} OUTPUT={seqDict}")
+    seqDictScaffs = []
+    f = open(seqDict, 'r')
+    for line in f:
+        if line.startswith("@SQ"):
+            line = line.split("\t")
+            scaff = line[1].replace("SN:", "")
+            seqDictScaffs.append(scaff)
+    return(seqDictScaffs)
+
+def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName):
+
+    # create sequence dictionary with picard, GATK needs it, and the order in which scaffolds are listed in .dict
+    # need to correspond to order in list files!
+    seqDictScaffs = createSeqDictGetScaffOrder(ref, refBaseName)
+
     # This function ruins picard's ScatterIntervalsByNs using many MAX_TO_MERGE values to 
     # find the optimal way to balance the interval lengths (none too long) with the number
     # of intervals (not too many)
@@ -281,7 +299,8 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
         runningSum_intervals = 0
         current_intervals = []
         listFile_index = 0
-        for scaff in newIntervals[optimalNmer]:
+        # go through scaffolds in same order as they appear in the sequence dictionary, printing lists as we go
+        for scaff in seqDictScaffs:
             for intv in newIntervals[optimalNmer][scaff]:
                 start = intv[0]
                 stop = intv[1]
