@@ -6,12 +6,12 @@ rule processRef:
         ref = config['ref'],
     output: 
         fai = config['ref'] + ".fai",
-        dict = refBaseName + ".dict"
+        #dict = refBaseName + ".dict"
     conda:
         "../envs/bam2vcf.yml"
     shell:
         "samtools faidx {input.ref} --output {output.fai}\n"
-        "picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dict}"
+        #"picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dict}"
 
 rule bam2gvcf:
     """
@@ -59,7 +59,8 @@ rule gvcf2DB:
         l = listDir + "list{list}.list",
         DBmapfile = dbDir + "DB_mapfile{list}"
     output: 
-        DB = directory(dbDir + "DB_L{list}")
+        DB = directory(dbDir + "DB_L{list}"),
+        doneFile = temp(touch("DB_L{list}.done"))
     resources: 
         cpus = CLUSTER["gvcf2DB"]["n"],
         mem_gb = int(CLUSTER["gvcf2DB"]["mem"]/1000 - int(5))
@@ -85,7 +86,8 @@ rule DB2vcf:
     input:
         #DB = directory(dbDir + "DB_L{list}"),
         DB = dbDir + "DB_L{list}",
-        ref = config['ref']
+        ref = config['ref'],
+        doneFile = "DB_L{list}.done"
     output: 
         vcf = vcfDir + "L{list}.vcf"
     resources: 
