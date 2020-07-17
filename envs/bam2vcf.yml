@@ -7,3 +7,4 @@ dependencies:
   - picard==2.22.8
   - samtools==1.10
   - vcftools==0.1.16
+  - bedtools==2.29.2

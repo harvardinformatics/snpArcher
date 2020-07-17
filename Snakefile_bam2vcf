@@ -1,5 +1,7 @@
 import os
 from collections import defaultdict
+import sys
+sys.path.append(os.getcwd())
 import helperFun
 
 configfile: "config.yaml"
@@ -45,8 +47,8 @@ helperFun.makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir)
 
 rule all:
     input:
-        missing = "missing_data_per_ind.txt" 
-        #vcfFiltered = "Combined_hardFiltered.vcf"
+        missing = "missing_data_per_ind.txt",
+        SNPsPerInt = "SNP_per_interval.txt"
 
 include: "rules/bam2vcf.smk"
 

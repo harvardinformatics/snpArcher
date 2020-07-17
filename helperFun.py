@@ -217,6 +217,11 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
                     ACGTmers[scaff].append( (start, end) )
                     totalACGTmerLength += length
         os.system("rm output.interval_list")
+
+        # if picard could not find any Nmers in your assembly (possible if only looking at small region) give NmerLens a key of 1 so loop below executes
+        if len(NmerLens.keys()) == 0:
+            NmerLens[1] = 1
+        
         # go through Nmers, starting with shortest ones, and construct different interval lists
         for Nmer in sorted(NmerLens):
             # go through scaffolds, from longest to shortest
@@ -300,11 +305,13 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
         current_intervals = []
         listFile_index = 0
         # go through scaffolds in same order as they appear in the sequence dictionary, printing lists as we go
+        bed = open("intervals.bed", 'w')
         for scaff in seqDictScaffs:
             for intv in newIntervals[optimalNmer][scaff]:
                 start = intv[0]
                 stop = intv[1]
                 intervalLen = (stop - start + 1)
+                print(scaff, start, stop, sep="\t", file=bed)
                 if len(current_intervals) == 0:
                     # if you decide lower maxBpPerList below maxIntervalLength, it's possible tohave an uninitialized
                     # current_intervals that doesn't make it to subsequent else statement
@@ -333,7 +340,7 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
             #for i in current_intervals:
             #    print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
             #out.close()
-
+        bed.close()
     # get list file indices
     LISTS = glob.glob(listDir + "*.list")	
     for i in range(len(LISTS)):
