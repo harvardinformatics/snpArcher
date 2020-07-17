@@ -138,12 +138,15 @@ rule gatherVcfs:
 
 rule vcftools:
     input:
-        vcf = "Combined_hardFiltered.vcf"
+        vcf = "Combined_hardFiltered.vcf",
+        int = "intervals.bed"
     output: 
-        missing = "missing_data_per_ind.txt"
+        missing = "missing_data_per_ind.txt",
+        SNPsPerInt = "SNP_per_interval.txt"
     resources: 
         #mem_gb = int(CLUSTER["gatherVcfs"]["mem"]/1000)
     conda:
         "../envs/bam2vcf.yml"
     shell:
-        "vcftools --vcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}"
+        "vcftools --vcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}\n"
+        "bedtools intersect -a {input.int} -b {input.vcf} -c > {output.SNPsPerInt}"

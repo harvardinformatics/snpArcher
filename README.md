@@ -4,7 +4,7 @@ The first part uses (unfiltered) raw fastq files to produce BAM files, which may
 
 Currently, the second part of our workflow uses GATK4 to call variants, although one may take their BAMs from part one and use other programs. In the future, we may create different versions of this second part to support a variety of popular variant callers so that users may, for example, take the intersection of the results from multiple programs.
 
-
+There are currently two different test datasets that accompany this workflow. The zebrafinch data consists of reads for 3 individuals that map to a genome with 3 scaffolds (each 200kb in length). The Black head duck data consists of reads for 3 individuals that maps to a genome with a single scaffold that gets split (by Nmers) into subintervals.
 
 The following is a schematic diagram of the workflow:
 
@@ -25,10 +25,9 @@ As mentioned above, we encourage users to inspect the BAM files at this point. P
 
 ### Part 2: BAM -> VCF
 
-Calling variants can be a time-consuming task for eukaryotic data, but running independent tasks in parallel can speed this process up. There are two approaches to [parallelization](https://gatk.broadinstitute.org/hc/en-us/articles/360035532012-Parallelism-Multithreading-Scatter-Gather): multi-threading and scatter-gather. Multi-threading involves instructions written into the program itself to use multiple cores on a machine (or node on Cannon computing cluster), while the scatter-gather approach involves running multiple copies of the program simultaneously on indepdendent tasks. For instance, we could give GATK 10 cores for multi-threading, or we could divide the genome up into 10 parts and run GATK with 1 core on each of these parts, gathering the results into a single file at the end. This workflow uses both approaches, since the multi-thread option of GATK by itself (currently only supported by the HaplotypeCaller step) has dminishing returns (*verify this*). Thus, we also use the scatter-gather approach, which allows us to also speed up the process by parallelizing parts of GATK that do not support multithreading.
+Calling variants can be a time-consuming task for eukaryotic data, but running independent tasks in parallel can speed this process up. There are two approaches to [parallelization](https://gatk.broadinstitute.org/hc/en-us/articles/360035532012-Parallelism-Multithreading-Scatter-Gather): multi-threading and scatter-gather. Multi-threading involves instructions written into the program itself to use multiple cores on a machine (or node on Cannon computing cluster), while the scatter-gather approach involves running multiple copies of the program simultaneously on indepdendent tasks. For instance, we could give GATK 10 cores for multi-threading, or we could divide the genome up into 10 parts and run GATK with 1 core on each of these parts, gathering the results into a single file at the end. This workflow uses the scatter-gather approach, as multithreading is not fully supported at all GATK steps at the moment. 
 
-The scatter-gather approach requires dividing the genome up into segments (e.g. chromosomes or scaffolds), and storing these segments in separate "list files" that we later give to GATK. Ideally, each list file would represent similar fractions of the genome. For instance, one list file may contain only the name of one large scaffold, while another may contain two shorter scaffolds that have a cumulative length similar to the larger scaffold in the previous file. To facilitate this approach, we provide a script (createListsFromFasta.py) that takes as input a fasta file and outputs many list files. The user gives two parameters to this script: the number of target segments to break the genome into and the maximum number of segments per list file. This second parameter is specified because incomplete assemblies may have thousands of smaller scaffolds, such that breaking the genome into, say, 20 segments may put thousands of small scaffolds into a particular list file. We have some experience suggesting that thousands of scaffolds in a list file may slow down particular steps of the GATK workflow.
-
+The scatter-gather approach requires dividing the genome up into segments (e.g. entire chromosomes/scaffolds or even subintervals within scaffolds), and storing these segments in separate "list" files that we later give to GATK to tell it to only work on that particular interval. Ideally, each list file would represent similar fractions of the genome so that all tasks take a similar amount of time. These list files have been created by the Broad for the human genome, but we have written an algorithm into this pipeline that will create these intervals for non-model organisms. Briefly, this algorithm works by finding all regions of the genome with consecutive N's (Nmers), as it is [recommended](https://gatk.broadinstitute.org/hc/en-us/articles/360036823571-ScatterIntervalsByNs-Picard-) that subintervals within scaffolds are flanked by Nmers to avoid problems with variant calling at the edges of intervals. The user can specify in the config file the minimum Nmer length to decide whether to split a scaffold into smaller subintervals. A minimum length of 500bp is probably fine, and you can likely go down to 100bp since this is the length of [padding used](https://gatk.broadinstitute.org/hc/en-us/articles/360035889551-When-should-I-restrict-my-analysis-to-specific-intervals-) when calling variants within exomes.
 
 At its peak of resource consumption, the bam -> VCF workflow submits up to (# samples)X(# list files) jobs, although one may control the maximum number of jobs snakemake submits on the command line.
 
@@ -36,9 +35,14 @@ At its peak of resource consumption, the bam -> VCF workflow submits up to (# sa
 
 If something in the workflow fails, check the log file and look for the keyword "Error", which should direct you to the specific tasks that failed. It is very possible that some errors may be fixed by simply rerunning the Snakefile, as temporary hardware issues may cause errors, e.g. the computing cluster not responding which can cause Input/Output errors. Occasionally, one step will fail because a previous step  produced truncated output (I have seen fastp produce corrupted files that get fed to bwa, where the error ultimately occurs that snakemake detects). In these cases, these files must be manually removed for snakemake to reproduce them.
 
+make sure all programs updated!! GATK actively changing and bugs being fixed all the time!!
+
 ## TO DO:
 
-make sure all programs updated!! GATK actively changing and bugs being fixed all the time!!
+post VCF stuff: number of SNPs, number of filtered SNPs, SFS,rrelatedness (vcftools), missingness (vcftools), PCA (the low depth version), NJ tree, SNPs per bp for each scaffold (or any metric that indicates regions of the genome look bad).
+IN GENERAL, ARE THERE WEIRD INDIVIDUALS OR REGIONS OF THE GENOME, check all intervals from list files
+
+use profile instead of cluster.json file. This may also help the workflow deal with TIMEOUT, which it currently doesn't recognize as failed.
 
 resubmit failed jobs; for genomicsdbImport, resubmit with more mem too 
 make failed jobs resubmit tasks with more resources! e.g. genomicsDBImport
@@ -70,10 +74,7 @@ can snakemake check if a file is corrupted? if so, remove so that pipeline can b
 
 make streamlined system for eliminating particular samples that just aren't behaving. Currently, you have to remove them from the fastq dir.
 
-post VCF stuff: number of SNPs, number of filtered SNPs, SFS,rrelatedness (vcftools), missingness (vcftools), PCA (the low depth version), NJ tree, SNPs per bp for each scaffold (or any metric that indicates regions of the genome look bad).
-IN GENERAL, ARE THERE WEIRD INDIVIDUALS OR REGIONS OF THE GENOME
 
-use profile instead of cluster.json file.
 
 add vcf sanity checks with vcftools.
 

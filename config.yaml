@@ -1,9 +1,10 @@
 # reference genome; note this is the prefix used during bwa indexing
-#ref: "data/zebraFinch/genome/Tgut_subseg_renamed.fa"
-ref: "data/BHduck/genome/MU014702.1.fa"
+ref: "data/zebraFinch/genome/Tgut_subseg_renamed.fa"
+#ref: "data/BHduck/genome/MU014702.1.fa"
 
 # location of fastq files; make sure the file path ends with a "/"! e.g. /n/home/files/
-fastqDir: "data/BHduck/fastq/"
+fastqDir: "data/zebraFinch/fastq/"
+#fastqDir: "data/BHduck/fastq/"
 # suffix of fastq files
 fastq_suffix1: "_1.fastq.gz"
 fastq_suffix2: "_2.fastq.gz"
@@ -20,8 +21,8 @@ vcfDir: "05_vcfs/"
 
 #listDir: "data/BHduck/lists/"
 listDir: "lists/"
-maxIntervalLen: 200000
-maxBpPerList: 200000
+maxIntervalLen: 210000
+maxBpPerList: 210000
 maxIntervalsPerList: 200
 minNmer: 100
 
