@@ -19,3 +19,6 @@ rm slurm-*.out
 rm out
 rm err
 rm bam_sumstats.txt
+rm SNP_per_interval.txt
+rm missing_data_per_ind.txt
+

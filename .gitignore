@@ -24,6 +24,7 @@ fastp.*
 slurm-*.out
 bam_sumstats.txt
 missing_data_per_ind.txt
+SNP_per_interval.txt
 Combined*
 out
 err
