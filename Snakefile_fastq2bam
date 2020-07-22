@@ -5,7 +5,6 @@ from collections import defaultdict
 import helperFun
 
 configfile: "config.yaml"
-CLUSTER = json.load(open(config['CLUSTER_JSON']))
 
 # rename variables from config file for clarity downstream
 fastq_suffix1 = config["fastq_suffix1"]

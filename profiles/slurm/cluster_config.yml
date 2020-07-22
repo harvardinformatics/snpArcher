@@ -1,0 +1,62 @@
+###
+# fastq2bam
+###
+fastp: 
+    partition: "holy-info"
+    time: 5000
+    nodes: 1
+    mem: 5000 
+bwa_map: 
+    partition: "holy-info"
+    time: 5000
+    nodes: 3
+    mem: 15000 
+sort_bam: 
+    partition: "holy-info"
+    time: 5000
+    nodes: 1
+    mem: 9000 
+dedup: 
+    partition: "holy-info"
+    time: 5000
+    nodes: 1
+    mem: 9000 
+bam_sumstats: 
+    partition: "holy-info"
+    time: 5000
+    nodes: 1
+    mem: 9000 
+
+
+###
+# bam2vcf
+###
+
+processRef: 
+    partition: "holy-info"
+    time: 500
+    nodes: 1
+    mem: 5000 
+bam2gvcf: 
+    partition: "holy-info"
+    time: 5000
+    nodes: 1
+    mem: 30000 
+gvcf2DB: 
+    partition: "holy-info"
+    time: 5000
+    nodes: 1
+    mem: 30000 
+DB2vcf: 
+    partition: "holy-info"
+    time: 500
+    nodes: 1
+    mem: 30000 
+gatherVcfs: 
+    partition: "holy-info"
+    time: 500
+    nodes: 1
+    mem: 5000 
+
+
+
