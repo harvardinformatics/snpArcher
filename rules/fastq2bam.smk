@@ -25,8 +25,6 @@ rule fastp:
         summ = sumstatDir + "{sample}_fastp.out"
     conda:
         "../envs/fastq2bam.yml"
-    threads: 
-        CLUSTER["fastp"]["n"]
     shell:
         "fastp --in1 {input.r1} --in2 {input.r2} "
         "--out1 {output.r1} --out2 {output.r2} "
@@ -47,8 +45,6 @@ rule bwa_map:
         amb = config['ref'] + ".amb"
     output: 
         bamDir + "{sample}.bam"
-    threads: 
-        CLUSTER["bwa_map"]["n"]
     params:
         rg="@RG\\tID:{sample}\\tSM:{sample}\\tPL:ILLUMINA"
     conda:

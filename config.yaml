@@ -30,4 +30,3 @@ minNmer: 100
 flowcell: "FLOWCELL"
 platform: "ILLUMINA"
 
-CLUSTER_JSON: "./cluster.json"

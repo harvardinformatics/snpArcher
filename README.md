@@ -37,6 +37,7 @@ If something in the workflow fails, check the log file and look for the keyword 
 
 Make sure all programs are updated!! GATK actively changing and bugs being fixed all the time!!
 
+To change the resources each task requests, please see the cluster_config.yml file in the subdirectory profiles/slurm/.
 
 ## TO DO:
 
