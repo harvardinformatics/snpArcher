@@ -35,12 +35,12 @@ At its peak of resource consumption, the bam -> VCF workflow submits up to (# sa
 
 If something in the workflow fails, check the log file and look for the keyword "Error", which should direct you to the specific tasks that failed. It is very possible that some errors may be fixed by simply rerunning the Snakefile, as temporary hardware issues may cause errors, e.g. the computing cluster not responding which can cause Input/Output errors. Occasionally, one step will fail because a previous step  produced truncated output (I have seen fastp produce corrupted files that get fed to bwa, where the error ultimately occurs that snakemake detects). In these cases, these files must be manually removed for snakemake to reproduce them.
 
-make sure all programs updated!! GATK actively changing and bugs being fixed all the time!!
+Make sure all programs are updated!! GATK actively changing and bugs being fixed all the time!!
+
 
 ## TO DO:
 
-post VCF stuff: number of SNPs, number of filtered SNPs, SFS,rrelatedness (vcftools), missingness (vcftools), PCA (the low depth version), NJ tree, SNPs per bp for each scaffold (or any metric that indicates regions of the genome look bad).
-IN GENERAL, ARE THERE WEIRD INDIVIDUALS OR REGIONS OF THE GENOME, check all intervals from list files
+post VCF stuff: number of SNPs, number of filtered SNPs, SFS,rrelatedness (vcftools), PCA (the low depth version), NJ tree, SNPs per bp for each scaffold (or any metric that indicates regions of the genome look bad).
 
 use profile instead of cluster.json file. This may also help the workflow deal with TIMEOUT, which it currently doesn't recognize as failed.
 
