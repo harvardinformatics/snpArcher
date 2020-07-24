@@ -145,7 +145,7 @@ def getSampleNames(fastqDir, fastq_suffix1):
     for i in range(len(SAMPLES)):
         SAMPLES[i] = os.path.basename(SAMPLES[i])
         SAMPLES[i] = SAMPLES[i].replace(fastq_suffix1, "")
-    print(SAMPLES)
+    #print(SAMPLES)
     return(SAMPLES)
 
 def createSeqDictGetScaffOrder(ref, refBaseName):
@@ -347,7 +347,7 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
         LISTS[i] = os.path.basename(LISTS[i])
         LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
     LISTS=sorted(LISTS)
-    print(LISTS)
+    #print(LISTS)
     return(LISTS)
 
 def overlaps(a, b):     
