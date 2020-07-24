@@ -1,17 +1,15 @@
 rule processRef:
     """
-    This rule generates a .dict and .fai file from the reference genome, which are required for GATK to run properly.
+    This rule generates a .fai file from the reference genome, which are required for GATK to run properly. GATK also needs a .dict file, but this was previously generated.
     """
     input:
         ref = config['ref'],
     output: 
         fai = config['ref'] + ".fai",
-        #dict = refBaseName + ".dict"
     conda:
         "../envs/bam2vcf.yml"
     shell:
         "samtools faidx {input.ref} --output {output.fai}\n"
-        #"picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dict}"
 
 rule bam2gvcf:
     """
@@ -30,7 +28,7 @@ rule bam2gvcf:
     resources: 
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
         # subtract that memory here
-        mem_gb = int(CLUSTER["bam2gvcf"]["mem"]/1000 - int(3))
+        mem_gb = int(cluster_config['bam2gvcf']['mem']/1000 - 3)
     params:
         minPrun = 1,
         minDang = 1
@@ -62,8 +60,7 @@ rule gvcf2DB:
         DB = directory(dbDir + "DB_L{list}"),
         doneFile = temp(touch("DB_L{list}.done"))
     resources: 
-        cpus = CLUSTER["gvcf2DB"]["n"],
-        mem_gb = int(CLUSTER["gvcf2DB"]["mem"]/1000 - int(5))
+        mem_gb = int(cluster_config['gvcf2DB']['mem']/1000 - 5)
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -75,8 +72,7 @@ rule gvcf2DB:
         "--genomicsdb-workspace-path {output.DB} "
         "-L {input.l} "
         "--tmp-dir {dbDir}tmp "
-        "--sample-name-map {input.DBmapfile} "
-        "--reader-threads {resources.cpus} \n"
+        "--sample-name-map {input.DBmapfile} \n"
 
 rule DB2vcf:
     """
@@ -84,14 +80,13 @@ rule DB2vcf:
     are still scattered.
     """
     input:
-        #DB = directory(dbDir + "DB_L{list}"),
         DB = dbDir + "DB_L{list}",
         ref = config['ref'],
         doneFile = "DB_L{list}.done"
     output: 
         vcf = vcfDir + "L{list}.vcf"
     resources: 
-        mem_gb = int(CLUSTER["DB2vcf"]["mem"]/1000 - int(5))
+        mem_gb = int(cluster_config['DB2vcf']['mem']/1000 - 3)
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -112,8 +107,6 @@ rule gatherVcfs:
     output: 
         vcf = "Combined.vcf",
         vcfFiltered = "Combined_hardFiltered.vcf"
-    resources: 
-        mem_gb = int(CLUSTER["gatherVcfs"]["mem"]/1000)
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -143,8 +136,6 @@ rule vcftools:
     output: 
         missing = "missing_data_per_ind.txt",
         SNPsPerInt = "SNP_per_interval.txt"
-    resources: 
-        #mem_gb = int(CLUSTER["gatherVcfs"]["mem"]/1000)
     conda:
         "../envs/bam2vcf.yml"
     shell:

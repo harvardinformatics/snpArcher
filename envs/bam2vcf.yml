@@ -8,3 +8,4 @@ dependencies:
   - samtools==1.10
   - vcftools==0.1.16
   - bedtools==2.29.2
+  - pyyaml==5.3.1

@@ -1,11 +1,12 @@
 import os
 from collections import defaultdict
 import sys
+import yaml
 sys.path.append(os.getcwd())
 import helperFun
 
 configfile: "config.yaml"
-CLUSTER = json.load(open(config['CLUSTER_JSON']))
+cluster_config = yaml.load(open(config["cluster_config"]))
 
 # rename variables from config file for downstream simplicity
 ref = config["ref"]
