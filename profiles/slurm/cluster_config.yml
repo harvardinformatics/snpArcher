@@ -1,3 +1,11 @@
+__default__:
+    partition: "holy-info"
+    time: 5000
+    nodes: 1
+    mem: 5000 
+    output: "logs/slurm-%j.out"
+    #error: "logs/slurm-%j.err"
+
 ###
 # fastq2bam
 ###
