@@ -38,7 +38,7 @@ processRef:
     nodes: 1
     mem: 5000 
 bam2gvcf: 
-    partition: "holy-info"
+    partition: "serial_requeue"
     time: 5000
     nodes: 1
     mem: 30000 

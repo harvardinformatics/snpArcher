@@ -30,3 +30,5 @@ minNmer: 100
 flowcell: "FLOWCELL"
 platform: "ILLUMINA"
 
+cluster_config: "profiles/slurm/cluster_config.yml"
+
