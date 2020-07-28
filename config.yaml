@@ -19,13 +19,17 @@ gvcfDir: "03_gvcfs/"
 dbDir: "04_genomicsDB/"
 vcfDir: "05_vcfs/"
 
-vcfDir_fb: "vcfs/"
-
 listDir: "lists/"
 maxIntervalLen: 210000
 maxBpPerList: 210000
 maxIntervalsPerList: 200
 minNmer: 100
+
+# FreeBayes workflow
+fbDir: "freebayes/"
+
+intervalDir: "intervals/"
+vcfDir_fb: "00_vcfs_byinterval/"
 
 #information for read groups
 flowcell: "FLOWCELL"
