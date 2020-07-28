@@ -377,3 +377,15 @@ def makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir):
                 print(s, gvcfDir + s+"_L"+l+".raw.g.vcf.gz", sep="\t", file=f)
             f.close()
 
+def loadIntervalsForFB(f):
+    intervals_fb = []
+    fh = open(f, 'r')
+    for line in fh:
+        line = line.split()
+        interval = line[0] + ":" + line[1] + "-" + line[2]
+        intervals_fb.append(interval)
+
+    return(intervals_fb)
+    
+
+

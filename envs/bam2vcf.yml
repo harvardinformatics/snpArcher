@@ -4,6 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - gatk4==4.1.8.0
+  - freebayes==1.3.2
   - picard==2.22.8
   - samtools==1.10
   - vcftools==0.1.16
