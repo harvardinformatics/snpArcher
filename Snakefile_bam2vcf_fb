@@ -37,12 +37,20 @@ LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, m
 intervals_fb = helperFun.loadIntervalsForFB("intervals.bed")
 
 
+def myfunc(vcfDir_fb, intervals_fb):
+    gatherCommand = ""
+    for j in intervals_fb:
+        gatherCommand = gatherCommand + f"-I {vcfDir_fb}{j}.vcf "
+    return(gatherCommand)
+
 ### workflow ###
 
 rule all:
     input:
-        intervals = expand("intervals/{i}", i=intervals_fb),
-        vcfs = expand(vcfDir_fb + "{i}.vcf", i=intervals_fb)
+        #intervals = expand("intervals/{i}", i=intervals_fb),
+        vcf = "Combined.vcf",
+        vcfFiltered = "Combined_hardFiltered.vcf"
+        #vcfs = expand(vcfDir_fb + "{i}.vcf", i=intervals_fb)
         #missing = "missing_data_per_ind.txt",
         #SNPsPerInt = "SNP_per_interval.txt"
 
@@ -70,5 +78,36 @@ rule bam2vcf:
         "-r {wildcards.i} "
         "{input.bams} "
         "> {output.vcf}\n"
+
+
+rule gatherVcfs:
+    """
+    This rule gathers all of the VCFs, one per interval, into one final VCF
+    """
+    input:
+        intervals = expand("intervals/{i}", i=intervals_fb),
+        vcfs = expand(vcfDir_fb + "{i}.vcf", i=intervals_fb),
+        ref = config['ref']
+    output: 
+        vcf = "Combined.vcf",
+        vcfFiltered = "Combined_hardFiltered.vcf"
+    params:
+        gatherCommand = myfunc(vcfDir_fb, intervals_fb)
+    conda:
+        "envs/bam2vcf.yml"
+    shell:
+        "gatk GatherVcfs "
+        "{params.gatherCommand} "
+        "-O {output.vcf}\n"
+
+        "sleep 10\n" # the variant filtration step was failing in an unreproducible way, so added this in case
+        # Hard filter Combined.vcf
+        "gatk VariantFiltration "
+        "-R {input.ref} "
+        "-V {output.vcf} "
+        "--output {output.vcfFiltered} "
+        "--filter-expression \"QD < 2.0 || FS > 60.0 || SOR > 3.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || ExcessHet > 30.0\" "
+        "--filter-name \"filteredOut\" "
+
 
 
