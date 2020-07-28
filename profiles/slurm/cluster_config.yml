@@ -67,4 +67,12 @@ gatherVcfs:
     mem: 5000 
 
 
+###
+# bam2vcf_fb
+###
 
+bam2vcf: 
+    partition: "holy-info"
+    time: 500
+    nodes: 1
+    mem: 5000 

@@ -19,7 +19,8 @@ gvcfDir: "03_gvcfs/"
 dbDir: "04_genomicsDB/"
 vcfDir: "05_vcfs/"
 
-#listDir: "data/BHduck/lists/"
+vcfDir_fb: "vcfs/"
+
 listDir: "lists/"
 maxIntervalLen: 210000
 maxBpPerList: 210000
