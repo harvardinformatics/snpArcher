@@ -15,10 +15,11 @@ fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
 
 # this is where Snakemake output will go, specify with baseDir in config.yml
-bamDir = config["baseDir"] + config["bamDir"]
-gvcfDir = config["baseDir"] + config["gvcfDir"]
-vcfDir_fb = config["baseDir"] + config["vcfDir_fb"]
+bamDir = config["bamDir"]
+intervalDir = config["fbDir"] + config["intervalDir"]  
+vcfDir_fb = config["fbDir"] + config["vcfDir_fb"]
 listDir = config["listDir"]
+# for creating intervals
 maxIntervalLen = int(config["maxIntervalLen"])
 maxBpPerList = int(config["maxBpPerList"])
 maxIntervalsPerList = int(config["maxIntervalsPerList"])
@@ -47,12 +48,8 @@ def myfunc(vcfDir_fb, intervals_fb):
 
 rule all:
     input:
-        #intervals = expand("intervals/{i}", i=intervals_fb),
-        vcf = "Combined.vcf",
-        vcfFiltered = "Combined_hardFiltered.vcf"
-        #vcfs = expand(vcfDir_fb + "{i}.vcf", i=intervals_fb)
-        #missing = "missing_data_per_ind.txt",
-        #SNPsPerInt = "SNP_per_interval.txt"
+        missing = config["fbDir"] + "missing_data_per_ind.txt",
+        SNPsPerInt = config["fbDir"] + "SNP_per_interval.txt"
 
 rule intervals:
     """
@@ -60,7 +57,7 @@ rule intervals:
     inputing one interval in the command at a time. This information is stored in intervals_fb
     """
     output:
-        interval = temp(touch("intervals/{i}"))
+        interval = temp(touch(intervalDir + "{i}"))
 
 rule bam2vcf:
     """
@@ -70,7 +67,7 @@ rule bam2vcf:
         ref = config['ref'],
         bams = expand(bamDir + "{sample}_dedup.bam", sample=SAMPLES) # input all bams at once
     output: 
-        vcf = vcfDir_fb + "{i}.vcf" # output one vcf per interval
+        vcf = temp(vcfDir_fb + "{i}.vcf") # output one vcf per interval
     conda:
         "envs/bam2vcf.yml"
     shell:
@@ -85,12 +82,12 @@ rule gatherVcfs:
     This rule gathers all of the VCFs, one per interval, into one final VCF
     """
     input:
-        intervals = expand("intervals/{i}", i=intervals_fb),
+        intervals = expand(intervalDir + "{i}", i=intervals_fb),
         vcfs = expand(vcfDir_fb + "{i}.vcf", i=intervals_fb),
         ref = config['ref']
     output: 
-        vcf = "Combined.vcf",
-        vcfFiltered = "Combined_hardFiltered.vcf"
+        vcf = temp(config["fbDir"] + "Combined.vcf"),
+        vcfFiltered = config["fbDir"] + "Combined_hardFiltered.vcf"
     params:
         gatherCommand = myfunc(vcfDir_fb, intervals_fb)
     conda:
@@ -109,5 +106,15 @@ rule gatherVcfs:
         "--filter-expression \"QD < 2.0 || FS > 60.0 || SOR > 3.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0 || ExcessHet > 30.0\" "
         "--filter-name \"filteredOut\" "
 
-
-
+rule vcftools:
+    input:
+        vcf = config["fbDir"] + "Combined_hardFiltered.vcf",
+        int = "intervals.bed"
+    output: 
+        missing = config["fbDir"] + "missing_data_per_ind.txt",
+        SNPsPerInt = config["fbDir"] + "SNP_per_interval.txt"
+    conda:
+        "envs/bam2vcf.yml"
+    shell:
+        "vcftools --vcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}\n"
+        "bedtools intersect -a {input.int} -b {input.vcf} -c > {output.SNPsPerInt}"
