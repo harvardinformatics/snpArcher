@@ -161,7 +161,7 @@ def createSeqDictGetScaffOrder(ref, refBaseName):
             seqDictScaffs.append(scaff)
     return(seqDictScaffs)
 
-def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName):
+def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName, workDir):
 
     # create sequence dictionary with picard, GATK needs it, and the order in which scaffolds are listed in .dict
     # need to correspond to order in list files!
@@ -305,7 +305,7 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
         current_intervals = []
         listFile_index = 0
         # go through scaffolds in same order as they appear in the sequence dictionary, printing lists as we go
-        bed = open("intervals.bed", 'w')
+        bed = open(workDir + "intervals.bed", 'w')
         for scaff in seqDictScaffs:
             for intv in newIntervals[optimalNmer][scaff]:
                 start = intv[0]

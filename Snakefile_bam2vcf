@@ -14,12 +14,12 @@ fastq_suffix1 = config["fastq_suffix1"]
 fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
 
-# this is where Snakemake output will go, specify with baseDir in config.yml
-bamDir = config["baseDir"] + config["bamDir"]
-gvcfDir = config["baseDir"] + config["gvcfDir"]
-dbDir = config["baseDir"] + config["dbDir"]
-vcfDir = config["baseDir"] + config["vcfDir"]
-listDir = config["listDir"]
+# this is where Snakemake output will go, specify with 'gatkDir' in config.yml
+bamDir = config["bamsForGatk"] 
+gvcfDir = config["gatkDir"] + config["gvcfDir"]
+dbDir = config["gatkDir"] + config["dbDir"]
+vcfDir = config["gatkDir"] + config["vcfDir"]
+listDir = config["gatkDir"] + config["listDir"]
 maxIntervalLen = int(config["maxIntervalLen"])
 maxBpPerList = int(config["maxBpPerList"])
 maxIntervalsPerList = int(config["maxIntervalsPerList"])
@@ -32,9 +32,11 @@ refBaseName = helperFun.getRefBaseName(config["ref"])
 SAMPLES = helperFun.getSampleNames(fastqDir, fastq_suffix1)
 
 
+if not os.path.isdir(config["gatkDir"]):
+    os.system("mkdir " + config["gatkDir"])
 if not os.path.isdir(listDir):
     os.system("mkdir " + listDir)
-LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName)
+LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName, config["gatkDir"])
 lastList = len(LISTS)-1
 
 # this directory needs to be made beforehand since it is specified within GATK, which doesn't automatically make directories
@@ -48,8 +50,8 @@ helperFun.makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir)
 
 rule all:
     input:
-        missing = "missing_data_per_ind.txt",
-        SNPsPerInt = "SNP_per_interval.txt"
+        missing = config["gatkDir"] + "missing_data_per_ind.txt",
+        SNPsPerInt = config["gatkDir"] + "SNP_per_interval.txt"
 
 include: "rules/bam2vcf.smk"
 
