@@ -12,9 +12,9 @@ fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
 
 # this is where Snakemake output will go, specify with baseDir in config.yml
-fastqFilterDir = config["baseDir"] + config["fastqFilterDir"]
-bamDir = config["baseDir"] + config["bamDir"]
-sumstatDir = config["baseDir"] + config["sumstatDir"]
+fastqFilterDir = config["fastq2bamDir"] + config["fastqFilterDir"]
+bamDir = config["fastq2bamDir"] + config["bamDir"]
+sumstatDir = config["fastq2bamDir"] + config["sumstatDir"]
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
 SAMPLES = helperFun.getSampleNames(fastqDir, fastq_suffix1)
@@ -25,7 +25,7 @@ SAMPLES = helperFun.getSampleNames(fastqDir, fastq_suffix1)
 
 rule all:
     input:
-        "bam_sumstats.txt"
+        config["fastq2bamDir"] + "bam_sumstats.txt"
 	
 include: "rules/fastq2bam.smk"
 
