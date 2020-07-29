@@ -105,8 +105,9 @@ rule gatherVcfs:
         vcfs = expand(vcfDir + "L{list}.vcf", list=LISTS),
         ref = config['ref']
     output: 
-        vcf = "Combined.vcf",
-        vcfFiltered = "Combined_hardFiltered.vcf"
+        vcf =  temp(config["gatkDir"] + "Combined.vcf"),
+        vcfidx =  temp(config["gatkDir"] + "Combined.vcf.idx"),
+        vcfFiltered =  config["gatkDir"] + "Combined_hardFiltered.vcf"
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -131,11 +132,11 @@ rule gatherVcfs:
 
 rule vcftools:
     input:
-        vcf = "Combined_hardFiltered.vcf",
-        int = "intervals.bed"
+        vcf = config["gatkDir"] + "Combined_hardFiltered.vcf",
+        int = config["gatkDir"] + "intervals.bed"
     output: 
-        missing = "missing_data_per_ind.txt",
-        SNPsPerInt = "SNP_per_interval.txt"
+        missing = config["gatkDir"] + "missing_data_per_ind.txt",
+        SNPsPerInt = config["gatkDir"] + "SNP_per_interval.txt"
     conda:
         "../envs/bam2vcf.yml"
     shell:

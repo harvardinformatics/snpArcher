@@ -10,27 +10,16 @@ data/genome/*.amb
 data/genome/*.fai
 data/genome/*.dict
 
-00_fastqFiltered/
-01_mappedReads/
-02_bamSumstats/
-03_gvcfs/
-04_genomicsDB/
-05_vcfs/
-
-lists/
-
 fastp.*
 
-slurm-*.out
-bam_sumstats.txt
-missing_data_per_ind.txt
-SNP_per_interval.txt
-Combined*
 out
 err
 __pycache__
 
+fastq2bam/
 freebayes/
+gatk/
+logs/
 
 
 

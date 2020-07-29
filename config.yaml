@@ -12,27 +12,32 @@ fastq_suffix2: "_2.fastq.gz"
 # for same dir as snakemake pipeline, put ""
 baseDir: ""
 
-fastq2bamDir: "fastq2bam/"
+# These variables control the output of the fastq2bam workflow (please have forward slash follow name!)
+fastq2bamDir: "fastq2bam/"      # this is the main directory
 fastqFilterDir: "00_fastqFiltered/"
 bamDir: "01_mappedReads/"
 sumstatDir: "02_bamSumstats/"
 
-
-gvcfDir: "03_gvcfs/"
-dbDir: "04_genomicsDB/"
-vcfDir: "05_vcfs/"
-
-listDir: "lists/"
+# These variables control how the genome gets split into intervals according to Nmers in the reference genome
 maxIntervalLen: 210000
 maxBpPerList: 210000
 maxIntervalsPerList: 200
 minNmer: 100
 
-# FreeBayes workflow
-fbDir: "freebayes/"
+# These variables control the output of the GATK4 workflow (please have forward slash follow name!)
+gatkDir: "gatk/"
+bamsForGatk: "fastq2bam/01_mappedReads/" # If you used the fastq2bam workflow above, simply specify that directory
+gvcfDir: "01_gvcfs/"
+dbDir: "02_genomicsDB/"
+vcfDir: "03_vcfs/"
 
-intervalDir: "intervals/"
-vcfDir_fb: "00_vcfs_byinterval/"
+listDir: "lists/"
+
+# These variables control the output of the FreeBayes workflow (please have forward slash follow name!)   
+fbDir: "freebayes/"
+bamsForFB: "fastq2bam/01_mappedReads/" # If you used the fastq2bam workflow above, simply specify that directory
+intervalDir: "00_intervals/"
+vcfDir_fb: "01_vcfs_byinterval/"
 
 #information for read groups
 flowcell: "FLOWCELL"

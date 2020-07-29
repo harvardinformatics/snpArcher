@@ -15,7 +15,7 @@ fastq_suffix2 = config["fastq_suffix2"]
 fastqDir = config["fastqDir"]
 
 # this is where Snakemake output will go, specify with baseDir in config.yml
-bamDir = config["bamDir"]
+bamDir = config["bamsForFB"]
 intervalDir = config["fbDir"] + config["intervalDir"]  
 vcfDir_fb = config["fbDir"] + config["vcfDir_fb"]
 listDir = config["listDir"]
@@ -34,7 +34,7 @@ SAMPLES = helperFun.getSampleNames(fastqDir, fastq_suffix1)
 
 if not os.path.isdir(listDir):
     os.system("mkdir " + listDir)
-LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName)
+LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName, config["fbDir"])
 intervals_fb = helperFun.loadIntervalsForFB("intervals.bed")
 
 
