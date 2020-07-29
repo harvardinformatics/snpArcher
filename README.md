@@ -41,6 +41,8 @@ To change the resources each task requests, please see the cluster_config.yml fi
 
 ## TO DO:
 
+have fastq2bam and bam2gatkVcf output content in separate subdirs
+
 post VCF stuff: number of SNPs, number of filtered SNPs, SFS,rrelatedness (vcftools), PCA (the low depth version), NJ tree, SNPs per bp for each scaffold (or any metric that indicates regions of the genome look bad).
 
 use profile instead of cluster.json file. This may also help the workflow deal with TIMEOUT, which it currently doesn't recognize as failed.
