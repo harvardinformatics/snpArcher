@@ -12,9 +12,12 @@ fastq_suffix2: "_2.fastq.gz"
 # for same dir as snakemake pipeline, put ""
 baseDir: ""
 
+fastq2bamDir: "fastq2bam/"
 fastqFilterDir: "00_fastqFiltered/"
 bamDir: "01_mappedReads/"
 sumstatDir: "02_bamSumstats/"
+
+
 gvcfDir: "03_gvcfs/"
 dbDir: "04_genomicsDB/"
 vcfDir: "05_vcfs/"

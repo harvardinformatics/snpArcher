@@ -104,7 +104,7 @@ rule collect_sumstats:
         coverageFiles = expand(sumstatDir + "{sample}_coverage.txt", sample=SAMPLES),
         validateFiles = expand(sumstatDir + "{sample}_validate.txt", sample=SAMPLES)
     output:
-        "bam_sumstats.txt"
+         config["fastq2bamDir"] + "bam_sumstats.txt"
     run:
         FractionReadsPassFilter, NumFilteredReads = helperFun.collectFastpOutput(input.fastpFiles)
         PercentDuplicates = helperFun.collectDedupMetrics(input.dedupFiles)
@@ -112,5 +112,5 @@ rule collect_sumstats:
         SeqDepths, CoveredBases = helperFun.collectCoverageMetrics(input.coverageFiles)
         validateSams = helperFun.collectValidationStatus(input.validateFiles)
 
-        helperFun.printBamSumStats(FractionReadsPassFilter, NumFilteredReads, PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams)
+        helperFun.printBamSumStats(FractionReadsPassFilter, NumFilteredReads, PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams, config["fastq2bamDir"])
 

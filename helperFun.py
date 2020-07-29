@@ -114,9 +114,9 @@ def collectCoverageMetrics(coverageFiles):
         CoveredBases[sample] = covbases
     return(SeqDepths, CoveredBases)
 
-def printBamSumStats(FractionReadsPassFilter, NumFilteredReads, PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams):
+def printBamSumStats(FractionReadsPassFilter, NumFilteredReads, PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams, fastq2bamDir):
 
-    o = open("bam_sumstats.txt", 'w')
+    o = open(fastq2bamDir + "bam_sumstats.txt", 'w')
     print("sample", "FractionReadsPassFilter", "NumFilteredReads", "PercentDuplicates", "PercentHQ20alignedReads", "PercentHQ20bases", "MeanSeqDepth", "BasesCoveredMoreThanOnce", "validBAM", file=o, sep="\t")
     for sample in PercentDuplicates:
         print(sample,file=o, end="\t")
