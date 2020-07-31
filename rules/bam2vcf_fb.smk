@@ -21,6 +21,7 @@ rule bam2vcf:
     shell:
         "freebayes -f {input.ref} "
         "-r {wildcards.i} "
+        "-g {maxDP_fb} "
         "{input.bams} "
         "> {output.vcf}\n"
 
@@ -34,9 +35,9 @@ rule gatherVcfs:
         vcfs = expand(vcfDir_fb + "{i}.vcf", i=intervals_fb),
         ref = config['ref']
     output: 
-        vcf = temp(config["fbDir"] + "Combined.vcf"),
-        vcfidx = temp(config["fbDir"] + "Combined.vcf.idx"),
-        vcfFiltered = config["fbDir"] + "Combined_hardFiltered.vcf"
+        vcf = temp(fbDir + "Combined.vcf"),
+        vcfidx = temp(fbDir + "Combined.vcf.idx"),
+        vcfFiltered = fbDir + "Combined_hardFiltered.vcf"
     params:
         gatherCommand = myfunc(vcfDir_fb, intervals_fb)
     conda:
@@ -57,11 +58,11 @@ rule gatherVcfs:
 
 rule vcftools:
     input:
-        vcf = config["fbDir"] + "Combined_hardFiltered.vcf",
-        int = "intervals.bed"
+        vcf = fbDir + "Combined_hardFiltered.vcf",
+        int = fbDir + "intervals.bed"
     output: 
-        missing = config["fbDir"] + "missing_data_per_ind.txt",
-        SNPsPerInt = config["fbDir"] + "SNP_per_interval.txt"
+        missing = fbDir + "missing_data_per_ind.txt",
+        SNPsPerInt = fbDir + "SNP_per_interval.txt"
     conda:
         "../envs/bam2vcf.yml"
     shell:

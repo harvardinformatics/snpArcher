@@ -18,7 +18,7 @@ fastqDir = config["fastqDir"]
 bamDir = config["bamsForGatk"] 
 gvcfDir = config["gatkDir"] + config["gvcfDir"]
 dbDir = config["gatkDir"] + config["dbDir"]
-vcfDir = config["gatkDir"] + config["vcfDir"]
+vcfDir = config["gatkDir"] + config["vcfDir_gatk"]
 listDir = config["gatkDir"] + config["listDir"]
 maxIntervalLen = int(config["maxIntervalLen"])
 maxBpPerList = int(config["maxBpPerList"])
@@ -53,7 +53,7 @@ rule all:
         missing = config["gatkDir"] + "missing_data_per_ind.txt",
         SNPsPerInt = config["gatkDir"] + "SNP_per_interval.txt"
 
-include: "rules/bam2vcf.smk"
+include: "rules/bam2vcf_gatk.smk"
 
 
 

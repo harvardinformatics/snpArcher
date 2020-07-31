@@ -58,7 +58,7 @@ rule gvcf2DB:
         DBmapfile = dbDir + "DB_mapfile{list}"
     output: 
         DB = directory(dbDir + "DB_L{list}"),
-        doneFile = temp(touch("DB_L{list}.done"))
+        doneFile = temp(touch(dbDir + "DB_L{list}.done"))
     resources: 
         mem_gb = int(cluster_config['gvcf2DB']['mem']/1000 - 5)
     conda:
@@ -82,7 +82,7 @@ rule DB2vcf:
     input:
         DB = dbDir + "DB_L{list}",
         ref = config['ref'],
-        doneFile = "DB_L{list}.done"
+        doneFile = dbDir + "DB_L{list}.done"
     output: 
         vcf = vcfDir + "L{list}.vcf"
     resources: 

@@ -9,10 +9,9 @@ fastqDir: "data/zebraFinch/fastq/"
 fastq_suffix1: "_1.fastq.gz"
 fastq_suffix2: "_2.fastq.gz"
 
-# for same dir as snakemake pipeline, put ""
-baseDir: ""
-
+###
 # These variables control the output of the fastq2bam workflow (please have forward slash follow name!)
+###
 fastq2bamDir: "fastq2bam/"      # this is the main directory
 fastqFilterDir: "00_fastqFiltered/"
 bamDir: "01_mappedReads/"
@@ -24,20 +23,25 @@ maxBpPerList: 210000
 maxIntervalsPerList: 200
 minNmer: 100
 
+###
 # These variables control the output of the GATK4 workflow (please have forward slash follow name!)
+###
 gatkDir: "gatk/"
 bamsForGatk: "fastq2bam/01_mappedReads/" # If you used the fastq2bam workflow above, simply specify that directory
 gvcfDir: "01_gvcfs/"
 dbDir: "02_genomicsDB/"
-vcfDir: "03_vcfs/"
-
+vcfDir_gatk: "03_vcfs/"
 listDir: "lists/"
 
+###
 # These variables control the output of the FreeBayes workflow (please have forward slash follow name!)   
+###
 fbDir: "freebayes/"
 bamsForFB: "fastq2bam/01_mappedReads/" # If you used the fastq2bam workflow above, simply specify that directory
 intervalDir: "00_intervals/"
 vcfDir_fb: "01_vcfs_byinterval/"
+maxDP_fb: 200
+
 
 #information for read groups
 flowcell: "FLOWCELL"
