@@ -5,9 +5,11 @@ ref: "data/zebraFinch/genome/Tgut_subseg_renamed.fa"
 # location of fastq files; make sure the file path ends with a "/"! e.g. /n/home/files/
 fastqDir: "data/zebraFinch/fastq/"
 #fastqDir: "data/BHduck/fastq/"
-# suffix of fastq files
-fastq_suffix1: "_1.fastq.gz"
-fastq_suffix2: "_2.fastq.gz"
+
+# file suffixes for fastq and BAM files
+fastq_suffix1: "_1.fastq.gz" # this is the suffix for the forward read
+fastq_suffix2: "_2.fastq.gz" # this is the suffix for the reverse read
+bam_suffix: "_dedup.bam" # the fastq2bam pipeline creates BAMs with names ending in "_dedup.bam". If you use BAMs from another workflow, change this accordingly (e.g. to just ".bam")
 
 ###
 # These variables control the output of the fastq2bam workflow (please have forward slash follow name!)

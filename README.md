@@ -41,8 +41,6 @@ To change the resources each task requests, please see the cluster_config.yml fi
 
 ## TO DO:
 
--have bam2vcf steps take names from bam dir, not from fastq dir
-
 post VCF stuff: number of SNPs, number of filtered SNPs, SFS,rrelatedness (vcftools), PCA (the low depth version), NJ tree, SNPs per bp for each scaffold (or any metric that indicates regions of the genome look bad).
 
 
