@@ -140,12 +140,19 @@ def getRefBaseName(ref):
         sys.exit("Your reference genome did not end in \".fasta\" or \".fa\". Please fix this before continuing.")
     return(refBaseName)
 
-def getSampleNames(fastqDir, fastq_suffix1):
+def getFastqSampleNames(fastqDir, fastq_suffix1):
     SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)	
     for i in range(len(SAMPLES)):
         SAMPLES[i] = os.path.basename(SAMPLES[i])
         SAMPLES[i] = SAMPLES[i].replace(fastq_suffix1, "")
     #print(SAMPLES)
+    return(SAMPLES)
+    
+def getBamSampleNames(BamDir, bam_suffix):
+    SAMPLES = glob.glob(BamDir + "*" + bam_suffix)	
+    for i in range(len(SAMPLES)):
+        SAMPLES[i] = os.path.basename(SAMPLES[i])
+        SAMPLES[i] = SAMPLES[i].replace(bam_suffix, "")
     return(SAMPLES)
 
 def createSeqDictGetScaffOrder(ref, refBaseName):
