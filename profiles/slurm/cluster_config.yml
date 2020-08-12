@@ -2,7 +2,6 @@ __default__:
     partition: "holy-info"
     time: 5000
     nodes: 1
-    mem: 5000 
     output: "logs/slurm-%j.out"
     #error: "logs/slurm-%j.err"
 
@@ -37,7 +36,7 @@ bam_sumstats:
 
 
 ###
-# bam2vcf
+# bam2vcf_gatk
 ###
 
 processRef: 
@@ -75,4 +74,4 @@ bam2vcf:
     partition: "holy-info"
     time: 500
     nodes: 1
-    mem: 5000 
+    #mem: 50 
