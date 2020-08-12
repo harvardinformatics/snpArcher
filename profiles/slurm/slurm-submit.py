@@ -9,7 +9,7 @@ from snakemake.utils import read_job_properties
 import slurm_utils
 
 # cookiecutter arguments
-SBATCH_DEFAULTS = """qos=holy-info time=5000 nodes=1 mem=9000"""
+SBATCH_DEFAULTS = """qos=serial_requeue time=5000 nodes=1"""
 CLUSTER_CONFIG = "./cluster_config.yml"
 ADVANCED_ARGUMENT_CONVERSION = {"yes": True, "no": False}["no"]
 
