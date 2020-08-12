@@ -19,9 +19,8 @@ rule bam2vcf:
     conda:
         "../envs/bam2vcf.yml"
     resources:
-        #mem = lambda wildcards, attempt: attempt * int(cluster_config['bam2vcf']['mem'])
-        #mem_mb = lambda wildcards, attempt: attempt * callable(int(cluster_config['bam2vcf']['mem']))
-        mem_mb = lambda wildcards, attempt: attempt * 50
+        # increase memory every attempt
+        mem_mb = lambda wildcards, attempt: attempt * 30000
     shell:
         "freebayes -f {input.ref} "
         "-r {wildcards.i} "
@@ -46,8 +45,6 @@ rule gatherVcfs:
         gatherCommand = myfunc(vcfDir_fb, intervals_fb)
     conda:
         "../envs/bam2vcf.yml"
-    resources:
-        mem = 3000
     shell:
         "gatk GatherVcfs "
         "{params.gatherCommand} "
@@ -71,8 +68,6 @@ rule vcftools:
         SNPsPerInt = fbDir + "SNP_per_interval.txt"
     conda:
         "../envs/bam2vcf.yml"
-    #resources:
-    #    mem = 3000
     shell:
         "vcftools --vcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}\n"
         "bedtools intersect -a {input.int} -b {input.vcf} -c > {output.SNPsPerInt}"
