@@ -37,7 +37,7 @@ If something in the workflow fails, check the log file and look for the keyword 
 
 Make sure all programs are updated!! GATK actively changing and bugs being fixed all the time!!
 
-To change the resources each task requests, please see the cluster_config.yml file in the subdirectory profiles/slurm/.
+To change the resources each task requests, please see the cluster_config.yml file in the subdirectory profiles/slurm/. However, a few rules have their resources specified within the rule specification (in rules subdir) so that the requested memory can be incremented with each attempt. I was not able to get this feature working while specifying memory for that rule within the cluster_config file.
 
 ## TO DO:
 
