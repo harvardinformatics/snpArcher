@@ -8,6 +8,8 @@ rule processRef:
         fai = config['ref'] + ".fai",
     conda:
         "../envs/bam2vcf.yml"
+    resources:
+        mem_mb = 5000
     shell:
         "samtools faidx {input.ref} --output {output.fai}\n"
 
@@ -28,7 +30,8 @@ rule bam2gvcf:
     resources: 
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
         # subtract that memory here
-        mem_gb = int(cluster_config['bam2gvcf']['mem']/1000 - 3)
+        mem_mb = lambda wildcards, attempt: attempt * 30000,   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: attempt * 27000  # this is the maximum amount given to java
     params:
         minPrun = 1,
         minDang = 1
@@ -36,7 +39,7 @@ rule bam2gvcf:
         "../envs/bam2vcf.yml"
     shell:
         "gatk HaplotypeCaller "
-        "--java-options \"-Xmx{resources.mem_gb}g\" "
+        "--java-options \"-Xmx{resources.reduced}m\" "
         "-R {input.ref} "
         "-I {input.bam} "
         "-O {output.gvcf} "
@@ -60,7 +63,8 @@ rule gvcf2DB:
         DB = directory(dbDir + "DB_L{list}"),
         doneFile = temp(touch(dbDir + "DB_L{list}.done"))
     resources: 
-        mem_gb = int(cluster_config['gvcf2DB']['mem']/1000 - 5)
+        mem_mb = lambda wildcards, attempt: attempt * 30000,   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: attempt * 27000  # this is the maximum amount given to java
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -68,7 +72,7 @@ rule gvcf2DB:
         # a forum suggested TILEDB_DISABLE_FILE_LOCKING=1 to remedy sluggish performance
         "export TILEDB_DISABLE_FILE_LOCKING=1 \n"
         "gatk GenomicsDBImport "
-        "--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" "
+        "--java-options \"-Xmx{resources.reduced}m -Xms{resources.reduced}m\" "
         "--genomicsdb-workspace-path {output.DB} "
         "-L {input.l} "
         "--tmp-dir {dbDir}tmp "
@@ -86,12 +90,13 @@ rule DB2vcf:
     output: 
         vcf = vcfDir + "L{list}.vcf"
     resources: 
-        mem_gb = int(cluster_config['DB2vcf']['mem']/1000 - 3)
+        mem_mb = lambda wildcards, attempt: attempt * 30000,   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: attempt * 27000  # this is the maximum amount given to java
     conda:
         "../envs/bam2vcf.yml"
     shell:
         "gatk GenotypeGVCFs "
-        "--java-options \"-Xmx{resources.mem_gb}g -Xms{resources.mem_gb}g\" "
+        "--java-options \"-Xmx{resources.reduced}m -Xms{resources.reduced}m\" "
         "-R {input.ref} "
         "-V gendb://{input.DB} "
         "-O {output.vcf} "
@@ -110,6 +115,8 @@ rule gatherVcfs:
         vcfFiltered =  config["gatkDir"] + "Combined_hardFiltered.vcf"
     conda:
         "../envs/bam2vcf.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 10000   # this is the overall memory requested
     shell:
         "INPUT=\"\" \n"
         "for ((i=0;i<={lastList};i++)) \n"
@@ -139,6 +146,8 @@ rule vcftools:
         SNPsPerInt = config["gatkDir"] + "SNP_per_interval.txt"
     conda:
         "../envs/bam2vcf.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 10000   # this is the overall memory requested
     shell:
         "vcftools --vcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}\n"
         "bedtools intersect -a {input.int} -b {input.vcf} -c > {output.SNPsPerInt}"

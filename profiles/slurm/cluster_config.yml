@@ -1,6 +1,6 @@
 __default__:
     partition: "holy-info"
-    time: 5000
+    time: 9000
     nodes: 1
     output: "logs/slurm-%j.out"
     #error: "logs/slurm-%j.err"
@@ -25,23 +25,10 @@ bam_sumstats:
 # bam2vcf_gatk
 ###
 
-processRef: 
-    time: 500
-    nodes: 1
-    mem: 5000 
 bam2gvcf: 
     partition: "serial_requeue"
-    nodes: 1
-    mem: 30000 
-gvcf2DB: 
-    nodes: 1
-    mem: 30000 
 DB2vcf: 
-    nodes: 1
     mem: 30000 
-gatherVcfs: 
-    nodes: 1
-    mem: 10000 
 
 
 ###
