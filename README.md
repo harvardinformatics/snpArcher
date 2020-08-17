@@ -1,13 +1,24 @@
-This is a snakemake pipeline to go from fastq's to VCFs in 2 modular parts.
+# Automated short-read mapping and variant calling
 
-The first part uses (unfiltered) raw fastq files to produce BAM files, which may be used with a variety of downstream variant callers. Users are encouraged to inspect these BAM files before proceding so that time (human or machine) is not wasted calling variants on defective BAM files (e.g. sample contaminatation, reference sequence too diverged, raw reads of unexpectedly low quality, PCR step from the DNA library preparation caused extreme biases, etc.).
+This is a suite of snakemake pipelines that takes short-read fastq files, maps them to a reference genome, and calls variants to produce a VCF file along with summaries using an HPC cluster. These pipelines are split into two modular parts: 
+    1. reference-based read mapping to produce BAM files (fastq -> BAM) 
+    2. using BAM files to call variants in one of several ways (BAM -> VCF)
 
-Currently, the second part of our workflow uses GATK4 to call variants, although one may take their BAMs from part one and use other programs. In the future, we may create different versions of this second part to support a variety of popular variant callers so that users may, for example, take the intersection of the results from multiple programs.
+The workflows here allow users to either start with raw fastq files **or** with BAM files if they have already mapped their short-read data to a reference genome. If you start with raw fastq files, these workflows will not directly give you a VCF file. You must first use the fastq->BAM workflow to create BAM files, and once this has been done, you may then use the BAM->VCF workflows to call variants. This stopping point will force you to inspect the quality of you BAM files (which we facilitate by computing several informative metrics, see below) before proceeding to potentially computationally-expensive tasks involved in variant calling.
+
+The first part of this workflow maps short reads to a reference genome using BWA. However, the second part gives you two options for variant calling: GATK4 or freebayes. You may also use both variant-calling programs if you like! This may be useful if you want to select only high quality variants detected by multiple programs.
+
+A key feature of the variant calling workflows is that we have designed a simple algorithm to split the reference genome into many smaller subsegments that are processed in parallel. These subsegments are flanked by stings of N's in order to avoid edge effects. Such lists of subsegments already exists for some organisms (e.g. Humans), but here we create them ourselves so that these workflows may be used with any non-model organisms.
+
+
+## Getting started
+
+
+### Test Data
 
 There are currently two different test datasets that accompany this workflow. The zebrafinch data consists of reads for 3 individuals that map to a genome with 3 scaffolds (each 200kb in length). The Black head duck data consists of reads for 3 individuals that maps to a genome with a single scaffold that gets split (by Nmers) into subintervals.
 
-The following is a schematic diagram of the workflow:
-
+## Workflow components
 ### Part 1: fastq -> BAM
 
 ![](docs/workflowSchematic_fastq2bam.png)
