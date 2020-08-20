@@ -4,15 +4,26 @@ This is a suite of snakemake pipelines that takes short-read fastq files, maps t
     1. reference-based read mapping to produce BAM files (fastq -> BAM) 
     2. using BAM files to call variants in one of several ways (BAM -> VCF)
 
-The workflows here allow users to either start with raw fastq files **or** with BAM files if they have already mapped their short-read data to a reference genome. If you start with raw fastq files, these workflows will not directly give you a VCF file. You must first use the fastq->BAM workflow to create BAM files, and once this has been done, you may then use the BAM->VCF workflows to call variants. This stopping point will force you to inspect the quality of you BAM files (which we facilitate by computing several informative metrics, see below) before proceeding to potentially computationally-expensive tasks involved in variant calling.
+The workflows here allow users to either start with raw fastq files **or** with BAM files if they have already mapped their short-read data to a reference genome. If you start with raw fastq files, these workflows will not directly give you a VCF file. You must first use the fastq->BAM workflow to create BAM files, and once this has been done, you may then use the BAM->VCF workflows to call variants. This stopping point will force you to inspect the quality of you BAM files (which we facilitate by computing several informative metrics, see below) before proceeding to the variant calling workflows, which involve computationally-expensive tasks and the submission of many jobs.
 
-The first part of this workflow maps short reads to a reference genome using BWA. However, the second part gives you two options for variant calling: GATK4 or freebayes. You may also use both variant-calling programs if you like! This may be useful if you want to select only high quality variants detected by multiple programs.
+The first part of this workflow maps short reads to a reference genome using a single short-read aligner: BWA. However, the second part gives you two options for variant calling: GATK4 or freebayes. You may also use both variant-calling programs if you like, but they are currently two separate workflows that need to be run individually by the user. Using both variant callers may be useful if you want to select only high quality variants detected by multiple programs.
 
-A key feature of the variant calling workflows is that we have designed a simple algorithm to split the reference genome into many smaller subsegments that are processed in parallel. These subsegments are flanked by stings of N's in order to avoid edge effects. Such lists of subsegments already exists for some organisms (e.g. Humans), but here we create them ourselves so that these workflows may be used with any non-model organisms.
+A key feature of the variant calling workflows is that we have designed a simple algorithm to split the reference genome into many smaller subsegments that are processed in parallel. These subsegments are flanked by strings of N's in order to avoid edge effects. Such lists of subsegments already exists for some organisms (e.g. Humans), but here we create them ourselves so that these workflows may be used with any non-model organisms.
 
 
 ## Getting started
 
+First clone this repository to copy all the files into a directory of your choosing, and move incto this directory:
+```
+git clone https://github.com/harvardinformatics/shortRead_mapping_variantCalling
+cd shortRead_mapping_variantCalling
+```
+
+Witin this directory you should see a file named *config.yaml* that stores many parameter values for the various workflows. These parameters include the location of files (e.g. reference genome, fastq files, etc) so that the workflows know where to find them, along with the suffixes of certain files (e.g. "_1.fastq.gz" for raw read files) that allow the programs to identify samples and the correct files to use.
+
+
+
+## Description of output files
 
 ### Test Data
 
