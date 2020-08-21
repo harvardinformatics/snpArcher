@@ -26,9 +26,15 @@ After updating the config.yaml file, you may now run one of the workflows, which
 sbatch run_fastq2bam.sh
 ```
 
-The BAM -> VCF workflow currently contains two different options, GATK4 or freebayes. These may both be found in the `run_bam2vcf.sh` file. However, I run just one of these workflows by commenting out the one I do not want to run (with a "#" sign at the beginning of the line). If I want to run GATK4, I comment out the second line of text (below the #SLURM directives) containing the snakemake file `Snakefile_bam2vcf_fb`, which is the freebayes pipeline. Likewise, if I want to run the freebayes workflow I comment out the first line (again, below the #SLURM directives) that contains the snakemake file `Snakefile_bam2vcf_gatk`. After this, I type the following on the command line to submit one of these workflows as a job:
+The BAM -> VCF workflow currently contains two different options. To run GATK4, type the following on the command line:
 ```
-sbatch run_bam2vcf.sh
+sbatch run_bam2vcf_gatk.sh
+```
+
+To run Freebayes, type the following on the command line:
+
+```
+sbatch run_bam2vcf_fb.sh
 ```
 
 Once the workflow is submitted as a job, it will output intermediate and final files in subdirectories depending on the workflow (e.g. *fastq2bam*, *gatk*, or *freebayes*). It may take a while before the workflow does any actual work or submitting of jobs, as conda takes a bit to build the software environment.
@@ -80,7 +86,8 @@ To change the resources each task requests, please see the cluster_config.yml fi
 ## TO DO:
 
 - for variables continaing directory, ask if they end in "/" otherwise add this!
-- have fastq2bam piipeline submit with higher resources
+- have fastq2bam piipeline submit with higher resources, BWA and sort_bam etc.
+- have cluster_config.yaml file in root, separate from slurm profile, and read that in for resubmitting failed jobs
 
 - ive tried the following to address the problem below, re. resubmitting with many resouces. It seems resources need to be specified in the rule, with the resources keyword, and multiplied by the special 'attempt' variable. However, if any resources are specified within cluster_config.yml under the default, these always override resources specified in the rule and it doesn't work. Moreover, if I instead use a value obtained from a dict, it also doesn't work. Basically the only way I'm able to get things to work now is if I specify the number directly in the rules file.
 - it really seems like if there are any job submission parameters defined in cluster_config.yml, either for the specific rule or __default__, it just uses those and ignores any job-specific resource allocations.
