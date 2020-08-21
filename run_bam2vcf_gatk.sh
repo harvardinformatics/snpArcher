@@ -9,5 +9,4 @@
 
 
 snakemake --snakefile Snakefile_bam2vcf_gatk --profile ./profiles/slurm
-#snakemake --snakefile Snakefile_bam2vcf_fb --profile ./profiles/slurm 
 
