@@ -25,7 +25,9 @@ rule fastp:
         summ = sumstatDir + "{sample}_fastp.out"
     conda:
         "../envs/fastq2bam.yml"
-    threads: 10
+    threads: res_config['fastp']['threads']
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['fastp']['mem'] 
     shell:
         "fastp --in1 {input.r1} --in2 {input.r2} "
         "--out1 {output.r1} --out2 {output.r2} "
@@ -50,7 +52,9 @@ rule bwa_map:
         rg="@RG\\tID:{sample}\\tSM:{sample}\\tPL:ILLUMINA"
     conda:
         "../envs/fastq2bam.yml"
-    threads: 10
+    threads: res_config['bwa_map']['threads']
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['bwa_map']['mem'] 
     shell:
         "bwa mem -M -t {threads} -R \'{params.rg}\' {input.ref} {input.r1} {input.r2} | "
         "samtools view -Sb - > {output}"
@@ -63,6 +67,8 @@ rule sort_bam:
         temp(bamDir + "{sample}_sorted.bai")
     conda:
         "../envs/fastq2bam.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['sort_bam']['mem'] 
     shell:
         "picard SortSam I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true"
 
@@ -75,6 +81,8 @@ rule dedup:
         dedupMet = sumstatDir + "{sample}_dedupMetrics.txt",
     conda:
         "../envs/fastq2bam.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['dedup']['mem'] 
     shell:
         "picard MarkDuplicates I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All\n"
         "picard BuildBamIndex I={output.dedupBam} "
@@ -90,6 +98,8 @@ rule bam_sumstats:
         val = sumstatDir + "{sample}_validate.txt"
     conda:
         "../envs/fastq2bam.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['bam_sumstats']['mem'] 
     shell:
         "samtools coverage --output {output.cov} {input.bam}\n"
         "picard CollectAlignmentSummaryMetrics I={input.bam} R={input.ref} O={output.alnSum}\n"

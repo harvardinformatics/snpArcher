@@ -5,20 +5,6 @@ __default__:
     output: "logs/slurm-%j.out"
     #error: "logs/slurm-%j.err"
 
-###
-# fastq2bam
-###
-fastp: 
-    mem: 5000 
-bwa_map: 
-    mem: 15000 
-sort_bam: 
-    mem: 9000 
-dedup: 
-    mem: 9000 
-bam_sumstats: 
-    mem: 9000 
-
 
 ###
 # bam2vcf_gatk
