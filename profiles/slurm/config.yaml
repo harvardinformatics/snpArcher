@@ -2,7 +2,7 @@ jobs: 1000
 restart-times: 3
 max-jobs-per-second: 1
 max-status-checks-per-second: 3
-#cores: 1
+cores: 10000
 #local-cores: 1
 latency-wait: 60
 use-conda: True

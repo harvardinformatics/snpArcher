@@ -9,10 +9,8 @@ __default__:
 # fastq2bam
 ###
 fastp: 
-    nodes: 10
     mem: 5000 
 bwa_map: 
-    nodes: 10
     mem: 15000 
 sort_bam: 
     mem: 9000 
