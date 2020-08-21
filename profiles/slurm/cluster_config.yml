@@ -1,5 +1,5 @@
 __default__:
-    partition: "holy-info"
+    partition: "shared"
     time: 9000
     nodes: 1
     output: "logs/slurm-%j.out"
@@ -9,9 +9,10 @@ __default__:
 # fastq2bam
 ###
 fastp: 
+    nodes: 10
     mem: 5000 
 bwa_map: 
-    nodes: 3
+    nodes: 10
     mem: 15000 
 sort_bam: 
     mem: 9000 

@@ -19,11 +19,27 @@ git clone https://github.com/harvardinformatics/shortRead_mapping_variantCalling
 cd shortRead_mapping_variantCalling
 ```
 
-Witin this directory you should see a file named *config.yaml* that stores many parameter values for the various workflows. These parameters include the location of files (e.g. reference genome, fastq files, etc) so that the workflows know where to find them, along with the suffixes of certain files (e.g. "_1.fastq.gz" for raw read files) that allow the programs to identify samples and the correct files to use.
+Witin this directory you should see a file named *config.yaml* that stores many variables for the various workflows. These variables include the location of files (e.g. reference genome, fastq files, etc) so that the workflows know where to find them, along with the suffixes of certain files (e.g. "_1.fastq.gz" for raw read files) that allow the programs to identify samples and the correct files to use. Please navigate to the section at the top that contains variables that need to be changed; notes within this file describe these variables. The variables in sections lower in the config.yaml file do not necessarily need to be altered. One of these variables that *may* need to be changed is "minNmer", which is the minimum length of an Nmer (e.g. string of 200 N's) used to break up the genome into smaller intervals to be processed independently (which dramatically speeds up the workflow). The larger the Nmer, the lower the likelihood a pair of reads maps to either side, which may create edge effects when we only consider sub-chromosomal intervals for variant calling. The appropriate Nmer length may also depend on the assembly, as programs differ in how many intervening N's they insert to unite contigs into scaffolds. However, if larger values of "minNmer" are specified, than the algorithm has fewer places to create intervals.
 
+After updating the config.yaml file, you may now run one of the workflows, which gets submitted as a job that itself submits many jobs (a maximum of 1000, but this may be changed). If you are runing the fastq -> BAM workflow, simply type the following on the command line to submit this workflow as a job:
+```
+sbatch run_fastq2bam.sh
+```
 
+The BAM -> VCF workflow currently contains two different options, GATK4 or freebayes. These may both be found in the `run_bam2vcf.sh` file. However, I run just one of these workflows by commenting out the one I do not want to run (with a "#" sign at the beginning of the line). If I want to run GATK4, I comment out the second line of text (below the #SLURM directives) containing the snakemake file `Snakefile_bam2vcf_fb`, which is the freebayes pipeline. Likewise, if I want to run the freebayes workflow I comment out the first line (again, below the #SLURM directives) that contains the snakemake file `Snakefile_bam2vcf_gatk`. After this, I type the following on the command line to submit one of these workflows as a job:
+```
+sbatch run_bam2vcf.sh
+```
+
+Once the workflow is submitted as a job, it will output intermediate and final files in subdirectories depending on the workflow (e.g. *fastq2bam*, *gatk*, or *freebayes*). It may take a while before the workflow does any actual work or submitting of jobs, as conda takes a bit to build the software environment.
+
+The workflows successfully completed if the final summary file (described below) are in the appropriate directory. For the fastq -> BAM workflow, this corresponds to the `bam_sumstats.txt` file, and for the BAM -> VCF workflow this corresponds to the `Combined_hardFiltered.vcf` file along with the files summarizing the VCF: `SNP_per_interval.txt` and `missing_data_per_ind.txt`.
 
 ## Description of output files
+
+## Changing the versions of programs
+
+The versions of the various programs may be found in the YAML files in the `envs/` directory. You may update any programs listed under the 'dependencies' heading, replacing the version number with the latest you can find after searching the [Anaconda cloud](https://anaconda.org/).
 
 ### Test Data
 
@@ -62,6 +78,8 @@ Make sure all programs are updated!! GATK actively changing and bugs being fixed
 To change the resources each task requests, please see the cluster_config.yml file in the subdirectory profiles/slurm/. However, a few rules have their resources specified within the rule specification (in rules subdir) so that the requested memory can be incremented with each attempt. I was not able to get this feature working while specifying memory for that rule within the cluster_config file.
 
 ## TO DO:
+
+fir variables continaing directory, ask if they end in "/" otherwise add this!
 
 - ive tried the following to address the problem below, re. resubmitting with many resouces. It seems resources need to be specified in the rule, with the resources keyword, and multiplied by the special 'attempt' variable. However, if any resources are specified within cluster_config.yml under the default, these always override resources specified in the rule and it doesn't work. Moreover, if I instead use a value obtained from a dict, it also doesn't work. Basically the only way I'm able to get things to work now is if I specify the number directly in the rules file.
 - it really seems like if there are any job submission parameters defined in cluster_config.yml, either for the specific rule or __default__, it just uses those and ignores any job-specific resource allocations.

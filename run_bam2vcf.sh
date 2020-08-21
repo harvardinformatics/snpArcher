@@ -4,7 +4,7 @@
 #SBATCH -e err
 #SBATCH -p test
 #SBATCH -n 1
-#SBATCH -t 400
+#SBATCH -t 9000
 #SBATCH --mem=4000
 
 
