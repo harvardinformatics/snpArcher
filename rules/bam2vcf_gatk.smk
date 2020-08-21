@@ -30,8 +30,8 @@ rule bam2gvcf:
     resources: 
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
         # subtract that memory here
-        mem_mb = lambda wildcards, attempt: attempt * 30000,   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * 27000  # this is the maximum amount given to java
+        mem_mb = lambda wildcards, attempt: attempt * res_config['bam2gvcf']['mem'],   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: attempt * (res_config['bam2gvcf']['mem'] - 3000)  # this is the maximum amount given to java
     params:
         minPrun = 1,
         minDang = 1
@@ -63,8 +63,8 @@ rule gvcf2DB:
         DB = directory(dbDir + "DB_L{list}"),
         doneFile = temp(touch(dbDir + "DB_L{list}.done"))
     resources: 
-        mem_mb = lambda wildcards, attempt: attempt * 30000,   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * 27000  # this is the maximum amount given to java
+        mem_mb = lambda wildcards, attempt: attempt * res_config['gvcf2DB']['mem'],   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: attempt * (res_config['gvcf2DB']['mem'] - 3000)  # this is the maximum amount given to java
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -90,8 +90,8 @@ rule DB2vcf:
     output: 
         vcf = vcfDir + "L{list}.vcf"
     resources: 
-        mem_mb = lambda wildcards, attempt: attempt * 30000,   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * 27000  # this is the maximum amount given to java
+        mem_mb = lambda wildcards, attempt: attempt * res_config['DB2vcf']['mem'],   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: attempt * (res_config['DB2vcf']['mem'] - 3000)  # this is the maximum amount given to java
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -116,7 +116,7 @@ rule gatherVcfs:
     conda:
         "../envs/bam2vcf.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * 10000   # this is the overall memory requested
+        mem_mb = lambda wildcards, attempt: attempt * res_config['gatherVcfs']['mem']   # this is the overall memory requested
     shell:
         "INPUT=\"\" \n"
         "for ((i=0;i<={lastList};i++)) \n"
@@ -147,7 +147,7 @@ rule vcftools:
     conda:
         "../envs/bam2vcf.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * 10000   # this is the overall memory requested
+        mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
     shell:
         "vcftools --vcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}\n"
         "bedtools intersect -a {input.int} -b {input.vcf} -c > {output.SNPsPerInt}"

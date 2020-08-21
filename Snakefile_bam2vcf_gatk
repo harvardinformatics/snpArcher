@@ -6,7 +6,7 @@ sys.path.append(os.getcwd())
 import helperFun
 
 configfile: "config.yaml"
-cluster_config = yaml.load(open(config["cluster_config"]))
+res_config = yaml.load(open("resources.yml"))
 
 # rename variables from config file for downstream simplicity
 ref = config["ref"]

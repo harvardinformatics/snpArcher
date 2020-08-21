@@ -12,8 +12,6 @@ __default__:
 
 bam2gvcf: 
     partition: "serial_requeue"
-DB2vcf: 
-    mem: 30000 
 
 
 ###

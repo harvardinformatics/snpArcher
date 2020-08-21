@@ -10,3 +10,23 @@ dedup:
     mem: 9000 
 bam_sumstats: 
     mem: 9000 
+
+# gatk
+bam2gvcf: 
+    mem: 30000
+gvcf2DB:
+    mem: 30000
+DB2vcf: 
+    mem: 30000 
+gatherVcfs:
+    mem: 30000
+vcftools:
+    mem: 10000
+
+# freebayes
+bam2vcf:
+    mem: 30000
+gatherVcfs:
+    mem: 30000
+vcftools:
+    mem: 10000
