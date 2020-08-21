@@ -6,7 +6,7 @@ from collections import defaultdict
 import helperFun
 
 configfile: "config.yaml"
-res_config = yaml.load(open("resources.yml"))
+res_config = yaml.load(open("resources.yaml"))
 
 # rename variables from config file for clarity downstream
 fastq_suffix1 = config["fastq_suffix1"]
