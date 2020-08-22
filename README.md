@@ -28,7 +28,7 @@ One important variable that *may* need to be changed is "minNmer", which is the 
 ### 3.) Modify resources file
 The `resources.yaml` file may be changed to increase the amount of requested memory or the number of threads for the steps that support multi-threading. Not all steps in th workflows are included here, so  these use the default amount of resources. **NOTE**: if they fail, these steps get resubmitted with (*attempt number*)\*(initial memory).
 
-### 4.) Submit workflow(s)!
+### 4a.) Submit workflow(s)!
 After updating the config.yaml file, you may now run one of the workflows, which gets submitted as a job that itself submits many jobs. If you are running the fastq -> BAM workflow, simply type the following on the command line to submit this workflow as a job:
 ```
 sbatch run_fastq2bam.sh
@@ -48,6 +48,9 @@ sbatch run_bam2vcf_fb.sh
 Once the workflow is submitted as a job, it may take a while to build the software environment before it does anything. 
 
 The workflows successfully completed if the final summary files (described below) are in the appropriate directory. For the fastq -> BAM workflow, this corresponds to the `bam_sumstats.txt` file, and for the BAM -> VCF workflow this corresponds to the `Combined_hardFiltered.vcf` file along with the files summarizing the VCF: `SNP_per_interval.txt` and `missing_data_per_ind.txt`.
+
+### 4b.) Change parameters to split the genome (MAkE THIS BETTER)
+The workflow first runs a custom python script to find the best way to split up the genome given parameters in the *config.yaml* file. If this fails, it outputs an error message that reports, for each Nmer it used to define intervals, what the minimum interval length was. This minimum interval length is the smallest interval over which you can do variant calling, given the Nmer the program used to split up the genome. If the workflow fails at this step (maybe specify why it might fail so users know which parameters to change), either specify a smaller Nmer to try to split up the genome more or increase the `maxIntervalLen` parameter in the *config.yaml* file.
 
 ## Description of output files
 
