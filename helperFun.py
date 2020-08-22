@@ -230,40 +230,45 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
             NmerLens[1] = 1
         
         # go through Nmers, starting with shortest ones, and construct different interval lists
+        # but skip Nmers within 50bp of one another as they probably give similar results.
+        prevNmer = 0
         for Nmer in sorted(NmerLens):
-            # go through scaffolds, from longest to shortest
-            for item in sorted(scaffLens.items(), key=lambda x: x[1], reverse=True):
-                scaff = item[0]
-                scaffLen = item[1]
-                # go through each interval on the scaffold
-                currInterval = [0, 0] # use 0 to initialize, since picard does not use 0-based coords
-                for i in range(len(picardIntervals[scaff])):
-                    start = picardIntervals[scaff][i][0]
-                    end = picardIntervals[scaff][i][1]
-                    merType = picardIntervals[scaff][i][2]
-                    length = end - start + 1
-                    if merType == "ACGTmer":
-                        # assign left coord of currInterval if it hasn't been initialized or was cleared
-                        # otherwise, don't touch it!
-                        if currInterval[0] == 0:
-                            currInterval[0] = start
-                        currInterval[1] = end
-                        continue
-                    if merType == "Nmer":
-                        # if the Nmer is smaller than the current length we're using to split
-                        # go onto the next ACGTmer and extend the interval
-                        if length < Nmer:
+            # need to initialize with prevNmer == 1 in case there are no Nmers found, such that the only one is of length one (see above code)
+            if prevNmer == 0 or Nmer >= (prevNmer + 50):
+                prevNmer = Nmer
+                # go through scaffolds, from longest to shortest
+                for item in sorted(scaffLens.items(), key=lambda x: x[1], reverse=True):
+                    scaff = item[0]
+                    scaffLen = item[1]
+                    # go through each interval on the scaffold
+                    currInterval = [0, 0] # use 0 to initialize, since picard does not use 0-based coords
+                    for i in range(len(picardIntervals[scaff])):
+                        start = picardIntervals[scaff][i][0]
+                        end = picardIntervals[scaff][i][1]
+                        merType = picardIntervals[scaff][i][2]
+                        length = end - start + 1
+                        if merType == "ACGTmer":
+                            # assign left coord of currInterval if it hasn't been initialized or was cleared
+                            # otherwise, don't touch it!
+                            if currInterval[0] == 0:
+                                currInterval[0] = start
+                            currInterval[1] = end
                             continue
-                        else:
-                            # store currInterval bc we encounterd an Nmer of sufficient length
-                            newIntervals[Nmer][scaff].append( currInterval )
-                            currInterval = [0, 0]
-                if currInterval[0] != 0:
-                    # if the interval was extended all the way to the end of the scaffold, store it here
-                    newIntervals[Nmer][scaff].append( currInterval )
+                        if merType == "Nmer":
+                            # if the Nmer is smaller than the current length we're using to split
+                            # go onto the next ACGTmer and extend the interval
+                            if length < Nmer:
+                                continue
+                            else:
+                                # store currInterval bc we encounterd an Nmer of sufficient length
+                                newIntervals[Nmer][scaff].append( currInterval )
+                                currInterval = [0, 0]
+                    if currInterval[0] != 0:
+                        # if the interval was extended all the way to the end of the scaffold, store it here
+                        newIntervals[Nmer][scaff].append( currInterval )
         
         # for each Nmer splitting, see what the maximum interval length is
-        for Nmer in sorted(NmerLens):
+        for Nmer in sorted(newIntervals.keys()):
             totalACGTmerLength_overlaps = 0
             Nmer_maxIntervalLen = 0
             for item in sorted(scaffLens.items(), key=lambda x: x[1], reverse=True):
