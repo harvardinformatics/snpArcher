@@ -20,7 +20,7 @@ bam_suffix: "_dedup.bam"                # the suffix for your BAM files that fol
 maxDP_fb: 200
 
 # These parameters control how the genome gets split into intervals according to Nmers in the reference genome
-minNmer: 100                    # the minimum Nmer used to split up the genome; e.g. a value of 200 means only Nmers 200 or greater are used to define the boundaries of intervals. The minimum is 50.
+minNmer: 200                    # the minimum Nmer used to split up the genome; e.g. a value of 200 means only Nmers 200 or greater are used to define the boundaries of intervals. The minimum is 50.
 maxIntervalLen: 210000          # the desired maximum size of an interval for calling variants; more than 2Mb is a good starting point
 maxBpPerList: 210000            # the desired maximum number of bp per list file for GATK4; list files potentially contain many small intervals, and we cap the fraction of the genome contained in each list file here
 maxIntervalsPerList: 200        # the desired maximum number of intervals per list file for GATK4; this prevents list files from containing thousands of small intervals, which can slow parts of GATK4
