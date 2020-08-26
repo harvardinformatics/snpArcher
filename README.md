@@ -7,9 +7,9 @@ This is a suite of snakemake pipelines to call variants with short-read sequence
 1. **fastq -> BAM**: map short reads to a reference genome with BWA
 2. **BAM -> VCF**: call variants with GATK4 or Freebayes
 
-Users may start with raw fastq files **or** with BAM files. If you start with raw fastq files, you must first use the **fastq -> BAM** workflow and inspect the quality of these BAM files before proceeding (we provide some summary statistics!). After this workflow completes, you may use the **BAM -> VCF** workflows.
+Users may start with raw fastq files or with BAM files. If you start with raw fastq files, you must first use the **fastq -> BAM** workflow and inspect the quality of these BAM files before proceeding (we provide some summary statistics!). After this workflow completes, you may use the **BAM -> VCF** workflows.
 
-A key feature of **BAM -> VCF** workflows is a simple algorithm to split the reference genome into many smaller subsegments that are processed in parallel on a computing cluster. These subsegments are flanked by strings of N's found in the reference genome in order to avoid edge effects. Lists of subsegments already exists for some organisms (e.g. Humans), but here we create them ourselves so that these workflows may be used with any non-model organisms.
+A key feature of **BAM -> VCF** workflows is a simple algorithm to split the reference genome into many smaller subsegments that are processed in parallel on a computing cluster. This speeds up these programs dramatically. These subsegments are flanked by strings of N's found in the reference genome in order to avoid edge effects. Lists of subsegments already exists for some organisms (e.g. Humans), but here we create them ourselves so that these workflows may be used with any non-model organisms.
 
 ## Getting started
 
@@ -20,15 +20,22 @@ git clone https://github.com/harvardinformatics/shortRead_mapping_variantCalling
 cd shortRead_mapping_variantCalling
 ```
 
-### 2.) Modify configuration file
-Witin this directory you should see a file named `config.yaml` that stores many variables for the various workflows. These variables include the location of files (e.g. reference genome) as well as file suffixes (e.g. forward read data end in "\_1.fastq.gz"). The top section of this file contains the variables that need to be changed; notes within this file describe these variables. 
+### 2.) Set values of important variables
+Witin this directory a file named `config.yaml` stores many variables, including the location of files (e.g. reference genome) as well as file suffixes (e.g. forward read data end in "\_1.fastq.gz"). The top section of `config.yaml` contains the variables that *need* to be changed, and notes within this file describe these variables. 
 
-One important variable that *may* need to be changed is "minNmer", which is the minimum length of an Nmer (e.g. string of 200 N's) used to break up the genome into smaller intervals to be processed independently (which dramatically speeds up the workflow). The larger the Nmer, the lower the likelihood a pair of reads maps to either side, which may create edge effects when we only consider sub-chromosomal intervals for variant calling. The appropriate Nmer length may also depend on the assembly, as programs differ in how many intervening N's they insert to unite contigs into scaffolds. However, if larger values of "minNmer" are specified, than the algorithm has fewer places to create intervals.
+#### 2b.) Parameterize algorithm to split up genome (most complicated bit, may need to simplify)
+`config.yaml` also contains two variables to define genomic intervals for parallel processing:
 
-### 3.) Modify resources file
-The `resources.yaml` file may be changed to increase the amount of requested memory or the number of threads for the steps that support multi-threading. Not all steps in th workflows are included here, so  these use the default amount of resources. **NOTE**: if they fail, these steps get resubmitted with (*attempt number*)\*(initial memory).
+1. minNmer: the minimum length of an Nmer used to define the beginning/end of an interval. Generally, smaller values (e.g. 200bp) will create many smaller intervals whereas larger ones (e.g. 2kb) will create fewer larger intervals. However,the number of intervals completely depends on the assembly and the distribution of Nmers. Values from 500bp to 2kb are a good place to start
 
-### 4a.) Submit workflow(s)!
+2. maxIntervalLen: the maximum length of a genomic interval allowed. This ensures that, whatever minNmer value is used, intervals never exceed a certain value, which can significantly slow down the workflow. The best value to choose for this may depend on how many samples you have, but values above 15Mb may be a good place to start.
+
+If you specify a minNmer value that does not sufficiently break up the genome -- creating intervals larger than maxIntervalLen -- the workflow will halt and show you the maximum interval length it found for various Nmers in the genome. With these data you can adjust the parameters accordingly.
+
+### 3.) Set the resources to request for various steps
+The `resources.yaml` file may be changed to increase the amount of requested memory or the number of threads for the steps that support multi-threading. Not all steps in th workflows are included here, so these use the default amount of resources. **NOTE**: if they fail, these steps get resubmitted with (*attempt number*)\*(initial memory).
+
+### 4.) Submit workflow(s)!
 After updating the config.yaml file, you may now run one of the workflows, which gets submitted as a job that itself submits many jobs. If you are running the fastq -> BAM workflow, simply type the following on the command line to submit this workflow as a job:
 ```
 sbatch run_fastq2bam.sh
@@ -49,10 +56,36 @@ Once the workflow is submitted as a job, it may take a while to build the softwa
 
 The workflows successfully completed if the final summary files (described below) are in the appropriate directory. For the fastq -> BAM workflow, this corresponds to the `bam_sumstats.txt` file, and for the BAM -> VCF workflow this corresponds to the `Combined_hardFiltered.vcf` file along with the files summarizing the VCF: `SNP_per_interval.txt` and `missing_data_per_ind.txt`.
 
-### 4b.) Change parameters to split the genome (MAkE THIS BETTER)
-The workflow first runs a custom python script to find the best way to split up the genome given parameters in the *config.yaml* file. If this fails, it outputs an error message that reports, for each Nmer it used to define intervals, what the minimum interval length was. This minimum interval length is the smallest interval over which you can do variant calling, given the Nmer the program used to split up the genome. If the workflow fails at this step (maybe specify why it might fail so users know which parameters to change), either specify a smaller Nmer to try to split up the genome more or increase the `maxIntervalLen` parameter in the *config.yaml* file.
 
 ## Description of output files
+### fastq -> BAM workflow
+
+Successful completion of this workflow will create `bam_sumstats.txt`, with columns that contain the following information:
+1. Sample name
+2. Fraction of reads that passed fastp filter
+3. Number of filtered reads
+4. Percent of PCR duplicates
+5. Percent of paired-end reads that mapped to the genome with mapping quality greater than 20
+6. Percent of aligned bases that have base qualities greater than 20
+7. Mean sequencing depth per site
+8. Number of bases covered *at least* once
+9. Logical test for whether your BAM file is valid and ready for variant calling (according to picard's ValidateSamFile tool). If not, check the appropriate _validate.txt file in the 02_bamSumstats dir. "FALSE" values indicate that variant callers may fail downstream, although not necessarily as this validation step is very fussy.
+
+### BAM -> VCF workflow
+
+Successful completion of this workflow will create a VCF file entitled `Combined_hardFiltered.vcf` as well as some files for quality control. These files include 
+
+1. `SNP_per_interval.txt` showing how many SNPs were detected for each genomic interval. These data may be used to ensure that variants were called for each interval. The columns of this file correspond to
+    1. scaffold/chromosome name
+    2. start position of interval in reference genome
+    3. end position of interval in reference genome
+    4. number of SNPs detected
+2. `missing_data_per_ind.txt` showing how many genotypes are missing per individual (the output of vcftools --missing-indv). The columns of this file correspond to:
+    1. sample name
+    2. number of genotypes for this sample
+    3. number of genotypes filtered out due to low quality
+    4. number of genotypes completely missing (e.g. due to low sequencing depth)
+    5. fraction of missing genotypes (column 4 divided by column 2)
 
 ## Changing the versions of programs
 
@@ -61,6 +94,17 @@ The versions of the various programs may be found in the YAML files in the `envs
 ### Test Data
 
 There are currently two different test datasets that accompany this workflow. The zebrafinch data consists of reads for 3 individuals that map to a genome with 3 scaffolds (each 200kb in length). The Black head duck data consists of reads for 3 individuals that maps to a genome with a single scaffold that gets split (by Nmers) into subintervals.
+
+
+
+
+
+
+# please ignore everything below this :)
+
+
+
+
 
 ## Workflow components
 ### Part 1: fastq -> BAM
