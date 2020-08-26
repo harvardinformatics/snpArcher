@@ -4,14 +4,14 @@
 
 This is a suite of snakemake pipelines to call variants with short-read sequence data. These pipelines are split into two modular parts, named by the primary type of input/output files: 
 
-1. **fastq -> BAM**: map short reads to a reference genome with BWA
-2. **BAM -> VCF**: call variants with GATK4 or Freebayes
+1. **fastq -> BAM**: maps short reads to a reference genome with BWA
+2. **BAM -> VCF**: calls variants with GATK4 or Freebayes
 
-Users may start with raw fastq files or with BAM files. If you start with raw fastq files, you must first use the **fastq -> BAM** workflow and inspect the quality of these BAM files before proceeding (we provide some summary statistics!). After this workflow completes, you may use the **BAM -> VCF** workflows.
+Users may start with raw fastq files or with BAM files. If you start with raw fastq files, you must first use the **fastq -> BAM** workflow and inspect the quality of the output BAM files before proceeding (e.g. by checking the summary file we produce). After this workflow completes, you may use the **BAM -> VCF** workflows.
 
-A key feature of **BAM -> VCF** workflows is a simple algorithm to split the reference genome into many smaller subsegments that are processed in parallel on a computing cluster. This speeds up these programs dramatically. These subsegments are flanked by strings of N's found in the reference genome in order to avoid edge effects. Lists of subsegments already exists for some organisms (e.g. Humans), but here we create them ourselves so that these workflows may be used with any non-model organisms.
+A key feature of the **BAM -> VCF** workflows is a simple algorithm to split the reference genome into many smaller intervals that are processed in parallel on a computing cluster. This speeds up these programs dramatically. These intervals are flanked by strings of N's found in the reference genome in order to avoid edge effects. While lists of intervals already exists for some organisms (e.g. Humans), here we create them ourselves so that these workflows may be used with any non-model organisms.
 
-## Getting started
+## How to use
 
 ### 1.) Download code
 First clone this repository and move into the new directory: 
@@ -21,22 +21,22 @@ cd shortRead_mapping_variantCalling
 ```
 
 ### 2.) Set values of important variables
-Witin this directory a file named `config.yaml` stores many variables, including the location of files (e.g. reference genome) as well as file suffixes (e.g. forward read data end in "\_1.fastq.gz"). The top section of `config.yaml` contains the variables that *need* to be changed, and notes within this file describe these variables. 
+Witin this directory a file named `config.yaml` stores many variables, including the location of files (e.g. reference genome) as well as file suffixes (e.g. forward read data end in "\_1.fastq.gz"). The top section of `config.yaml` contains the variables that *need* to be changed, and comments within this file describe these variables. 
 
 #### 2b.) Parameterize algorithm to split up genome (most complicated bit, may need to simplify)
 `config.yaml` also contains two variables to define genomic intervals for parallel processing:
 
-1. minNmer: the minimum length of an Nmer used to define the beginning/end of an interval. Generally, smaller values (e.g. 200bp) will create many smaller intervals whereas larger ones (e.g. 2kb) will create fewer larger intervals. However,the number of intervals completely depends on the assembly and the distribution of Nmers. Values from 500bp to 2kb are a good place to start
+1. minNmer: the minimum length of an Nmer used to define the beginning/end of an interval. Generally, smaller values (e.g. 200bp) will create many smaller intervals whereas larger ones (e.g. 2kb) will create fewer larger intervals. However,the number of intervals completely depends on the reference genome assembly and its distribution of Nmers. Values from 500bp to 2kb are a good place to start
 
-2. maxIntervalLen: the maximum length of a genomic interval allowed. This ensures that, whatever minNmer value is used, intervals never exceed a certain value, which can significantly slow down the workflow. The best value to choose for this may depend on how many samples you have, but values above 15Mb may be a good place to start.
+2. maxIntervalLen: the maximum length of a genomic interval allowed. This value ensures that whatever minNmer value is specified above, intervals never exceed a certain value, as this can significantly slow down the workflow (taking weeks instead of days for GATK). The best value to choose for this may depend on how many samples you have, but values above 15Mb may be a good place to start.
 
 If you specify a minNmer value that does not sufficiently break up the genome -- creating intervals larger than maxIntervalLen -- the workflow will halt and show you the maximum interval length it found for various Nmers in the genome. With these data you can adjust the parameters accordingly.
 
 ### 3.) Set the resources to request for various steps
-The `resources.yaml` file may be changed to increase the amount of requested memory or the number of threads for the steps that support multi-threading. Not all steps in th workflows are included here, so these use the default amount of resources. **NOTE**: if they fail, these steps get resubmitted with (*attempt number*)\*(initial memory).
+The `resources.yaml` file may be changed to increase the amount of requested memory (in Megabytes) or the number of threads for the steps that support multi-threading. Not all steps in the workflows are included here, so these use the default amount of resources. **NOTE**: if they fail, these steps get resubmitted with (*attempt number*)\*(initial memory).
 
 ### 4.) Submit workflow(s)!
-After updating the config.yaml file, you may now run one of the workflows, which gets submitted as a job that itself submits many jobs. If you are running the fastq -> BAM workflow, simply type the following on the command line to submit this workflow as a job:
+After updating the config.yaml file, you may now run one of the workflows, which gets submitted as a job that itself submits many jobs (max of 1000, may be changed). If you are running the fastq -> BAM workflow, simply type the following on the command line to submit this workflow as a job:
 ```
 sbatch run_fastq2bam.sh
 ```
@@ -54,7 +54,7 @@ sbatch run_bam2vcf_fb.sh
 
 Once the workflow is submitted as a job, it may take a while to build the software environment before it does anything. 
 
-The workflows successfully completed if the final summary files (described below) are in the appropriate directory. For the fastq -> BAM workflow, this corresponds to the `bam_sumstats.txt` file, and for the BAM -> VCF workflow this corresponds to the `Combined_hardFiltered.vcf` file along with the files summarizing the VCF: `SNP_per_interval.txt` and `missing_data_per_ind.txt`.
+The workflows successfully completed if the final summary files (described in next section) are in the appropriate directory.
 
 
 ## Description of output files
@@ -140,6 +140,7 @@ To change the resources each task requests, please see the cluster_config.yml fi
 
 ## TO DO:
 
+- annotate resources.yaml more
 - for variables continaing directory, ask if they end in "/" otherwise add this!
 
 - ive tried the following to address the problem below, re. resubmitting with many resouces. It seems resources need to be specified in the rule, with the resources keyword, and multiplied by the special 'attempt' variable. However, if any resources are specified within cluster_config.yml under the default, these always override resources specified in the rule and it doesn't work. Moreover, if I instead use a value obtained from a dict, it also doesn't work. Basically the only way I'm able to get things to work now is if I specify the number directly in the rules file.
