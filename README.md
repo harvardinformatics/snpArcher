@@ -1,15 +1,15 @@
 # Automated short-read mapping and variant calling
 
-This is a suite of snakemake pipelines that takes short-read fastq files, maps them to a reference genome, and calls variants to produce a VCF file along with summaries using an HPC cluster. These pipelines are split into two modular parts: 
-    1. reference-based read mapping to produce BAM files (fastq -> BAM) 
-    2. using BAM files to call variants in one of several ways (BAM -> VCF)
+## Design
 
-The workflows here allow users to either start with raw fastq files **or** with BAM files if they have already mapped their short-read data to a reference genome. If you start with raw fastq files, these workflows will not directly give you a VCF file. You must first use the fastq->BAM workflow to create BAM files, and once this has been done, you may then use the BAM->VCF workflows to call variants. This stopping point will force you to inspect the quality of you BAM files (which we facilitate by computing several informative metrics, see below) before proceeding to the variant calling workflows, which involve computationally-expensive tasks and the submission of many jobs.
+This is a suite of snakemake pipelines to call variants with short-read sequence data. These pipelines are split into two modular parts, named by the primary type of input/output files: 
 
-The first part of this workflow maps short reads to a reference genome using a single short-read aligner: BWA. However, the second part gives you two options for variant calling: GATK4 or freebayes. You may also use both variant-calling programs if you like, but they are currently two separate workflows that need to be run individually by the user. Using both variant callers may be useful if you want to select only high quality variants detected by multiple programs.
+    1. **fastq -> BAM**: map short reads to a reference genome with BWA
+    2. **BAM -> VCF**: call variants with GATK4 or Freebayes
 
-A key feature of the variant calling workflows is that we have designed a simple algorithm to split the reference genome into many smaller subsegments that are processed in parallel. These subsegments are flanked by strings of N's in order to avoid edge effects. Such lists of subsegments already exists for some organisms (e.g. Humans), but here we create them ourselves so that these workflows may be used with any non-model organisms.
+Users may start with raw fastq files **or** with BAM files. If you start with raw fastq files, you must first use the **fastq -> BAM** workflow and inspect the quality of these BAM files before proceeding (we provide some summary statistics!). After this workflow completes, you may use the **BAM -> VCF** workflows.
 
+A key feature of **BAM -> VCF** workflows is a simple algorithm to split the reference genome into many smaller subsegments that are processed in parallel on a computing cluster. These subsegments are flanked by strings of N's found in the reference genome in order to avoid edge effects. Lists of subsegments already exists for some organisms (e.g. Humans), but here we create them ourselves so that these workflows may be used with any non-model organisms.
 
 ## Getting started
 
