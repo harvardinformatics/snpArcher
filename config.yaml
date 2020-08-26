@@ -5,7 +5,7 @@
 ref: "data/zebraFinch/genome/Tgut_subseg_renamed.fa"    # location of the reference genome
 
 # If using the fastq -> BAM workflow change these, otherwise ignore them
-fastqDir: "data/zebraFinch/fastq/"      # location of fastq files
+fastqDir: "data/zebraFinch/fastq/"      # location of fastq files; must be followed by a "/"
 fastq_suffix1: "_1.fastq.gz"            # the suffix for the forward reads that follows all the sample names, e.g. "_1.fastq.gz" for sample "sampleName_1.fastq.gz"
 fastq_suffix2: "_2.fastq.gz"            # the suffix for the reverse reads that follows all the sample names, e.g. "_2.fastq.gz" for sample "sampleName_2.fastq.gz"
 
@@ -15,8 +15,8 @@ fastq_suffix2: "_2.fastq.gz"            # the suffix for the reverse reads that 
 ##############################
 
 # if using the BAM -> VCF workflows
-bamsForGatk: "fastq2bam/01_mappedReads/" # directory containing BAMs for GATK. If you used the fastq -> bam workflow above, simply keep the default value
-bamsForFB: "fastq2bam/01_mappedReads/"   # directory containing BAMs for Freebayes. If you used the fastq -> bam workflow above, simply keep the default value  
+bamsForGatk: "fastq2bam/01_mappedReads/" # directory containing BAMs for GATK. If you used the fastq -> bam workflow above, simply keep the default value; must be followed by a "/"
+bamsForFB: "fastq2bam/01_mappedReads/"   # directory containing BAMs for Freebayes. If you used the fastq -> bam workflow above, simply keep the default value; must be followed by a "/"
 bam_suffix: "_dedup.bam"                 # the suffix for your BAM files that follow all the sample names. If you use the fastq->BAM workflow above, simply keep the default value 
 
 # These parameters control how the genome gets split into intervals according to Nmers in the reference genome
@@ -28,7 +28,8 @@ maxIntervalsPerList: 200        # the desired maximum number of intervals per li
 maxDP_fb: 200 # this is the maximum depth parameter used for freebayes, site with more than this number are ignored, change according to expected depth
 
 ##############################
-# Variables you don't need to change
+# Variables you DO NOT need to change
+# if you do, ensure all path/directory names are followed by a "/"
 ##############################
 
 # These variables control the output of the fastq2bam workflow. You don't need to change these, but if you do please have a forward slash follow name!
