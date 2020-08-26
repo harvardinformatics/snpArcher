@@ -33,7 +33,7 @@ Witin this directory a file named `config.yaml` stores many variables, including
 If you specify a minNmer value that does not sufficiently break up the genome -- creating intervals larger than maxIntervalLen -- the workflow will halt and show you the maximum interval length it found for various Nmers in the genome. With these data you can adjust the parameters accordingly.
 
 ### 3.) Set the resources to request for various steps
-The `resources.yaml` file may be changed to increase the amount of requested memory (in Megabytes) or the number of threads for the steps that support multi-threading. Not all steps in the workflows are included here, so these use the default amount of resources. **NOTE**: if they fail, these steps get resubmitted with (*attempt number*)\*(initial memory).
+The `resources.yaml` file may be changed to increase the amount of requested memory (in Megabytes) or the number of threads for the steps that support multi-threading. Not all steps in the workflows are included here, so these use the default amount of resources. **NOTE**: if any job fails, it gets resubmitted with increased memory calculated as (*attempt number*)\*(initial memory).
 
 ### 4.) Submit workflow(s)!
 After updating the config.yaml file, you may now run one of the workflows, which gets submitted as a job that itself submits many jobs (max of 1000, may be changed). If you are running the fastq -> BAM workflow, simply type the following on the command line to submit this workflow as a job:
@@ -100,6 +100,8 @@ There are currently two different test datasets that accompany this workflow. Th
 
 
 
+# please ignore everything below this :)
+# please ignore everything below this :)
 # please ignore everything below this :)
 
 

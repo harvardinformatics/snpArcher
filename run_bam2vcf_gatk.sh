@@ -5,7 +5,7 @@
 #SBATCH -p shared
 #SBATCH -n 1
 #SBATCH -t 9000
-#SBATCH --mem=4000
+#SBATCH --mem=10000
 
 
 snakemake --snakefile Snakefile_bam2vcf_gatk --profile ./profiles/slurm
