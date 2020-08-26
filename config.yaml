@@ -9,22 +9,23 @@ fastqDir: "data/zebraFinch/fastq/"      # location of fastq files
 fastq_suffix1: "_1.fastq.gz"            # the suffix for the forward reads that follows all the sample names, e.g. "_1.fastq.gz" for sample "sampleName_1.fastq.gz"
 fastq_suffix2: "_2.fastq.gz"            # the suffix for the reverse reads that follows all the sample names, e.g. "_2.fastq.gz" for sample "sampleName_2.fastq.gz"
 
-# if using the BAM -> VCF workflows
-bam_suffix: "_dedup.bam"                # the suffix for your BAM files that follow all the sample names, if you use the fastq->BAM workflow above, use "_dedup.bam"
 
 ##############################
 # Variables you *might* need to change
 ##############################
 
-# this is the maximum depth parameter used for freebayes
-maxDP_fb: 200
+# if using the BAM -> VCF workflows
+bamsForGatk: "fastq2bam/01_mappedReads/" # directory containing BAMs for GATK. If you used the fastq -> bam workflow above, simply keep the default value
+bamsForFB: "fastq2bam/01_mappedReads/"   # directory containing BAMs for Freebayes. If you used the fastq -> bam workflow above, simply keep the default value  
+bam_suffix: "_dedup.bam"                 # the suffix for your BAM files that follow all the sample names. If you use the fastq->BAM workflow above, simply keep the default value 
 
 # These parameters control how the genome gets split into intervals according to Nmers in the reference genome
 minNmer: 200                    # the minimum Nmer used to split up the genome; e.g. a value of 200 means only Nmers 200 or greater are used to define the boundaries of intervals. The minimum is 50.
 maxIntervalLen: 210000          # the desired maximum size of an interval for calling variants; more than 2Mb is a good starting point
 maxBpPerList: 210000            # the desired maximum number of bp per list file for GATK4; list files potentially contain many small intervals, and we cap the fraction of the genome contained in each list file here
-maxIntervalsPerList: 200        # the desired maximum number of intervals per list file for GATK4; this prevents list files from containing thousands of small intervals, which can slow parts of GATK4
+maxIntervalsPerList: 200        # the desired maximum number of intervals per list file for GATK4; this prevents list files from containing thousands of small intervals, which can slow parts of GATK4. Default is good.
 
+maxDP_fb: 200 # this is the maximum depth parameter used for freebayes, site with more than this number are ignored, change according to expected depth
 
 ##############################
 # Variables you don't need to change
@@ -38,7 +39,6 @@ sumstatDir: "02_bamSumstats/"           # new directory created for BAM summary 
 
 # These variables control the output of the GATK4 workflow (please have forward slash follow name!)
 gatkDir: "gatk/"
-bamsForGatk: "fastq2bam/01_mappedReads/" # If you used the fastq2bam workflow above, simply specify that directory
 gvcfDir: "01_gvcfs/"
 dbDir: "02_genomicsDB/"
 vcfDir_gatk: "03_vcfs/"
@@ -46,7 +46,6 @@ listDir: "lists/"
 
 # These variables control the output of the FreeBayes workflow (please have forward slash follow name!)   
 fbDir: "freebayes/"
-bamsForFB: "fastq2bam/01_mappedReads/" # If you used the fastq2bam workflow above, simply specify that directory
 intervalDir: "00_intervals/"
 vcfDir_fb: "01_vcfs_byinterval/"
 
