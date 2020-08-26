@@ -4,8 +4,8 @@
 
 This is a suite of snakemake pipelines to call variants with short-read sequence data. These pipelines are split into two modular parts, named by the primary type of input/output files: 
 
-    1. **fastq -> BAM**: map short reads to a reference genome with BWA
-    2. **BAM -> VCF**: call variants with GATK4 or Freebayes
+1. **fastq -> BAM**: map short reads to a reference genome with BWA
+2. **BAM -> VCF**: call variants with GATK4 or Freebayes
 
 Users may start with raw fastq files **or** with BAM files. If you start with raw fastq files, you must first use the **fastq -> BAM** workflow and inspect the quality of these BAM files before proceeding (we provide some summary statistics!). After this workflow completes, you may use the **BAM -> VCF** workflows.
 
@@ -21,7 +21,7 @@ cd shortRead_mapping_variantCalling
 ```
 
 ### 2.) Modify configuration file
-Witin this directory you should see a file named *config.yaml* that stores many variables for the various workflows. These variables include the location of files (e.g. reference genome) as well as file suffixes (e.g. forward read data end in "\_1.fastq.gz"). The top section of this file contains the variables that need to be changed; notes within this file describe these variables. 
+Witin this directory you should see a file named `config.yaml` that stores many variables for the various workflows. These variables include the location of files (e.g. reference genome) as well as file suffixes (e.g. forward read data end in "\_1.fastq.gz"). The top section of this file contains the variables that need to be changed; notes within this file describe these variables. 
 
 One important variable that *may* need to be changed is "minNmer", which is the minimum length of an Nmer (e.g. string of 200 N's) used to break up the genome into smaller intervals to be processed independently (which dramatically speeds up the workflow). The larger the Nmer, the lower the likelihood a pair of reads maps to either side, which may create edge effects when we only consider sub-chromosomal intervals for variant calling. The appropriate Nmer length may also depend on the assembly, as programs differ in how many intervening N's they insert to unite contigs into scaffolds. However, if larger values of "minNmer" are specified, than the algorithm has fewer places to create intervals.
 
