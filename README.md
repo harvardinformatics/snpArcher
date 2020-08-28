@@ -13,6 +13,9 @@ A key feature of the **BAM -> VCF** workflows is a simple algorithm to split the
 
 ## How to use
 
+### 0.) Install snakemake, if you haven't already
+Please follow the [installation via conda instructions](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html) to install snakemake in a conda environment called "snakemake". The script that ultimately runs the snakemake command is preceded by a line with `conda activate snakemake`, so the exact environment name is necessary unless you change this script. If you already have snakemake installed, you can remove this line with `conda activate snakemake` from all the \*sh files.
+
 ### 1.) Download code
 First clone this repository and move into the new directory: 
 ```
