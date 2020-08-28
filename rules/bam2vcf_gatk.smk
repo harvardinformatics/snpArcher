@@ -8,8 +8,8 @@ rule processRef:
         fai = config['ref'] + ".fai",
     conda:
         "../envs/bam2vcf.yml"
-    resources:
-        mem_mb = 5000
+    resources: 
+        mem_mb = lambda wildcards, attempt: attempt * res_config['processRef']['mem']   
     shell:
         "samtools faidx {input.ref} --output {output.fai}\n"
 
