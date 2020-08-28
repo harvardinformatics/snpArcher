@@ -145,6 +145,7 @@ To change the resources each task requests, please see the cluster_config.yml fi
 ## TO DO:
 
 - how to change queue
+- optimize interval-creating algo for big genomes
 - for variables continaing directory, ask if they end in "/" otherwise add this!
 
 - ive tried the following to address the problem below, re. resubmitting with many resouces. It seems resources need to be specified in the rule, with the resources keyword, and multiplied by the special 'attempt' variable. However, if any resources are specified within cluster_config.yml under the default, these always override resources specified in the rule and it doesn't work. Moreover, if I instead use a value obtained from a dict, it also doesn't work. Basically the only way I'm able to get things to work now is if I specify the number directly in the rules file.

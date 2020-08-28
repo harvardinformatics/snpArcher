@@ -6,6 +6,9 @@
 fastp: 
     threads: 10 
     mem: 5000
+# index reference
+index_ref:
+    mem: 10000
 # bwa mapping
 bwa_map: 
     threads: 10 
@@ -27,6 +30,8 @@ bam_sumstats:
 # gatk workflow
 
 # gatk HaplotypeCaller
+processRef:
+    mem: 10000
 bam2gvcf: 
     mem: 30000
 # gatk GenomicsDBImport

@@ -12,6 +12,8 @@ rule index_ref:
        config['ref'] + ".amb"
     conda:
         "../envs/fastq2bam.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['index_ref']['mem'] 
     shell:
         "bwa index {input.ref}"
 
