@@ -72,7 +72,7 @@ rule sort_bam:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['sort_bam']['mem'] 
     shell:
-        "picard SortSam I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true"
+        "picard SortSam I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true TMP_DIR={bamDir}"
 
 rule dedup:
     input: 
