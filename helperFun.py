@@ -157,8 +157,11 @@ def getBamSampleNames(BamDir, bam_suffix):
 
 def createSeqDictGetScaffOrder(ref, refBaseName):
     seqDict = refBaseName + ".dict"
+    index = ref + ".fai"
     if not os.path.isfile(seqDict):
         os.system(f"picard CreateSequenceDictionary REFERENCE={ref} OUTPUT={seqDict}")
+    if not os.path.isfile(index):
+        os.system(f"samtools faidx {ref} --output {index}")
     seqDictScaffs = []
     f = open(seqDict, 'r')
     for line in f:
@@ -303,12 +306,13 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
         if lessThan:
             print(f"best Nmer is {lessThan[-1]}")
         else:
-            print(f"could not find suitable Nmer to split up genome, specify larger maximum scaffold length than {maxIntervalLen}?")
-            print("Here are the maximum interval lengths we observed, for each Nmer used")
+            print(f"We could not find suitable Nmer to split up genome given the specified maxIntervalLen (which is currently too small).")
+            print("Here are the actual maximum interval lengths we observed, for each minimum Nmer size used to split up the genome.")
+            print("To proceed, specify a maxIntervalLen that is equal to or slightly greater than the ones observed here.")
             print("Nmer MaxObservedInterval")
             for Nmer in maxIntervalLenByNmer:
                 print(Nmer, maxIntervalLenByNmer[Nmer])
-            sys.exit(1)
+            sys.exit("\n\n\n*****PLEASE SEE out FILE FOR A MESSAGE ON HOW TO PROCEED! :)*****\n\n\n")
 
         # take optimal interval_list and use to generate GATK list files
         optimalNmer = lessThan[-1]
