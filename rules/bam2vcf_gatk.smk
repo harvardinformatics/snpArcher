@@ -58,10 +58,14 @@ rule gvcf2DB:
         gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz", sample=SAMPLES, list=LISTS),
         gvcfs_idx = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi", sample=SAMPLES, list=LISTS),
         l = listDir + "list{list}.list",
-        DBmapfile = dbDir + "DB_mapfile{list}"
+        #DBmapfile = dbDir + "DB_mapfile{list}"
     output: 
         DB = directory(dbDir + "DB_L{list}"),
         doneFile = temp(touch(dbDir + "DB_L{list}.done"))
+    params:
+        # as input, GenomicsDBImport needs "-V " to precede all sample gvcf names and have these separated by spaces, this function creates this string 
+        # NOTE: like the rest of the list variables, it is bracketed and in quotes
+        inputGvcfs = helperFun.gvcfsPerList_gatk(SAMPLES, "{list}", gvcfDir)
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * res_config['gvcf2DB']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (res_config['gvcf2DB']['mem'] - 3000)  # this is the maximum amount given to java
@@ -76,7 +80,7 @@ rule gvcf2DB:
         "--genomicsdb-workspace-path {output.DB} "
         "-L {input.l} "
         "--tmp-dir {dbDir}tmp "
-        "--sample-name-map {input.DBmapfile} \n"
+        "{params.inputGvcfs} \n"
 
 rule DB2vcf:
     """

@@ -41,8 +41,6 @@ lastList = len(LISTS)-1
 # this directory needs to be made beforehand since it is specified within GATK, which doesn't automatically make directories
 os.system("mkdir -p " + dbDir + "tmp")
 os.system("mkdir -p " + vcfDir + "tmp")
-# we need to create some map files for GenomicsDBImport that contain partition gVCFs by list index 
-helperFun.makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir)
 
 
 ### workflow ###
