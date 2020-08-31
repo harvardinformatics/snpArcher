@@ -328,12 +328,12 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
                 stop = intv[1]
                 intervalLen = (stop - start + 1)
                 print(scaff, start, stop, sep="\t", file=bed)
-                if len(current_intervals) == 0:
-                    # if you decide lower maxBpPerList below maxIntervalLength, it's possible tohave an uninitialized
-                    # current_intervals that doesn't make it to subsequent else statement
-                    current_intervals = [ (scaff, start, stop) ]
                 # does adding the next interval put us over the maximum values for our two thresholds?
                 if (runningSumBp + intervalLen) >= maxBpPerList or (runningSum_intervals + 1) >= maxIntervalsPerList:
+                    if len(current_intervals) == 0:
+                        # if you decide lower maxBpPerList below maxIntervalLength, it's possible tohave an uninitialized
+                        # current_intervals that doesn't make it to subsequent else statement
+                        current_intervals = [ (scaff, start, stop) ]
                     # flush out current_intervals into a list file
                     printIntervalsToListFile(listDir, listFile_index, current_intervals)
                     #out = open(f"{listDir}list{listFile_index}.list", 'w')
