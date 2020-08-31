@@ -57,8 +57,7 @@ rule gvcf2DB:
         # for all samples from a particular list to be finished
         gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz", sample=SAMPLES, list=LISTS),
         gvcfs_idx = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi", sample=SAMPLES, list=LISTS),
-        l = listDir + "list{list}.list",
-        #DBmapfile = dbDir + "DB_mapfile{list}"
+        l = listDir + "list{list}.list"
     output: 
         DB = directory(dbDir + "DB_L{list}"),
         doneFile = temp(touch(dbDir + "DB_L{list}.done"))
@@ -117,19 +116,15 @@ rule gatherVcfs:
         vcf =  temp(config["gatkDir"] + "Combined.vcf"),
         vcfidx =  temp(config["gatkDir"] + "Combined.vcf.idx"),
         vcfFiltered =  config["gatkDir"] + "Combined_hardFiltered.vcf"
+    params:
+        gatherVcfsInput = helperFun.getVcfs_gatk(lastList, vcfDir)
     conda:
         "../envs/bam2vcf.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['gatherVcfs']['mem']   # this is the overall memory requested
     shell:
-        "INPUT=\"\" \n"
-        "for ((i=0;i<={lastList};i++)) \n"
-        "do \n"
-        "INPUT=\"${{INPUT}} -I {vcfDir}L${{i}}.vcf\" \n"
-        "done\n"
-
         "gatk GatherVcfs "
-        "$INPUT "
+        "{params.gatherVcfsInput} "
         "-O {output.vcf}\n"
 
         "sleep 10\n" # the variant filtration step was failing in an unreproducible way, so added this in case

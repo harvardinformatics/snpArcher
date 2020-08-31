@@ -400,3 +400,11 @@ def gvcfsPerList_gatk(SAMPLES, list, gvcfDir):
         inputGvcfs.append("-V " + gvcfDir + s + "_L" + str(list) + ".raw.g.vcf.gz")
     out = " ".join(inputGvcfs)
     return(out)
+
+
+def getVcfs_gatk(lastList, vcfDir):
+    vcfs = []
+    for i in range(lastList+1):
+       vcfs.append(f"-I {vcfDir}L{i}.vcf")
+    out = " ".join(vcfs)
+    return(out)
