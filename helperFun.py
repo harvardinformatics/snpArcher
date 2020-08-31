@@ -382,16 +382,6 @@ def printIntervalsToListFile(listDir, listFile_index, current_intervals):
         print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
     out.close()
 
-def makeMapFilesForGenomicsDBImport(SAMPLES, LISTS, dbDir, gvcfDir):
-    for l in LISTS:
-        fileName = dbDir + "DB_mapfile" + l
-        # only rewrite file if you haven't already; otherwise rerunning the script updates time stamp of these files
-        # causing snakemake to erroneously rerun some steps due to updated input
-        if not os.path.exists(fileName):
-            f=open(fileName, 'w')
-            for s in SAMPLES:
-                print(s, gvcfDir + s+"_L"+l+".raw.g.vcf.gz", sep="\t", file=f)
-            f.close()
 
 def loadIntervalsForFB(f):
     intervals_fb = []
@@ -404,4 +394,9 @@ def loadIntervalsForFB(f):
     return(intervals_fb)
     
 
-
+def gvcfsPerList_gatk(SAMPLES, list, gvcfDir):
+    inputGvcfs = []
+    for s in SAMPLES:
+        inputGvcfs.append("-V " + gvcfDir + s + "_L" + str(list) + ".raw.g.vcf.gz")
+    out = " ".join(inputGvcfs)
+    return(out)
