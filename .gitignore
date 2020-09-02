@@ -11,6 +11,14 @@ data/zebraFinch/genome/*.amb
 data/zebraFinch/genome/*.fai
 data/zebraFinch/genome/*.dict
 
+data/BHduck/genome/*.sa
+data/BHduck/genome/*.pac
+data/BHduck/genome/*.bwt
+data/BHduck/genome/*.ann
+data/BHduck/genome/*.amb
+data/BHduck/genome/*.fai
+data/BHduck/genome/*.dict
+
 fastp.*
 
 out
