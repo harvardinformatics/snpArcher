@@ -212,7 +212,7 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
 
     # if picard could not find any Nmers in your assembly (possible if only looking at small region) give NmerLens a key of 1 so loop below executes
     if len(NmerLens.keys()) == 0:
-        NmerLens[1] = 1
+        NmerLens[0] = 1
     
     # go through Nmers, starting with shortest ones, and construct different interval lists
     # but skip Nmers within 50bp of one another as they probably give similar results.
@@ -285,15 +285,30 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
         if maxIntervalLenByNmer[Nmer] < maxIntervalLen:
             lessThan.append(Nmer)
                 
+
+    out = open(workDir + "interval_algo.out",'w')
+    print("Here are the actual maximum interval lengths we observed, for each minimum Nmer size used to split up the genome.", file=out)
+    print("To proceed, specify a maxIntervalLen that is equal to or slightly greater than the ones observed here.", file=out)
+    print("Nmer MaxObservedInterval NumIntervals", file=out)
+    for Nmer in maxIntervalLenByNmer:
+        numInt = 0
+        for scaff in newIntervals[Nmer]:
+            numInt += len(newIntervals[Nmer][scaff])
+        print(Nmer, maxIntervalLenByNmer[Nmer], numInt, file=out)
+    out.close()
+
     if lessThan:
         print(f"best Nmer is {lessThan[-1]}")
     else:
         print(f"We could not find suitable Nmer to split up genome given the specified maxIntervalLen (which is currently too small).")
         print("Here are the actual maximum interval lengths we observed, for each minimum Nmer size used to split up the genome.")
         print("To proceed, specify a maxIntervalLen that is equal to or slightly greater than the ones observed here.")
-        print("Nmer MaxObservedInterval")
+        print("Nmer MaxObservedInterval NumIntervals")
         for Nmer in maxIntervalLenByNmer:
-            print(Nmer, maxIntervalLenByNmer[Nmer])
+            numInt = 0
+            for scaff in newIntervals[Nmer]:
+                numInt += len(newIntervals[Nmer][scaff])
+            print(Nmer, maxIntervalLenByNmer[Nmer], numInt)
         sys.exit("\n\n\n*****PLEASE SEE out FILE FOR A MESSAGE ON HOW TO PROCEED! :)*****\n\n\n")
 
     # take optimal interval_list and use to generate GATK list files
