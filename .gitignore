@@ -1,5 +1,6 @@
 data_preparation/
 .snakemake*
+template_slurm.sh
 
 # indexing and creating a sequence dictionary gets done within pipeline
 data/zebraFinch/genome/*.sa
@@ -17,6 +18,7 @@ err
 __pycache__
 
 fastq2bam/
+intervalFiles/
 freebayes/
 gatk/
 logs/
