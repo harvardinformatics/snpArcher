@@ -43,7 +43,7 @@ gatkDir: "gatk/"
 gvcfDir: "01_gvcfs/"
 dbDir: "02_genomicsDB/"
 vcfDir_gatk: "03_vcfs/"
-listDir: "intervalFiles/"
+intDir: "intervalFiles/"
 
 # These variables control the output of the FreeBayes workflow (please have forward slash follow name!)   
 fbDir: "freebayes/"

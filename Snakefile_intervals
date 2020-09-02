@@ -14,7 +14,7 @@ bam_suffix = config["bam_suffix"]
 
 # this is where Snakemake output will go, specify with 'gatkDir' in config.yml
 bamDir = config["bamsForGatk"] 
-listDir = config["listDir"]
+intDir = config["intDir"]
 maxIntervalLen = int(config["maxIntervalLen"])
 maxBpPerList = int(config["maxBpPerList"])
 maxIntervalsPerList = int(config["maxIntervalsPerList"])
@@ -27,14 +27,14 @@ refBaseName = helperFun.getRefBaseName(config["ref"])
 SAMPLES = helperFun.getBamSampleNames(bamDir, bam_suffix)
 
 # create directory to store GATK lists
-if not os.path.isdir(listDir + "gatkLists"):
-    os.system("mkdir -p " + listDir + "gatkLists")
+if not os.path.isdir(intDir + "gatkLists"):
+    os.system("mkdir -p " + intDir + "gatkLists")
 
 ### workflow ###
 
 rule all:
     input:
-        intervals = listDir + "intervals_fb.bed"
+        intervals = intDir + "intervals_fb.bed"
 
 rule process_ref:
     """
@@ -45,7 +45,7 @@ rule process_ref:
     output: 
         fai = config['ref'] + ".fai",
         dict = refBaseName + ".dict",
-        intervals = temp(listDir + "output.interval_list")
+        intervals = temp(intDir + "output.interval_list")
     conda:
         "./envs/bam2vcf.yml"
     resources: 
@@ -60,11 +60,11 @@ rule create_intervals:
     input:
         fai = config['ref'] + ".fai",
         dict = refBaseName + ".dict",
-        intervals = listDir + "output.interval_list"
+        intervals = intDir + "output.interval_list"
     output: 
-        intervals = listDir + "intervals_fb.bed"
+        intervals = intDir + "intervals_fb.bed"
     run:
-         LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName, listDir) 
+         LISTS = helperFun.createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName, intDir) 
 
 
 

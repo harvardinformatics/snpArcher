@@ -18,7 +18,7 @@ bamDir = config["bamsForGatk"]
 gvcfDir = gatkDir + config["gvcfDir"]
 dbDir = gatkDir + config["dbDir"]
 vcfDir = gatkDir + config["vcfDir_gatk"]
-listDir = config["listDir"]
+intDir = config["intDir"]
 maxIntervalLen = int(config["maxIntervalLen"])
 maxBpPerList = int(config["maxBpPerList"])
 maxIntervalsPerList = int(config["maxIntervalsPerList"])
@@ -38,7 +38,7 @@ os.system("mkdir -p " + dbDir + "tmp")
 os.system("mkdir -p " + vcfDir + "tmp")
 
 
-LISTS = helperFun.getListIndices(listDir)
+LISTS = helperFun.getListIndices(intDir)
 if not LISTS:
     sys.exit("no gatk lists found!")
 

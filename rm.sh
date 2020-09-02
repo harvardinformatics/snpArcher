@@ -7,18 +7,17 @@
 #SBATCH -t 40
 #SBATCH --mem=1000
 
-rm -r 00_fastqFiltered
-rm -r 01_mappedReads
-rm -r 02_bamSumstats
-rm -r 03_gvcfs
-rm -r 04_genomicsDB
-rm -r 05_vcfs
-rm Combined*.vcf
-rm Combined*.idx
-rm slurm-*.out
-rm out
-rm err
-rm bam_sumstats.txt
-rm SNP_per_interval.txt
-rm missing_data_per_ind.txt
+rm -r fastq2bam
+rm -r intervalFiles
+rm -r gatk
+rm -r freebayes
+
+rm -r logs
+
+rm data/zebraFinch/genome/Tgut_subseg_renamed.fa.*
+rm data/zebraFinch/genome/Tgut_subseg_renamed.dict
+
+rm data/BHduck/genome/MU014702.1.fa.*
+rm data/BHduck/genome/MU014702.1.dict
+
 
