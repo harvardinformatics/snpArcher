@@ -24,7 +24,7 @@ cd shortRead_mapping_variantCalling
 ```
 
 ### 2.) Set values of important variables
-Witin this directory a file named `config.yaml` stores many variables, including the location of files (e.g. reference genome) as well as file suffixes (e.g. forward read data end in "\_1.fastq.gz"). The top section of `config.yaml` contains the variables that *need* to be changed, and comments within this file describe these variables. 
+Witin this directory a file named `config.yaml` stores many variables, including the location of files (e.g. reference genome) as well as file suffixes (e.g. forward read data end in "\_1.fastq.gz" with the names of samples preceding these suffixes). The top section of `config.yaml` contains the variables that *need* to be changed, and comments within this file describe these variables. 
 
 #### 2b.) Parameterize algorithm to split up genome (most complicated bit, may need to simplify)
 `config.yaml` also contains two variables to define genomic intervals for parallel processing:
@@ -35,7 +35,7 @@ Witin this directory a file named `config.yaml` stores many variables, including
 
 3. `maxBpPerList`: the maximum number of bp (summed length of intervals) allowed in a list file used by GATK4. I usually just set this to the same as `maxIntervalLen` above.
 
-If you specify a minNmer value that does not sufficiently break up the genome -- creating intervals larger than maxIntervalLen -- the workflow will halt and show you the maximum interval length it found for various Nmers in the genome. With these data you can adjust the parameters accordingly.
+If you specify a minNmer value that does not sufficiently break up the genome -- creating intervals larger than maxIntervalLen -- the workflow will halt and show you the maximum interval length it found for various Nmers in the genome. With these data you can adjust the parameters accordingly. For more info, see the interval creation workflow below.
 
 ### 3.) Set the resources to request for various steps
 The `resources.yaml` file may be changed to increase the amount of requested memory (in Megabytes) or the number of threads for the steps that support multi-threading. Not all steps in the workflows are included here, so these use the default amount of resources. **NOTE**: if any job fails, it gets resubmitted with increased memory calculated as (*attempt number*)\*(initial memory).
@@ -49,18 +49,18 @@ To run, simply type the following on the command line to submit this workflow as
 sbatch run_fastq2bam.sh
 ```
 
-#### interval creation workflow (preliminary step to variant calling)
+#### interval creation workflow (preprocessing step to variant calling)
 Before running the BAM -> VCF workflows, you must run a fast (depending on genome assembly) algorithm that splits up the genome into many intervals flanked by N's (described above). Because the outcome of this will vary by genome and depend on the parameters in the `config.yaml` file, we suggest you check the output of this short workflow to make sure everything went well. For instance, it's possible that, given the parameters and your assembly, the algorithm found ~100k intervals. Dividing the genome into this many intervals may slow down the workflow, as these short jobs will spend more time pending in the queue than actually running. 
 
 Type the following on the command line:
 ```
 sbatch run_intervals.sh
 ```
-and go to the `intervalFiles` directory. In the subdirectory `gatkLists` you'll find the list files used to partition the genome. GATK requires intervals be specified in this way, and each list file contains potentially many intervals. The number of list files will be proportional to how many jobs ultimately get submitted, and 10's to 100's of list files is probably OK.
+and go to the `intervalFiles` directory. In the subdirectory `gatkLists` you'll find the list files used to partition the genome. GATK requires intervals be specified in this way, and each list file contains potentially many intervals. The number of list files will be proportional to how many jobs ultimately get submitted, and many 100's of list files is OK. Something around 10k is probably too many.
 
 For the Freebayes workflow, the file `intervals_fb.bed` contains the intervals used to partition the genome. Again, something on the order of 1000 to 10k intervals is probably fine (just count the number of lines in this file using `wc -l intervals_fb.bed`).
 
-If you dont get the desired number of intervals, you can change `minNmer` in the config file; increasing the value will result in fewer intervals, decreasing it will create more. You can also look at the `interval_algo.out` file in the `intervalFiles` directory to see how many intervals get created for each Nmer we found in your genome assembly and also the maximum interval length for each `minNmer`. You can use this information to select a `minNmer` that doesn't create too large of intervals, which can slow down the workflow.
+If you dont get the desired number of intervals, you can change `minNmer` in the config file; increasing the value will result in fewer intervals, decreasing it will create more. You can also look at the `interval_algo.out` file in the `intervalFiles` directory to see how many intervals get created for each Nmer we found in your genome assembly and also the maximum interval length for each `minNmer`. You can use this information to select a `minNmer` that doesn't create too large of intervals (`MaxObservedInterval`), which can slow down the workflow.
 
 NOTE: a perfect assembly with no N's will have as many intervals as there are chromosomes.
 
@@ -120,7 +120,11 @@ The versions of the various programs may be found in the YAML files in the `envs
 There are currently two different test datasets that accompany this workflow. The zebrafinch data consists of reads for 3 individuals that map to a genome with 3 scaffolds (each 200kb in length). The Black head duck data consists of reads for 3 individuals that maps to a genome with a single scaffold that gets split (by Nmers) into subintervals.
 
 
-
+<br>
+<br>
+<br>
+<br>
+<br>
 
 
 

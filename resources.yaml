@@ -15,7 +15,7 @@ bwa_map:
     mem: 15000
 # sort bam with picard's SortSam tool
 sort_bam: 
-    mem: 9000 
+    mem: 25000 
 # mark duplicates with picard's MarkDuplicates
 dedup: 
     mem: 9000 
@@ -23,16 +23,19 @@ dedup:
 bam_sumstats: 
     mem: 9000 
 
+###
+# BAM -> VCF workflow
+###
 
+# preprocess genome, create intervals
+# picard's create CreateSequenceDictionary, samtools faidx
 process_ref:
     mem: 15000
+# custom python algo to create intervals
 create_intervals:
     mem: 15000
 
 
-###
-# BAM -> VCF workflow
-##
 
 # gatk workflow
 
@@ -50,7 +53,7 @@ gatherVcfs:
     mem: 30000
 # vcftools program
 vcftools:
-    mem: 10000
+    mem: 30000
 
 
 # freebayes workflow
@@ -63,4 +66,4 @@ gatherVcfs:
     mem: 30000
 # vcftools program
 vcftools:
-    mem: 10000
+    mem: 30000
