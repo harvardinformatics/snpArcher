@@ -17,13 +17,8 @@ fbDir = config["fbDir"]
 bamDir = config["bamsForFB"]
 intervalDir = fbDir + config["intervalDir"]  
 vcfDir_fb = fbDir + config["vcfDir_fb"]
-listDir = fbDir + config["listDir"]
+listDir = config["listDir"]
 maxDP_fb = config["maxDP_fb"]
-# for creating intervals
-maxIntervalLen = int(config["maxIntervalLen"])
-maxBpPerList = int(config["maxBpPerList"])
-maxIntervalsPerList = int(config["maxIntervalsPerList"])
-minNmer = config["minNmer"]
 
 refBaseName = helperFun.getRefBaseName(config["ref"])
 
@@ -34,10 +29,7 @@ SAMPLES = helperFun.getBamSampleNames(bamDir, bam_suffix)
 
 if not os.path.isdir(fbDir):
     os.system("mkdir " + fbDir)
-if not os.path.isdir(listDir):
-    os.system("mkdir " + listDir)
-LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName, fbDir)
-intervals_fb = helperFun.loadIntervalsForFB(fbDir + "intervals.bed")
+intervals_fb = helperFun.loadIntervalsForFB(listDir + "intervals_fb.bed")
 
 
 def myfunc(vcfDir_fb, intervals_fb):

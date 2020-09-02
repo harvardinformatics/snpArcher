@@ -41,10 +41,22 @@ If you specify a minNmer value that does not sufficiently break up the genome --
 The `resources.yaml` file may be changed to increase the amount of requested memory (in Megabytes) or the number of threads for the steps that support multi-threading. Not all steps in the workflows are included here, so these use the default amount of resources. **NOTE**: if any job fails, it gets resubmitted with increased memory calculated as (*attempt number*)\*(initial memory).
 
 ### 4.) Submit workflow(s)!
-After updating the config.yaml file, you may now run one of the workflows, which gets submitted as a job that itself submits many jobs (max of 1000, may be changed). If you are running the fastq -> BAM workflow, simply type the following on the command line to submit this workflow as a job:
+After updating the config.yaml file, you may now run one of the workflows, which gets submitted as a job that itself submits many jobs (max of 1000, may be changed).
+
+If you are running the fastq -> BAM workflow, simply type the following on the command line to submit this workflow as a job:
 ```
 sbatch run_fastq2bam.sh
 ```
+
+Before running the BAM -> VCF workflows, you must run a fast (depending on genome assembly) algorithm that splits up the genome into many intervals flanked by N's (described above). Because the outcome of this will vary by genome and depend on the parameters in the `config.yaml` file, we suggest you check the output of this short workflow to make sure everything went well. For instance, it's possible that, given the parameters and your assembly, the algorithm found ~100k intervals. Dividing the genome into this many intervals may slow down the workflow, as these short jobs will spend more time pending in the queue than actually running. Type the following on the command line:
+```
+sbatch run_intervals.sh
+```
+and go to the `intervalFiles` directory. In the subdirectory `gatkLists` you'll find the list files used to partition the genome. GATK requires intervals be specified in this way, and each list file contains potentially many intervals. The number of list files will be proportional to how many jobs ultimately get submitted, and 10's to 100's of list files is probably OK.
+
+For the Freebayes workflow, the file `intervals_fb.bed` contains the intervals used to partition the genome. Again, something on the order of 1000 to 10k intervals is probably fine (just count the number of lines in this file using `wc -l intervals_fb.bed`.
+
+
 
 The BAM -> VCF workflow currently contains two different options. To run GATK4, type the following on the command line:
 ```
@@ -147,6 +159,7 @@ To change the resources each task requests, please see the cluster_config.yml fi
 
 ## TO DO:
 
+- simplify variable names? listDir confusing bc it's used for FB which uses intervals not lists
 - how to change queue
 - optimize interval-creating algo for big genomes
 - for variables continaing directory, ask if they end in "/" otherwise add this!

@@ -23,6 +23,13 @@ dedup:
 bam_sumstats: 
     mem: 9000 
 
+
+process_ref:
+    mem: 15000
+create_intervals:
+    mem: 15000
+
+
 ###
 # BAM -> VCF workflow
 ##
@@ -30,8 +37,6 @@ bam_sumstats:
 # gatk workflow
 
 # gatk HaplotypeCaller
-processRef:
-    mem: 10000
 bam2gvcf: 
     mem: 30000
 # gatk GenomicsDBImport

@@ -13,7 +13,7 @@ rule bam2vcf:
     """
     input:
         ref = config['ref'],
-        bams = expand(bamDir + "{sample}_dedup.bam", sample=SAMPLES) # input all bams at once
+        bams = expand(bamDir + "{sample}" + bam_suffix, sample=SAMPLES) # input all bams at once
     output: 
         vcf = temp(vcfDir_fb + "{i}.vcf") # output one vcf per interval
     conda:
@@ -64,7 +64,7 @@ rule gatherVcfs:
 rule vcftools:
     input:
         vcf = fbDir + "Combined_hardFiltered.vcf",
-        int = fbDir + "intervals.bed"
+        int = listDir + "intervals_fb.bed"
     output: 
         missing = fbDir + "missing_data_per_ind.txt",
         SNPsPerInt = fbDir + "SNP_per_interval.txt"

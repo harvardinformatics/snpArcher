@@ -1,4 +1,4 @@
 @HD	VN:1.6
-@SQ	SN:1	LN:200000	M5:abe8b92d1d97503a5b47f6c777b7fa62	UR:file:/n/holylfs/LABS/informatics/bjarnold/workshops/shortRead_mapping_variantCalling/snakemake_bam2vcf_GATK/../data/genome/Tgut_subseg_renamed.fa
-@SQ	SN:2	LN:200000	M5:fa677d27cf48fd83f5ab0b80d06ccf8b	UR:file:/n/holylfs/LABS/informatics/bjarnold/workshops/shortRead_mapping_variantCalling/snakemake_bam2vcf_GATK/../data/genome/Tgut_subseg_renamed.fa
-@SQ	SN:3	LN:200000	M5:ede8ed3c24b4c1faeef37c534cfebb00	UR:file:/n/holylfs/LABS/informatics/bjarnold/workshops/shortRead_mapping_variantCalling/snakemake_bam2vcf_GATK/../data/genome/Tgut_subseg_renamed.fa
+@SQ	SN:1	LN:200000	M5:abe8b92d1d97503a5b47f6c777b7fa62	UR:file:/n/holylfs/LABS/informatics/bjarnold/workshops/shortRead_mapping_variantCalling/data/zebraFinch/genome/Tgut_subseg_renamed.fa
+@SQ	SN:2	LN:200000	M5:fa677d27cf48fd83f5ab0b80d06ccf8b	UR:file:/n/holylfs/LABS/informatics/bjarnold/workshops/shortRead_mapping_variantCalling/data/zebraFinch/genome/Tgut_subseg_renamed.fa
+@SQ	SN:3	LN:200000	M5:ede8ed3c24b4c1faeef37c534cfebb00	UR:file:/n/holylfs/LABS/informatics/bjarnold/workshops/shortRead_mapping_variantCalling/data/zebraFinch/genome/Tgut_subseg_renamed.fa

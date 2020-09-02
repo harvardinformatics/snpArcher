@@ -1,18 +1,3 @@
-rule processRef:
-    """
-    This rule generates a .fai file from the reference genome, which are required for GATK to run properly. GATK also needs a .dict file, but this was previously generated.
-    """
-    input:
-        ref = config['ref'],
-    output: 
-        fai = config['ref'] + ".fai",
-    conda:
-        "../envs/bam2vcf.yml"
-    resources: 
-        mem_mb = lambda wildcards, attempt: attempt * res_config['processRef']['mem']   
-    shell:
-        "samtools faidx {input.ref} --output {output.fai}\n"
-
 rule bam2gvcf:
     """
     This rule scatters analyses over two dimensions: sample name and list file. For each BAM file, one per sample,
@@ -22,8 +7,8 @@ rule bam2gvcf:
         ref = config['ref'],
         fai = config['ref'] + ".fai",
         dict = refBaseName + ".dict",
-        bam = bamDir + "{sample}_dedup.bam",
-        l = listDir + "list{list}.list"
+        bam = bamDir + "{sample}" + bam_suffix,
+        l = listDir + "gatkLists/list{list}.list"
     output: 
         gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz",
         gvcf_idx = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi"
@@ -57,7 +42,7 @@ rule gvcf2DB:
         # for all samples from a particular list to be finished
         gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz", sample=SAMPLES, list=LISTS),
         gvcfs_idx = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi", sample=SAMPLES, list=LISTS),
-        l = listDir + "list{list}.list"
+        l = listDir + "gatkLists/list{list}.list"
     output: 
         DB = directory(dbDir + "DB_L{list}"),
         doneFile = temp(touch(dbDir + "DB_L{list}.done"))
@@ -117,7 +102,7 @@ rule gatherVcfs:
         vcfidx =  temp(config["gatkDir"] + "Combined.vcf.idx"),
         vcfFiltered =  config["gatkDir"] + "Combined_hardFiltered.vcf"
     params:
-        gatherVcfsInput = helperFun.getVcfs_gatk(lastList, vcfDir)
+        gatherVcfsInput = helperFun.getVcfs_gatk(LISTS, vcfDir)
     conda:
         "../envs/bam2vcf.yml"
     resources:
@@ -138,11 +123,11 @@ rule gatherVcfs:
 
 rule vcftools:
     input:
-        vcf = config["gatkDir"] + "Combined_hardFiltered.vcf",
-        int = config["gatkDir"] + "intervals.bed"
+        vcf = gatkDir + "Combined_hardFiltered.vcf",
+        int = listDir + "intervals_fb.bed"
     output: 
-        missing = config["gatkDir"] + "missing_data_per_ind.txt",
-        SNPsPerInt = config["gatkDir"] + "SNP_per_interval.txt"
+        missing = gatkDir + "missing_data_per_ind.txt",
+        SNPsPerInt = gatkDir + "SNP_per_interval.txt"
     conda:
         "../envs/bam2vcf.yml"
     resources:

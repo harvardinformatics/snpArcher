@@ -1,0 +1,70 @@
+import os
+from collections import defaultdict
+import sys
+import yaml
+sys.path.append(os.getcwd())
+import helperFun
+
+configfile: "config.yaml"
+res_config = yaml.load(open("resources.yaml"))
+
+# rename variables from config file for downstream simplicity
+ref = config["ref"]
+bam_suffix = config["bam_suffix"]
+
+# this is where Snakemake output will go, specify with 'gatkDir' in config.yml
+bamDir = config["bamsForGatk"] 
+listDir = config["listDir"]
+maxIntervalLen = int(config["maxIntervalLen"])
+maxBpPerList = int(config["maxBpPerList"])
+maxIntervalsPerList = int(config["maxIntervalsPerList"])
+minNmer = config["minNmer"]
+
+refBaseName = helperFun.getRefBaseName(config["ref"])
+
+# grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
+#SAMPLES = ["ERR1013163"]
+SAMPLES = helperFun.getBamSampleNames(bamDir, bam_suffix)
+
+# create directory to store GATK lists
+if not os.path.isdir(listDir + "gatkLists"):
+    os.system("mkdir -p " + listDir + "gatkLists")
+
+### workflow ###
+
+rule all:
+    input:
+        intervals = listDir + "intervals_fb.bed"
+
+rule process_ref:
+    """
+    This rule generates a .fai file from the reference genome, which are required for GATK to run properly. GATK also needs a .dict file, but this was previously generated.
+    """
+    input:
+        ref = config['ref'],
+    output: 
+        fai = config['ref'] + ".fai",
+        dict = refBaseName + ".dict",
+        intervals = temp(listDir + "output.interval_list")
+    conda:
+        "./envs/bam2vcf.yml"
+    resources: 
+        mem_mb = lambda wildcards, attempt: attempt * res_config['process_ref']['mem']   
+    shell:
+        "samtools faidx {input.ref} --output {output.fai}\n"
+        "picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dict}\n"
+        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={minNmer} 2> err\n"
+
+
+rule create_intervals:
+    input:
+        fai = config['ref'] + ".fai",
+        dict = refBaseName + ".dict",
+        intervals = listDir + "output.interval_list"
+    output: 
+        intervals = listDir + "intervals_fb.bed"
+    run:
+         LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName, listDir) 
+
+
+
