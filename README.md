@@ -49,8 +49,10 @@ To run, simply type the following on the command line to submit this workflow as
 sbatch run_fastq2bam.sh
 ```
 
-#### create intervals for parallelizing variant calling
-Before running the BAM -> VCF workflows, you must run a fast (depending on genome assembly) algorithm that splits up the genome into many intervals flanked by N's (described above). Because the outcome of this will vary by genome and depend on the parameters in the `config.yaml` file, we suggest you check the output of this short workflow to make sure everything went well. For instance, it's possible that, given the parameters and your assembly, the algorithm found ~100k intervals. Dividing the genome into this many intervals may slow down the workflow, as these short jobs will spend more time pending in the queue than actually running. Type the following on the command line:
+#### interval creation workflow (preliminary step to variant calling)
+Before running the BAM -> VCF workflows, you must run a fast (depending on genome assembly) algorithm that splits up the genome into many intervals flanked by N's (described above). Because the outcome of this will vary by genome and depend on the parameters in the `config.yaml` file, we suggest you check the output of this short workflow to make sure everything went well. For instance, it's possible that, given the parameters and your assembly, the algorithm found ~100k intervals. Dividing the genome into this many intervals may slow down the workflow, as these short jobs will spend more time pending in the queue than actually running. 
+
+Type the following on the command line:
 ```
 sbatch run_intervals.sh
 ```
@@ -58,12 +60,12 @@ and go to the `intervalFiles` directory. In the subdirectory `gatkLists` you'll 
 
 For the Freebayes workflow, the file `intervals_fb.bed` contains the intervals used to partition the genome. Again, something on the order of 1000 to 10k intervals is probably fine (just count the number of lines in this file using `wc -l intervals_fb.bed`).
 
-If you dont get the desired number of intervals, you can change `minNmer` in the config file; increasing the value will result in fewer intervals, decreasing it will create more. You can also look at the `interval_algo.out` file in the `intervalFiles` directory to see what the maximum interval length is for each minNmer. You can use this information to select a minNmer that doesn't create too large of intervals which can slow down the workflow.
+If you dont get the desired number of intervals, you can change `minNmer` in the config file; increasing the value will result in fewer intervals, decreasing it will create more. You can also look at the `interval_algo.out` file in the `intervalFiles` directory to see how many intervals get created for each Nmer we found in your genome assembly and also the maximum interval length for each `minNmer`. You can use this information to select a `minNmer` that doesn't create too large of intervals, which can slow down the workflow.
 
 NOTE: a perfect assembly with no N's will have as many intervals as there are chromosomes.
 
 #### BAM -> VCF workflows
-To run GATK4, type the following on the command line:
+Once you are satisfied with how the genome will get split into intervals, to run GATK4, type the following on the command line:
 ```
 sbatch run_bam2vcf_gatk.sh
 ```
@@ -164,7 +166,6 @@ To change the resources each task requests, please see the cluster_config.yml fi
 
 ## TO DO:
 
-- simplify variable names? listDir confusing bc it's used for FB which uses intervals not lists
 - how to change queue
 - optimize interval-creating algo for big genomes
 - for variables continaing directory, ask if they end in "/" otherwise add this!

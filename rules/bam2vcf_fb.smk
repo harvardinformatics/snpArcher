@@ -64,7 +64,7 @@ rule gatherVcfs:
 rule vcftools:
     input:
         vcf = fbDir + "Combined_hardFiltered.vcf",
-        int = listDir + "intervals_fb.bed"
+        int = intDir + "intervals_fb.bed"
     output: 
         missing = fbDir + "missing_data_per_ind.txt",
         SNPsPerInt = fbDir + "SNP_per_interval.txt"

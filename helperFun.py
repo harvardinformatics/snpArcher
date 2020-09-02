@@ -167,7 +167,7 @@ def createSeqDictGetScaffOrder(ref, refBaseName):
             seqDictScaffs.append(scaff)
     return(seqDictScaffs)
 
-def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName, workDir):
+def createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName, workDir):
 
     # Get the order in which scaffolds are listed in genome .dict file,  need to correspond to order in list files! So use .dict order for printing interval files
     seqDictScaffs = createSeqDictGetScaffOrder(ref, refBaseName)
@@ -186,7 +186,7 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
 
 
     # read in picard output
-    f = open(listDir + "output.interval_list", 'r')
+    f = open(intDir + "output.interval_list", 'r')
     for line in f:
         line = line.strip()
         line = line.split()
@@ -332,8 +332,8 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
                     # current_intervals that doesn't make it to subsequent else statement
                     current_intervals = [ (scaff, start, stop) ]
                 # flush out current_intervals into a list file
-                printIntervalsToListFile(listDir, listFile_index, current_intervals)
-                #out = open(f"{listDir}list{listFile_index}.list", 'w')
+                printIntervalsToListFile(intDir, listFile_index, current_intervals)
+                #out = open(f"{intDir}list{listFile_index}.list", 'w')
                 #for i in current_intervals:
                 #    print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
                 #out.close()
@@ -348,15 +348,15 @@ def createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPer
                 runningSumBp += intervalLen
     # if part-way through the loop above ran out of intervals to print, print whatever remains
     if current_intervals:
-        printIntervalsToListFile(listDir, listFile_index, current_intervals)
-        #out = open(f"{listDir}list{listFile_index}.list", 'w')
+        printIntervalsToListFile(intDir, listFile_index, current_intervals)
+        #out = open(f"{intDir}list{listFile_index}.list", 'w')
         #for i in current_intervals:
         #    print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
         #out.close()
     bed.close()
 
     # get list file indices
-    LISTS = glob.glob(listDir + "*.list")	
+    LISTS = glob.glob(intDir + "*.list")	
     for i in range(len(LISTS)):
         LISTS[i] = os.path.basename(LISTS[i])
         LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
@@ -374,8 +374,8 @@ def overlaps(a, b):
     """     
     return min(a[1], b[1]) - max(a[0], b[0])
 
-def printIntervalsToListFile(listDir, listFile_index, current_intervals):
-    out = open(f"{listDir}gatkLists/list{listFile_index}.list", 'w')
+def printIntervalsToListFile(intDir, listFile_index, current_intervals):
+    out = open(f"{intDir}gatkLists/list{listFile_index}.list", 'w')
     for i in current_intervals:
         print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
     out.close()
@@ -407,8 +407,8 @@ def getVcfs_gatk(LISTS, vcfDir):
     out = " ".join(vcfs)
     return(out)
 
-def getListIndices(listDir):
-    LISTS = glob.glob(listDir + "gatkLists/*.list")	
+def getListIndices(intDir):
+    LISTS = glob.glob(intDir + "gatkLists/*.list")	
     for i in range(len(LISTS)):
         LISTS[i] = os.path.basename(LISTS[i])
         LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list

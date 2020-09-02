@@ -8,7 +8,7 @@ rule bam2gvcf:
         fai = config['ref'] + ".fai",
         dict = refBaseName + ".dict",
         bam = bamDir + "{sample}" + bam_suffix,
-        l = listDir + "gatkLists/list{list}.list"
+        l = intDir + "gatkLists/list{list}.list"
     output: 
         gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz",
         gvcf_idx = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi"
@@ -42,7 +42,7 @@ rule gvcf2DB:
         # for all samples from a particular list to be finished
         gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz", sample=SAMPLES, list=LISTS),
         gvcfs_idx = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi", sample=SAMPLES, list=LISTS),
-        l = listDir + "gatkLists/list{list}.list"
+        l = intDir + "gatkLists/list{list}.list"
     output: 
         DB = directory(dbDir + "DB_L{list}"),
         doneFile = temp(touch(dbDir + "DB_L{list}.done"))
@@ -124,7 +124,7 @@ rule gatherVcfs:
 rule vcftools:
     input:
         vcf = gatkDir + "Combined_hardFiltered.vcf",
-        int = listDir + "intervals_fb.bed"
+        int = intDir + "intervals_fb.bed"
     output: 
         missing = gatkDir + "missing_data_per_ind.txt",
         SNPsPerInt = gatkDir + "SNP_per_interval.txt"
