@@ -2,13 +2,13 @@ data_preparation/
 .snakemake*
 
 # indexing and creating a sequence dictionary gets done within pipeline
-data/genome/*.sa
-data/genome/*.pac
-data/genome/*.bwt
-data/genome/*.ann
-data/genome/*.amb
-data/genome/*.fai
-data/genome/*.dict
+data/zebraFinch/genome/*.sa
+data/zebraFinch/genome/*.pac
+data/zebraFinch/genome/*.bwt
+data/zebraFinch/genome/*.ann
+data/zebraFinch/genome/*.amb
+data/zebraFinch/genome/*.fai
+data/zebraFinch/genome/*.dict
 
 fastp.*
 

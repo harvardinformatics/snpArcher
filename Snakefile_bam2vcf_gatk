@@ -18,7 +18,7 @@ bamDir = config["bamsForGatk"]
 gvcfDir = gatkDir + config["gvcfDir"]
 dbDir = gatkDir + config["dbDir"]
 vcfDir = gatkDir + config["vcfDir_gatk"]
-listDir = gatkDir + config["listDir"]
+listDir = config["listDir"]
 maxIntervalLen = int(config["maxIntervalLen"])
 maxBpPerList = int(config["maxBpPerList"])
 maxIntervalsPerList = int(config["maxIntervalsPerList"])
@@ -30,18 +30,17 @@ refBaseName = helperFun.getRefBaseName(config["ref"])
 #SAMPLES = ["ERR1013163"]
 SAMPLES = helperFun.getBamSampleNames(bamDir, bam_suffix)
 
-
 if not os.path.isdir(config["gatkDir"]):
     os.system("mkdir " + config["gatkDir"])
-if not os.path.isdir(listDir):
-    os.system("mkdir " + listDir)
-LISTS = helperFun.createListsGetIndices(listDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName, config["gatkDir"])
-lastList = len(LISTS)-1
 
 # this directory needs to be made beforehand since it is specified within GATK, which doesn't automatically make directories
 os.system("mkdir -p " + dbDir + "tmp")
 os.system("mkdir -p " + vcfDir + "tmp")
 
+
+LISTS = helperFun.getListIndices(listDir)
+if not LISTS:
+    sys.exit("no gatk lists found!")
 
 ### workflow ###
 
