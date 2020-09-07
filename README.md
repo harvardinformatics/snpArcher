@@ -62,7 +62,7 @@ For the Freebayes workflow, the file `intervals_fb.bed` contains the intervals u
 
 If you dont get the desired number of intervals, you can change `minNmer` in the config file; increasing the value will result in fewer intervals, decreasing it will create more. You can also look at the `interval_algo.out` file in the `intervalFiles` directory to see how many intervals get created for each Nmer we found in your genome assembly and also the maximum interval length for each `minNmer`. You can use this information to select a `minNmer` that doesn't create too large of intervals (`MaxObservedInterval`), which can slow down the workflow.
 
-NOTE: a perfect assembly with no N's will have as many intervals as there are chromosomes.
+NOTE: a perfect assembly with no N's will have as many intervals as there are chromosomes (or scaffolds).
 
 #### BAM -> VCF workflows
 Once you are satisfied with how the genome will get split into intervals, to run GATK4, type the following on the command line:
