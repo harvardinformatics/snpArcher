@@ -11,7 +11,8 @@ rule bam2gvcf:
         l = intDir + "gatkLists/list{list}.list"
     output: 
         gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz",
-        gvcf_idx = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi"
+        gvcf_idx = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi",
+        doneFile = temp(touch(gvcfDir + "{sample}_L{list}.done"))
     resources: 
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
         # subtract that memory here
@@ -42,7 +43,8 @@ rule gvcf2DB:
         # for all samples from a particular list to be finished
         gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz", sample=SAMPLES, list=LISTS),
         gvcfs_idx = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi", sample=SAMPLES, list=LISTS),
-        l = intDir + "gatkLists/list{list}.list"
+        l = intDir + "gatkLists/list{list}.list",
+        doneFiles = expand(gvcfDir + "{sample}_L{list}.done", sample=SAMPLES, list=LISTS)
     output: 
         DB = directory(dbDir + "DB_L{list}"),
         doneFile = temp(touch(dbDir + "DB_L{list}.done"))
