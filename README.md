@@ -40,7 +40,10 @@ If you specify a minNmer value that does not sufficiently break up the genome --
 ### 3.) Set the resources to request for various steps
 The `resources.yaml` file may be changed to increase the amount of requested memory (in Megabytes) or the number of threads for the steps that support multi-threading. Not all steps in the workflows are included here, so these use the default amount of resources. **NOTE**: if any job fails, it gets resubmitted with increased memory calculated as (*attempt number*)\*(initial memory).
 
-### 4.) Submit workflow(s)!
+### 4.) Are you alright with default number of jobs to submit to run simultaneously?
+There's a file in the `profiles/slurm` directory called `config.yaml` which contains various options for the workflow (this setup is from using [profiles](https://github.com/Snakemake-Profiles)). The most important is `jobs` at the top. If your workflow needs to submit ~10k jobs overall and many of them can be run in parallel (e.g. making GVCFs from BAM files for each sample), then this `jobs` variable determines how many jobs the workflow will submit at any given time. The default is 1000, meaning if 1k jobs are sitting in the queue (running or pending), it will not submit more. If you are concerned about your fairshare score decreasing dramatically because of this (e.g. you have 80k jobs to submit overall from having many samples), set `jobs` to something smaller, such as 300. This will of course make the workflow take longer but will leave resources for your colleagues!
+
+### 5.) Submit workflow(s)!
 After updating the config.yaml file, you may now run one of the workflows, which gets submitted as a job that itself submits many jobs (max of 1000, may be changed).
 
 #### fastq -> BAM workflow
@@ -129,47 +132,21 @@ There are currently two different test datasets that accompany this workflow. Th
 
 
 # please ignore everything below this :)
-# please ignore everything below this :)
-# please ignore everything below this :)
+
+
+<br>
+<br>
+<br>
+<br>
+<br>
 
 
 
-
-
-## Workflow components
-### Part 1: fastq -> BAM
-
-![](docs/workflowSchematic_fastq2bam.png)
-
-As mentioned above, we encourage users to inspect the BAM files at this point. Please find many informative metrics in "bam_sumstats.txt". This file contains the following information:
-1. Sample name
-2. Fraction of reads that passed fastp filter
-3. Number of filtered reads
-4. Percent of PCR duplicates
-5. Percent of paired-end reads that mapped to the genome with mapping quality greater than 20
-6. Percent of aligned bases that have base qualities greater than 20
-7. Mean sequencing depth per site
-8. Number of bases covered *at least* once
-9. Logical test for whether your BAM file is valid and ready for variant calling (according to picard's ValidateSamFile tool). If not, check the appropriate _validate.txt file in the 02_bamSumstats dir. "FALSE" values indicate that variant callers may fail downstream, although not necessarily as this validation step is very fussy.
-
-### Part 2: BAM -> VCF
-
-Calling variants can be a time-consuming task for eukaryotic data, but running independent tasks in parallel can speed this process up. There are two approaches to [parallelization](https://gatk.broadinstitute.org/hc/en-us/articles/360035532012-Parallelism-Multithreading-Scatter-Gather): multi-threading and scatter-gather. Multi-threading involves instructions written into the program itself to use multiple cores on a machine (or node on Cannon computing cluster), while the scatter-gather approach involves running multiple copies of the program simultaneously on indepdendent tasks. For instance, we could give GATK 10 cores for multi-threading, or we could divide the genome up into 10 parts and run GATK with 1 core on each of these parts, gathering the results into a single file at the end. This workflow uses the scatter-gather approach, as multithreading is not fully supported at all GATK steps at the moment. 
-
-The scatter-gather approach requires dividing the genome up into segments (e.g. entire chromosomes/scaffolds or even subintervals within scaffolds), and storing these segments in separate "list" files that we later give to GATK to tell it to only work on that particular interval. Ideally, each list file would represent similar fractions of the genome so that all tasks take a similar amount of time. These list files have been created by the Broad for the human genome, but we have written an algorithm into this pipeline that will create these intervals for non-model organisms. Briefly, this algorithm works by finding all regions of the genome with consecutive N's (Nmers), as it is [recommended](https://gatk.broadinstitute.org/hc/en-us/articles/360036823571-ScatterIntervalsByNs-Picard-) that subintervals within scaffolds are flanked by Nmers to avoid problems with variant calling at the edges of intervals. The user can specify in the config file the minimum Nmer length to decide whether to split a scaffold into smaller subintervals. A minimum length of 500bp is probably fine, and you can likely go down to 100bp since this is the length of [padding used](https://gatk.broadinstitute.org/hc/en-us/articles/360035889551-When-should-I-restrict-my-analysis-to-specific-intervals-) when calling variants within exomes.
-
-At its peak of resource consumption, the bam -> VCF workflow submits up to (# samples)X(# list files) jobs, although one may control the maximum number of jobs snakemake submits on the command line.
-
-![](docs/workflowSchematic_bam2VCF.png)
-
-If something in the workflow fails, check the log file and look for the keyword "Error", which should direct you to the specific tasks that failed. It is very possible that some errors may be fixed by simply rerunning the Snakefile, as temporary hardware issues may cause errors, e.g. the computing cluster not responding which can cause Input/Output errors. Occasionally, one step will fail because a previous step  produced truncated output (I have seen fastp produce corrupted files that get fed to bwa, where the error ultimately occurs that snakemake detects). In these cases, these files must be manually removed for snakemake to reproduce them.
-
-Make sure all programs are updated!! GATK actively changing and bugs being fixed all the time!!
-
-To change the resources each task requests, please see the cluster_config.yml file in the subdirectory profiles/slurm/. However, a few rules have their resources specified within the rule specification (in rules subdir) so that the requested memory can be incremented with each attempt. I was not able to get this feature working while specifying memory for that rule within the cluster_config file.
 
 ## TO DO:
 
+- print out scalc
+- let them know how to change # jobs it submits at any given time
 - how to change queue
 - optimize interval-creating algo for big genomes
 - for variables continaing directory, ask if they end in "/" otherwise add this!
