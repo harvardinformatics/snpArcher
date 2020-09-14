@@ -32,6 +32,18 @@ rule bam2gvcf:
         "-L {input.l} "
         "--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang}"
 
+rule mkDBmapfile:
+    input:
+        # NOTE: this waits for all gvcfs to be finished, whereas ou really only need to wait 
+        # for all samples from a particular list to be finished
+        gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz", sample=SAMPLES, list=LISTS),
+        gvcfs_idx = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi", sample=SAMPLES, list=LISTS),
+        l = intDir + "gatkLists/list{list}.list",
+        doneFiles = expand(gvcfDir + "{sample}_L{list}.done", sample=SAMPLES, list=LISTS)
+    output:
+        dbFile = temp(dbDir + "DB_L{list}.done")
+    run:
+
 rule gvcf2DB:
     """
     This rule gathers results for a given list file name, so the workflow is now scattered in only a single dimension. 
