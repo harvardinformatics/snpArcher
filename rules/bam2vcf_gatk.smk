@@ -12,7 +12,7 @@ rule bam2gvcf:
     output: 
         gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz",
         gvcf_idx = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi",
-        doneFile = temp(touch(gvcfDir + "{sample}_L{list}.done"))
+        doneFile = touch(gvcfDir + "{sample}_L{list}.done")
     resources: 
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
         # subtract that memory here
@@ -33,16 +33,26 @@ rule bam2gvcf:
         "--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang}"
 
 rule mkDBmapfile:
+    """
+    This rule makes DB map files for the GenomicsDBImport function. These files contain the names of all the samples for a particular
+    list. This can be necessary because with many samples (thousands) the gatk command can get too long if you include all sample
+    names on the command line, so long SLURM throws an error.
+    """
     input:
         # NOTE: this waits for all gvcfs to be finished, whereas ou really only need to wait 
         # for all samples from a particular list to be finished
         gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz", sample=SAMPLES, list=LISTS),
         gvcfs_idx = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi", sample=SAMPLES, list=LISTS),
-        l = intDir + "gatkLists/list{list}.list",
         doneFiles = expand(gvcfDir + "{sample}_L{list}.done", sample=SAMPLES, list=LISTS)
     output:
-        dbFile = temp(dbDir + "DB_L{list}.done")
+        dbMapFile = expand(dbDir + "DB_mapfile_L{list}", list=LISTS)
     run:
+        for l in LISTS:
+            fileName = dbDir + f"DB_mapfile_L{l}"
+            f=open(fileName, 'w') 
+            for s in SAMPLES:
+                print(s, gvcfDir + s + f"_L{l}.raw.g.vcf.gz", sep="\t", file=f)  
+            f.close() 
 
 rule gvcf2DB:
     """
@@ -51,19 +61,11 @@ rule gvcf2DB:
     Samples are thus gathered by a shared list name, but lists are still scattered.
     """
     input:
-        # NOTE: this waits for all gvcfs to be finished, whereas ou really only need to wait 
-        # for all samples from a particular list to be finished
-        gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz", sample=SAMPLES, list=LISTS),
-        gvcfs_idx = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi", sample=SAMPLES, list=LISTS),
         l = intDir + "gatkLists/list{list}.list",
-        doneFiles = expand(gvcfDir + "{sample}_L{list}.done", sample=SAMPLES, list=LISTS)
+        dbMapFile = temp(dbDir + "DB_mapfile_L{list}") 
     output: 
         DB = directory(dbDir + "DB_L{list}"),
         doneFile = temp(touch(dbDir + "DB_L{list}.done"))
-    params:
-        # as input, GenomicsDBImport needs "-V " to precede all sample gvcf names and have these separated by spaces, this function creates this string 
-        # NOTE: like the rest of the list variables, it is bracketed and in quotes
-        inputGvcfs = helperFun.gvcfsPerList_gatk(SAMPLES, "{list}", gvcfDir)
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * res_config['gvcf2DB']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (res_config['gvcf2DB']['mem'] - 3000)  # this is the maximum amount given to java
@@ -78,7 +80,7 @@ rule gvcf2DB:
         "--genomicsdb-workspace-path {output.DB} "
         "-L {input.l} "
         "--tmp-dir {dbDir}tmp "
-        "{params.inputGvcfs} \n"
+        "--sample-name-map {input.dbMapFile} \n"
 
 rule DB2vcf:
     """

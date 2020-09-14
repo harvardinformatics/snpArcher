@@ -391,15 +391,6 @@ def loadIntervalsForFB(f):
 
     return(intervals_fb)
     
-
-def gvcfsPerList_gatk(SAMPLES, list, gvcfDir):
-    inputGvcfs = []
-    for s in SAMPLES:
-        inputGvcfs.append("-V " + gvcfDir + s + "_L" + str(list) + ".raw.g.vcf.gz")
-    out = " ".join(inputGvcfs)
-    return(out)
-
-
 def getVcfs_gatk(LISTS, vcfDir):
     vcfs = []
     for i in range(len(LISTS)):
