@@ -62,7 +62,7 @@ rule gvcf2DB:
     """
     input:
         l = intDir + "gatkLists/list{list}.list",
-        dbMapFile = temp(dbDir + "DB_mapfile_L{list}") 
+        dbMapFile = dbDir + "DB_mapfile_L{list}"
     output: 
         DB = directory(dbDir + "DB_L{list}"),
         doneFile = temp(touch(dbDir + "DB_L{list}.done"))

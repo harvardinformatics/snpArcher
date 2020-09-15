@@ -11,3 +11,5 @@
 source activate snakemake
 snakemake --snakefile Snakefile_intervals --profile ./profiles/slurm
 
+snakemake --snakefile Snakefile_bam2vcf_gatk --profile ./profiles/slurm --dryrun > bam2vcf_gatk_dryrun.txt
+snakemake --snakefile Snakefile_bam2vcf_fb --profile ./profiles/slurm --dryrun > bam2vcf_fb_dryrun.txt
