@@ -1,3 +1,5 @@
+localrules: mkDBmapfile
+
 rule bam2gvcf:
     """
     This rule scatters analyses over two dimensions: sample name and list file. For each BAM file, one per sample,
@@ -39,20 +41,22 @@ rule mkDBmapfile:
     names on the command line, so long SLURM throws an error.
     """
     input:
-        # NOTE: this waits for all gvcfs to be finished, whereas ou really only need to wait 
-        # for all samples from a particular list to be finished
-        gvcfs = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz", sample=SAMPLES, list=LISTS),
-        gvcfs_idx = expand(gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi", sample=SAMPLES, list=LISTS),
-        doneFiles = expand(gvcfDir + "{sample}_L{list}.done", sample=SAMPLES, list=LISTS)
+        # NOTE: the double curly brackets around 'list' prevent the expand function from operating on that variable
+        # thus, we expand by sample but not by list, such that we gather by sample for each list value
+        gvcfs = expand(gvcfDir + "{sample}_L{{list}}.raw.g.vcf.gz", sample=SAMPLES),
+        gvcfs_idx = expand(gvcfDir + "{sample}_L{{list}}.raw.g.vcf.gz.tbi", sample=SAMPLES),
+        doneFiles = expand(gvcfDir + "{sample}_L{{list}}.done", sample=SAMPLES)
     output:
-        dbMapFile = expand(dbDir + "DB_mapfile_L{list}", list=LISTS)
+        dbMapFile = dbDir + "DB_mapfile_L{list}"
+    params:
+        # to use wildcards in 'run' statement below, specify them here
+        l = "{list}"
     run:
-        for l in LISTS:
-            fileName = dbDir + f"DB_mapfile_L{l}"
-            f=open(fileName, 'w') 
-            for s in SAMPLES:
-                print(s, gvcfDir + s + f"_L{l}.raw.g.vcf.gz", sep="\t", file=f)  
-            f.close() 
+        fileName = dbDir + f"DB_mapfile_L{params.l}"
+        f=open(fileName, 'w') 
+        for s in SAMPLES:
+            print(s, gvcfDir + s + f"_L{params.l}.raw.g.vcf.gz", sep="\t", file=f)  
+        f.close() 
 
 rule gvcf2DB:
     """
