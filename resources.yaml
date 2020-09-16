@@ -47,7 +47,7 @@ gvcf2DB:
     mem: 30000
 # gatk GenotypeGVCFs 
 DB2vcf: 
-    mem: 30000 
+    mem: 30000
 # gatk GatherVcfs
 gatherVcfs:
     mem: 30000

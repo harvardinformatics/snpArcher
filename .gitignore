@@ -30,6 +30,6 @@ intervalFiles/
 freebayes/
 gatk/
 logs/
-
+*_dryrun.txt
 
 
