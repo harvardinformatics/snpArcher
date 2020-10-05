@@ -40,7 +40,7 @@ os.system("mkdir -p " + vcfDir + "tmp")
 
 LISTS = helperFun.getListIndices(intDir)
 if not LISTS:
-    sys.exit("no gatk lists found!")
+    sys.exit("no gatk lists found! Make sure you ran the workflow that creates intervals, and that the results are in the expected subdirectory!")
 
 ### workflow ###
 
