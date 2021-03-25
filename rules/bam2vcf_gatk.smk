@@ -21,8 +21,8 @@ rule bam2gvcf:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bam2gvcf']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (res_config['bam2gvcf']['mem'] - 3000)  # this is the maximum amount given to java
     params:
-        minPrun = 1,
-        minDang = 1
+        minPrun = config['minP'],
+        minDang = config['minD']
     conda:
         "../envs/bam2vcf.yml"
     shell:
