@@ -27,6 +27,18 @@ maxIntervalsPerList: 200        # the desired maximum number of intervals per li
 
 maxDP_fb: 200 # this is the maximum depth parameter used for freebayes, site with more than this number are ignored, change according to expected depth
 
+## Coverage options ##
+## default pipeline is optimized for low coverage data - if using high coverage data (> 10x), uncomment high coverage options and comment out low coverage options
+
+# low coverage options
+minP: 1
+minD: 1
+
+# high coverage options
+#minP: 2
+#minD: 4
+
+
 ##############################
 # Variables you DO NOT need to change
 # if you do, ensure all path/directory names are followed by a "/"
