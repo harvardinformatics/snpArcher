@@ -2,7 +2,7 @@
 # Variables you need to change
 ##############################
 
-ref: "data/BHduck/genome/MU014702.1.fa"    # location of the reference genome
+ref: "/n/holylfs/LABS/informatics/alex_lg/cod-pop-gen/00_input_data/REFs/Gardmor3.fasta"    # location of the reference genome
 
 # If using the fastq -> BAM workflow change these, otherwise ignore them
 fastqDir: "data/BHduck/fastq/"      # location of fastq files; must be followed by a "/"
@@ -15,9 +15,9 @@ fastq_suffix2: "_2.fastq.gz"            # the suffix for the reverse reads that 
 ##############################
 
 # if using the BAM -> VCF workflows
-bamsForGatk: "fastq2bam/01_mappedReads/" # directory containing BAMs for GATK. If you used the fastq -> bam workflow above, simply keep the default value; must be followed by a "/"
+bamsForGatk: "/n/holylfs/LABS/informatics/alex_lg/cod-pop-gen/00_input_data/BAMs/Agl/" # directory containing BAMs for GATK. If you used the fastq -> bam workflow above, simply keep the default value; must be followed by a "/"
 bamsForFB: "fastq2bam/01_mappedReads/"   # directory containing BAMs for Freebayes. If you used the fastq -> bam workflow above, simply keep the default value; must be followed by a "/"
-bam_suffix: "_dedup.bam"                 # the suffix for your BAM files that follow all the sample names. If you use the fastq->BAM workflow above, simply keep the default value 
+bam_suffix: ".dedup.sorted.bam"                 # the suffix for your BAM files that follow all the sample names. If you use the fastq->BAM workflow above, simply keep the default value 
 
 # These parameters control how the genome gets split into intervals according to Nmers in the reference genome
 minNmer: 500                    # the minimum Nmer used to split up the genome; e.g. a value of 200 means only Nmers 200 or greater are used to define the boundaries of intervals. The minimum is 50.
