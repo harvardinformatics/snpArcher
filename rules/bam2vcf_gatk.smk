@@ -144,7 +144,7 @@ rule gatherVcfs:
         "--filter-expression \"vc.isSNP() && ((vc.hasAttribute('MQ') && MQ < 40.0) || (vc.hasAttribute('MQRankSum') && MQRankSum < -12.5))\" "  
         "--filter-expression \"(vc.hasAttribute('QD') && QD < 2.0) || ((vc.isIndel()\" "
         "--filter-name \"QD_filter\" "
-        "--filter-expression \"(vc.hasAttribute('SOR') &&  SOR > 3.0))) || ((vc.isIndel() || (vc.hasAttribute('SOR') &&  SOR > 10.0)))\" "
+        "--filter-expression \"(vc.hasAttribute('SOR') &&  SOR > 3.0) || ((vc.isIndel() || (vc.hasAttribute('SOR') &&  SOR > 10.0)\" "
         "--filter-name \"SOR_filter\" "
         "--filter-expression \"(vc.hasAttribute('QUAL') && QUAL < 30.0 || ((vc.isIndel()\" "
         "--filter-name \"QUAL_filter\" "
