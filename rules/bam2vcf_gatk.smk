@@ -153,7 +153,7 @@ rule gatherVcfs:
 
 rule vcftools:
     input:
-        vcf = gatkDir + "Combined_hardFiltered.vcf",
+        vcf = gatkDir + "Combined_hardFiltered.vcf.gz",
         int = intDir + "intervals_fb.bed"
     output: 
         missing = gatkDir + "missing_data_per_ind.txt",
@@ -163,5 +163,5 @@ rule vcftools:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
     shell:
-        "vcftools --vcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}\n"
+        "vcftools --gzvcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}\n"
         "bedtools intersect -a {input.int} -b {input.vcf} -c > {output.SNPsPerInt}"
