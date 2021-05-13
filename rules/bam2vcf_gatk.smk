@@ -120,9 +120,7 @@ rule gatherVcfs:
     output: 
         vcf =  temp(config["gatkDir"] + "Combined.vcf"),
         vcfidx =  temp(config["gatkDir"] + "Combined.vcf.idx"),
-        vcfFiltered =  config["gatkDir"] + "Combined_hardFiltered.vcf",
-        vcfComp = config["gatkDir"] + "Combined_hardFiltered.vcf.gz",
-        vcfIdx = config["gatkDir"] + "Combined_hardFiltered.vcf.gz.tbi"
+        vcfFiltered =  config["gatkDir"] + "Combined_hardFiltered.vcf"
     params:
         gatherVcfsInput = helperFun.getVcfs_gatk(LISTS, vcfDir)
     conda:
@@ -137,7 +135,7 @@ rule gatherVcfs:
         "gatk VariantFiltration "
         "-R {input.ref} "
         "-V {output.vcf} "
-        "--output {output.vcfFiltered} "
+        "--output tmp.vcf "
         "--filter-name \"RPRS_filter\" "
         "--filter-expression \"(vc.isSNP() && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -8.0)) || ((vc.isIndel() || vc.isMixed()) && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -20.0)) || (vc.hasAttribute('QD') && QD < 2.0)\" "
         "--filter-name \"FS_SOR_filter\" "
@@ -146,8 +144,21 @@ rule gatherVcfs:
         "--filter-expression \"vc.isSNP() && ((vc.hasAttribute('MQ') && MQ < 40.0) || (vc.hasAttribute('MQRankSum') && MQRankSum < -12.5))\" "
         "--invalidate-previous-filters\n"
         
-        "vcftools --vcf {output.vcfFiltered} --minQ 30 --recode --stdout | bgzip > {output.vcfComp}\n"
-        "tabix -p vcf {output.vcfComp}"
+        "vcftools --vcf tmp.vcf --minQ 30 --recode --stdout > {output.vcfFiltered}\n"
+        "rm tmp.vcf"
+
+rule compress:
+    input:
+        vcf = config["gatkDir"] + "Combined_hardFiltered.vcf"
+    output:
+        vcf = config["gatkDir"] + "Combined_hardFiltered.vcf.gz",
+        idx = config["gatkDir"] + "Combined_hardFiltered.vcf.gz.tbi"
+    conda:
+        "../envs/bam2vcf.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
+    shell:
+        "bgzip {input.vcf} && tabix -p vcf {output.vcf}"
 
 rule vcftools:
     input:
