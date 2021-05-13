@@ -144,7 +144,7 @@ rule gatherVcfs:
         "--filter-expression \"vc.isSNP() && ((vc.hasAttribute('MQ') && MQ < 40.0) || (vc.hasAttribute('MQRankSum') && MQRankSum < -12.5))\" "
         "--filter-name \"QUAL_filter\" "
         "--filter-expression \"vc.isSNP() && ((vc.hasAttribute('QUAL') && QUAL < 30.0)) || vc.isIndel()\" "
-        "--invalidate-previous-filters"
+        "--invalidate-previous-filters\n"
 
 rule compress:
     input:
