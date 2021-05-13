@@ -120,7 +120,9 @@ rule gatherVcfs:
     output: 
         vcf =  temp(config["gatkDir"] + "Combined.vcf"),
         vcfidx =  temp(config["gatkDir"] + "Combined.vcf.idx"),
-        vcfFiltered =  config["gatkDir"] + "Combined_hardFiltered.vcf"
+        vcfFiltered =  config["gatkDir"] + "Combined_hardFiltered.vcf",
+        vcfComp = config["gatkDir"] + "Combined_hardFiltered.vcf.gz",
+        vcfIdx = config["gatkDir"] + "Combined_hardFiltered.vcf.gz.tbi"
     params:
         gatherVcfsInput = helperFun.getVcfs_gatk(LISTS, vcfDir)
     conda:
@@ -145,19 +147,9 @@ rule gatherVcfs:
         "--filter-name \"QUAL_filter\" "
         "--filter-expression \"vc.isSNP() && ((vc.hasAttribute('QUAL') && QUAL < 30.0)) || vc.isIndel()\" "
         "--invalidate-previous-filters\n"
-
-rule compress:
-    input:
-        vcf = config["gatkDir"] + "Combined_hardFiltered.vcf"
-    output:
-        vcf = config["gatkDir"] + "Combined_hardFiltered.vcf.gz",
-        idx = config["gatkDir"] + "Combined_hardFiltered.vcf.gz.tbi"
-    conda:
-        "../envs/bam2vcf.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
-    shell:
-        "bgzip {input.vcf} && tabix -p vcf {output.vcf}"
+        
+        "vcftools --vcf {output.vcfFiltered} --minQ 30 --recode --stdout | bgzip > {output.vcfComp}\n"
+        "tabix -p vcf {output.vcfComp}"
 
 rule vcftools:
     input:
