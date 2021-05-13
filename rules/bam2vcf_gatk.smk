@@ -144,8 +144,6 @@ rule gatherVcfs:
         "--filter-expression \"(vc.isSNP() && ((vc.hasAttribute('FS') && FS > 60.0) || (vc.hasAttribute('SOR') &&  SOR > 3.0))) || ((vc.isIndel() || vc.isMixed()) && ((vc.hasAttribute('FS') && FS > 200.0) || (vc.hasAttribute('SOR') &&  SOR > 10.0)))\" "
         "--filter-name \"MQ_filter\" "
         "--filter-expression \"vc.isSNP() && ((vc.hasAttribute('MQ') && MQ < 40.0) || (vc.hasAttribute('MQRankSum') && MQRankSum < -12.5))\" "
-        "--filter-name \"QUAL_filter\" "
-        "--filter-expression \"vc.isSNP() && ((vc.hasAttribute('QUAL') && QUAL < 30.0)) || vc.isIndel()\" "
         "--invalidate-previous-filters\n"
         
         "vcftools --vcf {output.vcfFiltered} --minQ 30 --recode --stdout | bgzip > {output.vcfComp}\n"
