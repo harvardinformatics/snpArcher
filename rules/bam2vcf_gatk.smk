@@ -120,7 +120,7 @@ rule gatherVcfs:
     output: 
         vcf =  temp(config["gatkDir"] + "Combined.vcf"),
         vcfidx =  temp(config["gatkDir"] + "Combined.vcf.idx"),
-        vcfF1 =  temp(config["gatkDir"] + "Combined_hardFiltered.vcf"),
+        vcfF1 =  temp(config["gatkDir"] + "Combined_filter1.vcf"),
         vcfFiltered = config["gatkDir"] + "Combined_hardFiltered.vcf"
     params:
         gatherVcfsInput = helperFun.getVcfs_gatk(LISTS, vcfDir)
