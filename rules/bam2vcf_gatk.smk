@@ -135,25 +135,31 @@ rule gatherVcfs:
         "gatk VariantFiltration "
         "-R {input.ref} "
         "-V {output.vcf} "
-	"--filter-name \"RPRS_filter\" "
-        "--filter-expression \"(vc.isSNP() && vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -8.0) || ((vc.isIndel() || vc.isMixed() && vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -20.0))\" "
-        "--filter-name \"FS_filter\" "
-        "--filter-expression \"(vc.isSNP() && vc.hasAttribute('FS') && FS > 60.0) || ((vc.isIndel() || vc.isMixed() && vc.hasAttribute('FS') && FS > 200.0))\" "
+        "--output {output.vcfFiltered} "
+        "--filter-name \"RPRS_filter\" "
+        "--filter-expression \"(vc.isSNP() && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -8.0)) || ((vc.isIndel() || vc.isMixed()) && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -20.0)) || (vc.hasAttribute('QD') && QD < 2.0)\" "
+        "--filter-name \"FS_SOR_filter\" "
+        "--filter-expression \"(vc.isSNP() && ((vc.hasAttribute('FS') && FS > 60.0) || (vc.hasAttribute('SOR') &&  SOR > 3.0))) || ((vc.isIndel() || vc.isMixed()) && ((vc.hasAttribute('FS') && FS > 200.0) || (vc.hasAttribute('SOR') &&  SOR > 10.0)))\" "
         "--filter-name \"MQ_filter\" "
-        "--filter-expression \"(vc.isSNP() && vc.hasAttribute('MQ') && MQ < 40.0) || (vc.isSNP() && vc.hasAttribute('MQRankSum') && MQRankSum < -12.5)\" "  
-        "--filter-name \"QD_filter\" "
-        "--filter-expression \"(vc.isSNP() && vc.hasAttribute('QD') && QD < 2.0) || vc.isIndel()\" "
-	"--filter-name \"SOR_filter\" "
-        "--filter-expression \"(vc.isSNP() && vc.hasAttribute('SOR') && SOR > 10.0) || (vc.isIndel() && vc.hasAttribute('SOR') && SOR > 3.0)\" "
-        "--filter-name \"QUAL_filter\" "        
-        "--filter-expression \"(vc.hasAttribute('QUAL') && QUAL < 30.0) || vc.isIndel()\" "
-        "--invalidate-previous-filters\n"
-        
-        "bgzip -i {output.vcfFiltered} > {output.vcfComp}"
+        "--filter-expression \"vc.isSNP() && ((vc.hasAttribute('MQ') && MQ < 40.0) || (vc.hasAttribute('MQRankSum') && MQRankSum < -12.5))\" "
+        "--invalidate-previous-filters"
+
+rule compress:
+    input:
+        vcf = config["gatkDir"] + "Combined_hardFiltered.vcf"
+    output:
+        vcf = config["gatkDir"] + "Combined_hardFiltered.vcf.gz",
+        idx = config["gatkDir"] + "Combined_hardFiltered.vcf.gz.tbi"
+    conda:
+        "../envs/bam2vcf.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
+    shell:
+        "bgzip {input.vcf} && tabix -p vcf {output.vcf}"
 
 rule vcftools:
     input:
-        vcf = gatkDir + "Combined_hardFiltered.vcf.gz",
+        vcf = config["gatkDir"] + "Combined_hardFiltered.vcf.gz",
         int = intDir + "intervals_fb.bed"
     output: 
         missing = gatkDir + "missing_data_per_ind.txt",
