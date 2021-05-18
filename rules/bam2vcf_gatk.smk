@@ -119,7 +119,7 @@ rule gatherVcfs:
         ref = config['ref']
     output: 
         vcfs = expand(vcfDir + "L{list}_filter.vcf", list=LISTS)
-        vcfFinal = config["gatkDir"] + config['spp'] + "_final.vcf.gz"
+        vcfFinal = config["gatkDir"] + config["spp"] + "_final.vcf.gz"
     params:
         gatherVcfsInput = helperFun.getVcfs_gatk(LISTS, vcfDir)
     conda:
