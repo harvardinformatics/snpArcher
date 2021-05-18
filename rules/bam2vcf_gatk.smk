@@ -118,9 +118,8 @@ rule gatherVcfs:
         vcfs = expand(vcfDir + "L{list}.vcf", list=LISTS),
         ref = config['ref']
     output: 
-        vcf =  temp(config["gatkDir"] + "Combined.vcf"),
-        vcfidx =  temp(config["gatkDir"] + "Combined.vcf.idx"),
-        vcfFiltered = config["gatkDir"] + config['spp'] + "_hardFiltered.vcf"
+        vcfs = expand(vcfDir + "L{list}_filter.vcf", list=LISTS)
+        vcfFinal = config["gatkDir"] + config['spp'] + "_final.vcf.gz"
     params:
         gatherVcfsInput = helperFun.getVcfs_gatk(LISTS, vcfDir)
     conda:
@@ -130,8 +129,8 @@ rule gatherVcfs:
     shell:
         "gatk VariantFiltration "
         "-R {input.ref} "
-        "-V {output.vcf} "
-        "--output {vcfFiltered} "
+        "-V {input.vcfs} " 
+        "--output {output.vcfs} "
         "--filter-name \"RPRS_filter\" "
         "--filter-expression \"(vc.isSNP() && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -8.0)) || ((vc.isIndel() || vc.isMixed()) && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -20.0)) || (vc.hasAttribute('QD') && QD < 2.0)\" "
         "--filter-name \"FS_SOR_filter\" "
@@ -144,7 +143,7 @@ rule gatherVcfs:
         
         "gatk GatherVcfs "
         "{params.gatherVcfsInput} "
-        "-O {output.vcf}\n"
+        "-O {output.vcfFinal}\n"
 
 rule vcftools:
     input:
