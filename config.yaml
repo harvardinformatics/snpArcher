@@ -3,6 +3,7 @@
 ##############################
 
 ref: "data/BHduck/genome/MU014702.1.fa"    # location of the reference genome
+spp: "hetAtr"                             # species name/code for the final VCF output file name
 
 # If using the fastq -> BAM workflow change these, otherwise ignore them
 fastqDir: "data/BHduck/fastq/"      # location of fastq files; must be followed by a "/"
