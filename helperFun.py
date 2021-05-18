@@ -394,7 +394,7 @@ def loadIntervalsForFB(f):
 def getVcfs_gatk(LISTS, vcfDir):
     vcfs = []
     for i in range(len(LISTS)):
-       vcfs.append(f"-I {vcfDir}L{i}.vcf")
+       vcfs.append(f"-I {vcfDir}L{i}_filter.vcf")
     out = " ".join(vcfs)
     return(out)
 
