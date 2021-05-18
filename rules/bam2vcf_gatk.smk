@@ -112,7 +112,7 @@ rule DB2vcf:
 
 rule gatherVcfs:
     """
-    This rule gathers all of the VCFs, one per list, into one final VCF
+    This rule filters all of the VCFs, then gathers, one per list, into one final VCF
     """
     input:
         vcfs = expand(vcfDir + "L{list}.vcf", list=LISTS),
@@ -120,8 +120,6 @@ rule gatherVcfs:
     output: 
         vcf =  temp(config["gatkDir"] + "Combined.vcf"),
         vcfidx =  temp(config["gatkDir"] + "Combined.vcf.idx"),
-        vcfF1 =  temp(config["gatkDir"] + "Combined_filter1.vcf"),
-        vcfF1idx =  temp(config["gatkDir"] + "Combined_filter1.vcf.idx"),
         vcfFiltered = config["gatkDir"] + "Combined_hardFiltered.vcf"
     params:
         gatherVcfsInput = helperFun.getVcfs_gatk(LISTS, vcfDir)
@@ -130,36 +128,21 @@ rule gatherVcfs:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['gatherVcfs']['mem']   # this is the overall memory requested
     shell:
-        "gatk GatherVcfs "
-        "{params.gatherVcfsInput} "
-        "-O {output.vcf}\n"
-
         "gatk VariantFiltration "
         "-R {input.ref} "
-        "-V {output.vcf} "
-        "--output {output.vcfF1} "
+        "-V {params.gatherVcfsInput} "
+        "--output {output.vcfFiltered} "
         "--filter-name \"RPRS_filter\" "
         "--filter-expression \"(vc.isSNP() && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -8.0)) || ((vc.isIndel() || vc.isMixed()) && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -20.0)) || (vc.hasAttribute('QD') && QD < 2.0)\" "
         "--filter-name \"FS_SOR_filter\" "
         "--filter-expression \"(vc.isSNP() && ((vc.hasAttribute('FS') && FS > 60.0) || (vc.hasAttribute('SOR') &&  SOR > 3.0))) || ((vc.isIndel() || vc.isMixed()) && ((vc.hasAttribute('FS') && FS > 200.0) || (vc.hasAttribute('SOR') &&  SOR > 10.0)))\" "
         "--filter-name \"MQ_filter\" "
         "--filter-expression \"vc.isSNP() && ((vc.hasAttribute('MQ') && MQ < 40.0) || (vc.hasAttribute('MQRankSum') && MQRankSum < -12.5))\" "
-        "--invalidate-previous-filters\n"
+        "--invalidate-previous-filters true\n"
         
-        "vcftools --vcf {output.vcfF1} --minQ 30 --recode --stdout > {output.vcfFiltered}"
-
-rule compress:
-    input:
-        vcf = config["gatkDir"] + "Combined_hardFiltered.vcf"
-    output:
-        vcf = config["gatkDir"] + "Combined_hardFiltered.vcf.gz",
-        idx = config["gatkDir"] + "Combined_hardFiltered.vcf.gz.tbi"
-    conda:
-        "../envs/bam2vcf.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
-    shell:
-        "bgzip {input.vcf} && tabix -p vcf {output.vcf}"
+        "gatk GatherVcfs "
+        "{params.gatherVcfsInput} "
+        "-O {output.vcf}\n"
 
 rule vcftools:
     input:
