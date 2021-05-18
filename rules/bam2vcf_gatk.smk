@@ -143,7 +143,7 @@ rule gatherVcfs:
         
         "gatk GatherVcfs "
         "{params.gatherVcfsInput} "
-        "-O {output.vcfFinal}\n"
+        "-O {output.vcfFinal}"
 
 rule vcftools:
     input:
