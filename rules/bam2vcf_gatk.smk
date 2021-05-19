@@ -119,7 +119,7 @@ rule gatherVcfs:
         ref = config['ref']
     output: 
         vcfs = expand(vcfDir + "L{list}_filter.vcf", list=LISTS)
-        vcfFinal = config["gatkDir"] + "Combined_final.vcf.gz"
+        vcfFinal = config["gatkDir"] + "Combined_final.vcf"
     params:
         gatherVcfsInput = helperFun.getVcfs_gatk(LISTS, vcfDir)
     conda:
@@ -147,7 +147,7 @@ rule gatherVcfs:
 
 rule vcftools:
     input:
-        vcf = config["gatkDir"] + "Combined_final.vcf.gz",
+        vcf = config["gatkDir"] + "Combined_final.vcf",
         int = intDir + "intervals_fb.bed"
     output: 
         missing = gatkDir + "missing_data_per_ind.txt",
@@ -157,5 +157,5 @@ rule vcftools:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
     shell:
-        "vcftools --gzvcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}\n"
+        "vcftools --vcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}\n"
         "bedtools intersect -a {input.int} -b {input.vcf} -c > {output.SNPsPerInt}"
