@@ -119,7 +119,7 @@ rule gatherVcfs:
         ref = config['ref']
     output: 
         vcfs = expand(vcfDir + "L{list}_filter.vcf", list=LISTS),
-        vcfFinal = config["gatkDir"] + "Combined_final.vcf.gz"
+        vcfFinal = config["gatkDir"] + config['spp'] + "_final.vcf.gz"
     params:
         gatherVcfsInput = helperFun.getVcfs_gatk(LISTS, vcfDir)
     conda:
@@ -147,7 +147,7 @@ rule gatherVcfs:
 
 rule vcftools:
     input:
-        vcf = config["gatkDir"] + "Combined_final.vcf.gz",
+        vcf = config["gatkDir"] + config['spp'] + "_final.vcf.gz",
         int = intDir + "intervals_fb.bed"
     output: 
         missing = gatkDir + "missing_data_per_ind.txt",
