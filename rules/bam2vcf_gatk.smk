@@ -147,7 +147,7 @@ rule gatherVcfs:
 
 rule vcftools:
     input:
-        vcf = config["gatkDir"] + "Combined_hardFiltered.vcf.gz",
+        vcf = config["gatkDir"] + "Combined_final.vcf.gz",
         int = intDir + "intervals_fb.bed"
     output: 
         missing = gatkDir + "missing_data_per_ind.txt",
