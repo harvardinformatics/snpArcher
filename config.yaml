@@ -3,6 +3,7 @@
 ##############################
 
 ref: "data/BHduck/genome/MU014702.1.fa"    # location of the reference genome
+spp: "hetAtr"                             # species name/code for the final VCF output file name
 
 # If using the fastq -> BAM workflow change these, otherwise ignore them
 fastqDir: "data/BHduck/fastq/"      # location of fastq files; must be followed by a "/"
@@ -26,6 +27,18 @@ maxBpPerList: 15000000            # the desired maximum number of bp per list fi
 maxIntervalsPerList: 200        # the desired maximum number of intervals per list file for GATK4; this prevents list files from containing thousands of small intervals, which can slow parts of GATK4. Default is good.
 
 maxDP_fb: 200 # this is the maximum depth parameter used for freebayes, site with more than this number are ignored, change according to expected depth
+
+## Coverage options ##
+## default pipeline is optimized for low coverage data - if using high coverage data (> 10x), uncomment high coverage options and comment out low coverage options
+
+# low coverage options (< 10x) 
+minP: 1
+minD: 1
+
+# high coverage options (> 10x)
+#minP: 2
+#minD: 4
+
 
 ##############################
 # Variables you DO NOT need to change
