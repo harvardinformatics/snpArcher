@@ -51,14 +51,15 @@ rule bwa_map:
     output: 
         bamDir + "{sample}.bam"
     params:
-        rg="@RG\\tID:{sample}\\tSM:{sample}\\tPL:ILLUMINA"
+        lib_id = lambda wildcards: sample_dict[wildcards.sample]['lib_id'],
+        sample = "{sample}",
     conda:
         "../envs/fastq2bam.yml"
     threads: res_config['bwa_map']['threads']
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bwa_map']['mem'] 
     shell:
-        "bwa mem -M -t {threads} -R \'{params.rg}\' {input.ref} {input.r1} {input.r2} | "
+        "bwa mem -M -t {threads} -R \'@RG\\tID:{params.lib_id}\\tSM:{params.sample}\\tPL:ILLUMINA\' {input.ref} {input.r1} {input.r2} | "
         "samtools view -Sb - > {output}"
 
 rule sort_bam:
