@@ -405,3 +405,13 @@ def getListIndices(intDir):
         LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
     LISTS=sorted(LISTS)
     return(LISTS)
+
+def create_sample_dict(file_path: str) -> dict:
+    sample_dict = defaultdict(dict)
+    with open(file_path, "r") as f:
+        for line in f:
+            if not line.startswith("#"):
+                line = line.strip().split(",")
+                sample_dict[line[0]] = {'lib_id': line[1], "srr": line[2], "ref_genome_acc": line[3]}
+    return sample_dict
+
