@@ -52,13 +52,13 @@ rule index_ref:
 rule fastp:
     input:
         r1 = lambda wildcards:
-            expand("data/{Organism}/{{sample}}/{run}_1.fastq.gz", Organism=sample_dict[wildcards.sample]["Organism"], run=sample_dict[wildcards.sample]["Run"]),
+            expand("data/{Organism}/{sample}/{{run}}_1.fastq.gz", Organism=run_dict[wildcards.run]["Organism"], sample=run_dict[wildcards.run]["Sample"]),
         r2 = lambda wildcards:
-            expand("data/{Organism}/{{sample}}/{run}_2.fastq.gz", Organism=sample_dict[wildcards.sample]["Organism"], run=sample_dict[wildcards.sample]["Run"])
+            expand("data/{Organism}/{sample}/{{run}}_2.fastq.gz", Organism=run_dict[wildcards.run]["Organism"], sample=run_dict[wildcards.run]["Sample"])
     output: 
-        r1 = fastqFilterDir + "{sample}_fastp" + fastq_suffix1,
-        r2 = fastqFilterDir + "{sample}_fastp" + fastq_suffix2,
-        summ = sumstatDir + "{sample}_fastp.out"
+        r1 = fastqFilterDir + "{sample}_{run}_fastp" + fastq_suffix1,
+        r2 = fastqFilterDir + "{sample}_{run}_fastp" + fastq_suffix2,
+        summ = sumstatDir + "{sample}/{run}.out"
     conda:
         "../envs/fastq2bam.yml"
     threads: res_config['fastp']['threads']
@@ -75,8 +75,8 @@ rule bwa_map:
     input:
         ref = lambda wildcards:
             expand("data/{Organism}/genome/{refGenome}.fna.gz", Organism=sample_dict[wildcards.sample]["Organism"], refGenome=sample_dict[wildcards.sample]["refGenome"]),
-        r1 = fastqFilterDir + "{sample}_fastp" + fastq_suffix1,
-        r2 = fastqFilterDir + "{sample}_fastp" + fastq_suffix2,
+        r1 = fastqFilterDir + "{sample}_{run}_fastp" + fastq_suffix1,
+        r2 = fastqFilterDir + "{sample}_{run}_fastp" + fastq_suffix2,
         # the following files are bwa index files that aren't directly input into command below, but needed
         sa = lambda wildcards:
             expand("data/{Organism}/genome/{refGenome}.fna.gz.sa", Organism=sample_dict[wildcards.sample]["Organism"], refGenome=sample_dict[wildcards.sample]["refGenome"]),
@@ -89,10 +89,10 @@ rule bwa_map:
         amb = lambda wildcards:
             expand("data/{Organism}/genome/{refGenome}.fna.gz.amb", Organism=sample_dict[wildcards.sample]["Organism"], refGenome=sample_dict[wildcards.sample]["refGenome"])
     output: 
-        bam = bamDir + "{sample}_sorted.bam",
-        bai = bamDir + "{sample}_sorted.bai"
+        bam = bamDir + "{sample}/{run}.bam",
+        #bai = bamDir + "{sample}/{run}.bai"
     params:
-        lib_id = lambda wildcards: sample_dict[wildcards.sample]['LibraryName'],
+        lib_id = lambda wildcards: run_dict[wildcards.run]['LibraryName'],
         sample = "{sample}",
     conda:
         "../envs/fastq2bam.yml"
@@ -103,24 +103,18 @@ rule bwa_map:
         "bwa mem -M -t {threads} -R \'@RG\\tID:{params.lib_id}\\tSM:{params.sample}\\tPL:ILLUMINA\' {input.ref} {input.r1} {input.r2} | "
         "samtools sort -o {output.bam} -"
 
-"""rule sort_bam:
-    input: 
-        bamDir + "{sample}.bam"
+rule merge:
+    input: lambda wildcards:
+            expand("fastq2bam/01_mappedReads/{{sample}}/{run}.bam", run=sample_runs[wildcards.sample])
     output: 
-        temp(bamDir + "{sample}_sorted.bam"),
-        temp(bamDir + "{sample}_sorted.bai")
-    conda:
-        "../envs/fastq2bam.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['sort_bam']['mem'] 
+        bam = bamDir + "{sample}_sorted.bam",
+        bai = bamDir + "{sample}_sorted.bam.bai"
     shell:
-        "picard SortSam I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true TMP_DIR={bamDir}"
-"""
-
+        "samtools merge {output.bam} {input} && samtools index {output.bam}"
 rule dedup:
     input: 
         bamDir + "{sample}_sorted.bam",
-        bamDir + "{sample}_sorted.bai"
+        bamDir + "{sample}_sorted.bam.bai"
     output:
         dedupBam = bamDir + "{sample}_dedup.bam",
         dedupMet = sumstatDir + "{sample}_dedupMetrics.txt",
@@ -139,7 +133,7 @@ rule bam_sumstats:
             expand("data/{Organism}/genome/{refGenome}.fna.gz", Organism=sample_dict[wildcards.sample]["Organism"], refGenome=sample_dict[wildcards.sample]["refGenome"])
 
     output: 
-        cov = sumstatDir + "{sample}_coverage.txt",
+        cov = sumstatDir + "{sample}_coverage.txt",  
         alnSum = sumstatDir + "{sample}_AlnSumMets.txt",
         val = sumstatDir + "{sample}_validate.txt"
     conda:
@@ -153,7 +147,12 @@ rule bam_sumstats:
         # causing snakemake to exit and remove these output files.  I cirumvent this by appending "|| true".
         # I also ignore "INVALID_TAG_NM" because it isn't used by GATK but causes errors at this step
         "picard ValidateSamFile I={input.bam} R={input.ref} O={output.val} IGNORE=INVALID_TAG_NM || true"
-		
+rule collect_fastp_stats:
+    input: lambda wildcards:
+            expand(sumstatDir + "{sample}/" + "{run}.out", run=sample_runs[wildcards.sample], allow_missing=True)
+    output: sumstatDir + "{sample}_fastp.out"
+    shell:
+        "cat {input} > {output}"
 rule collect_sumstats:
     input:
         fastpFiles = expand(sumstatDir + "{sample}_fastp.out", sample=SAMPLES),
