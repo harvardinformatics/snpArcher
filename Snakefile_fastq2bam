@@ -19,9 +19,11 @@ bamDir = config["fastq2bamDir"] + config["bamDir"]
 sumstatDir = config["fastq2bamDir"] + config["sumstatDir"]
 
 # Get sample names from keys of dictionary
-sample_dict = helperFun.create_sample_dict("samples.csv")
+run_dict, sample_dict, sample_runs = helperFun.create_sample_dict("samples.csv")
 print(sample_dict)
-SAMPLES = [sample_dict.keys()]
+print(run_dict)
+SAMPLES = sample_dict.keys()
+#SAMPLES = [sample_dict[key]["Sample"] for key in sample_dict.keys()]
 ###
 # workflow with rules
 ###
