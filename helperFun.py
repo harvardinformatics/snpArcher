@@ -4,6 +4,7 @@ import os
 import sys
 import re
 from collections import defaultdict
+from urllib.request import urlopen
 
 def collectDedupMetrics(dedupFiles):
 
@@ -409,9 +410,22 @@ def getListIndices(intDir):
 def create_sample_dict(file_path: str) -> dict:
     sample_dict = defaultdict(dict)
     with open(file_path, "r") as f:
+        next(f)
         for line in f:
-            if not line.startswith("#"):
                 line = line.strip().split(",")
-                sample_dict[line[0]] = {'lib_id': line[1], "srr": line[2], "ref_genome_acc": line[3]}
+                sample_dict[line[0]] = {'LibraryName': line[1], "refGenome": line[2], "Run": line[3], "Organism": line[4].replace(" ", "_"), "BioProject": line[5]}
     return sample_dict
+
+def get_ref_link(acc: str) -> str:
+    assembly_link = f"https://www.ncbi.nlm.nih.gov/assembly/{acc}"
+    # opens ncbi assembly page and gets the ASM specifier thing from the html title tags because ncbi for some reason uses it in the ftp
+    with urlopen(assembly_link) as fh:
+        html = fh.read().decode('utf-8')
+    html_title = html[html.find("<title>")+7:html.find("</title>")]
+    asm = html_title.split()[0]
+    acc_asm = acc + "_" + asm
+    http = "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA"
+    link = os.path.join(http, acc[4:7], acc[7:10], acc[10:13], acc_asm, acc_asm) + "_genomic.fna.gz"
+    
+    return link
 

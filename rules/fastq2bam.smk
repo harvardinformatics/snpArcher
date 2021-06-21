@@ -1,26 +1,60 @@
 localrules: collect_sumstats
+import os
 
+rule get_fastq_pe:
+    #should specify tmpdir probably
+    output:
+        "data/{Organism}/{sample}/{run}_1.fastq",
+        "data/{Organism}/{sample}/{run}_2.fastq"
+    params:
+        outdir = "data/{Organism}/{sample}"
+        
+    conda:
+        "../envs/fastq2bam.yml"
+    shell:
+        "fasterq-dump {wildcards.run} -O {params.outdir}"
+
+rule gzip_fastq:
+    input:
+        "data/{Organism}/{sample}/{run}_1.fastq",
+        "data/{Organism}/{sample}/{run}_2.fastq"
+    output:
+        "data/{Organism}/{sample}/{run}_1.fastq.gz",
+        "data/{Organism}/{sample}/{run}_2.fastq.gz"
+    shell:
+        "gzip {input}"
+
+rule download_reference:
+    output:
+        "data/{Organism}/genome/{refGenome}.fna.gz"
+    params:
+        link = lambda wildcards:
+            helperFun.get_ref_link(wildcards.refGenome)
+    log:
+        "logs/{Organism}/dl_genome/{refGenome}.log"
+    shell:
+        "wget -O {output} -o {log} {params.link}"
 
 rule index_ref:
     input:
-        ref = config['ref']
+        ref = "data/{Organism}/genome/{refGenome}.fna.gz"
     output: 
-       config['ref'] + ".sa",
-       config['ref'] + ".pac",
-       config['ref'] + ".bwt",
-       config['ref'] + ".ann",
-       config['ref'] + ".amb"
+            expand("data/{{Organism}}/genome/{{refGenome}}.fna.gz.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"])
     conda:
         "../envs/fastq2bam.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['index_ref']['mem'] 
+        mem_mb = lambda wildcards, attempt: attempt * res_config['index_ref']['mem']
+    log:
+        "logs/{Organism}/index_ref/{refGenome}.log" 
     shell:
-        "bwa index {input.ref}"
+        "bwa index {input.ref} 2> {log}"
 
 rule fastp:
     input:
-        r1 = fastqDir + "{sample}" + fastq_suffix1,
-        r2 = fastqDir + "{sample}" + fastq_suffix2
+        r1 = lambda wildcards:
+            expand("data/{Organism}/{{sample}}/{run}_1.fastq.gz", Organism=sample_dict[wildcards.sample]["Organism"], run=sample_dict[wildcards.sample]["Run"]),
+        r2 = lambda wildcards:
+            expand("data/{Organism}/{{sample}}/{run}_2.fastq.gz", Organism=sample_dict[wildcards.sample]["Organism"], run=sample_dict[wildcards.sample]["Run"])
     output: 
         r1 = fastqFilterDir + "{sample}_fastp" + fastq_suffix1,
         r2 = fastqFilterDir + "{sample}_fastp" + fastq_suffix2,
@@ -39,19 +73,26 @@ rule fastp:
 
 rule bwa_map:
     input:
-        ref = config['ref'],
+        ref = lambda wildcards:
+            expand("data/{Organism}/genome/{refGenome}.fna.gz", Organism=sample_dict[wildcards.sample]["Organism"], refGenome=sample_dict[wildcards.sample]["refGenome"]),
         r1 = fastqFilterDir + "{sample}_fastp" + fastq_suffix1,
         r2 = fastqFilterDir + "{sample}_fastp" + fastq_suffix2,
         # the following files are bwa index files that aren't directly input into command below, but needed
-        sa = config['ref'] + ".sa",
-        pac = config['ref'] + ".pac",
-        bwt = config['ref'] + ".bwt",
-        ann = config['ref'] + ".ann",
-        amb = config['ref'] + ".amb"
+        sa = lambda wildcards:
+            expand("data/{Organism}/genome/{refGenome}.fna.gz.sa", Organism=sample_dict[wildcards.sample]["Organism"], refGenome=sample_dict[wildcards.sample]["refGenome"]),
+        pac = lambda wildcards:
+            expand("data/{Organism}/genome/{refGenome}.fna.gz.pac", Organism=sample_dict[wildcards.sample]["Organism"], refGenome=sample_dict[wildcards.sample]["refGenome"]),
+        bwt = lambda wildcards:
+            expand("data/{Organism}/genome/{refGenome}.fna.gz.bwt", Organism=sample_dict[wildcards.sample]["Organism"], refGenome=sample_dict[wildcards.sample]["refGenome"]),
+        ann = lambda wildcards:
+            expand("data/{Organism}/genome/{refGenome}.fna.gz.ann", Organism=sample_dict[wildcards.sample]["Organism"], refGenome=sample_dict[wildcards.sample]["refGenome"]),
+        amb = lambda wildcards:
+            expand("data/{Organism}/genome/{refGenome}.fna.gz.amb", Organism=sample_dict[wildcards.sample]["Organism"], refGenome=sample_dict[wildcards.sample]["refGenome"])
     output: 
-        bamDir + "{sample}.bam"
+        bam = bamDir + "{sample}_sorted.bam",
+        bai = bamDir + "{sample}_sorted.bai"
     params:
-        lib_id = lambda wildcards: sample_dict[wildcards.sample]['lib_id'],
+        lib_id = lambda wildcards: sample_dict[wildcards.sample]['LibraryName'],
         sample = "{sample}",
     conda:
         "../envs/fastq2bam.yml"
@@ -60,9 +101,9 @@ rule bwa_map:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bwa_map']['mem'] 
     shell:
         "bwa mem -M -t {threads} -R \'@RG\\tID:{params.lib_id}\\tSM:{params.sample}\\tPL:ILLUMINA\' {input.ref} {input.r1} {input.r2} | "
-        "samtools view -Sb - > {output}"
+        "samtools sort -o {output.bam} -"
 
-rule sort_bam:
+"""rule sort_bam:
     input: 
         bamDir + "{sample}.bam"
     output: 
@@ -74,6 +115,7 @@ rule sort_bam:
         mem_mb = lambda wildcards, attempt: attempt * res_config['sort_bam']['mem'] 
     shell:
         "picard SortSam I={input} O={output[0]} SORT_ORDER=coordinate CREATE_INDEX=true TMP_DIR={bamDir}"
+"""
 
 rule dedup:
     input: 
@@ -93,7 +135,8 @@ rule dedup:
 rule bam_sumstats:
     input: 
         bam = bamDir + "{sample}_dedup.bam",
-        ref = config['ref']
+        ref = lambda wildcards:
+            expand("data/{Organism}/genome/{refGenome}.fna.gz", Organism=sample_dict[wildcards.sample]["Organism"], refGenome=sample_dict[wildcards.sample]["refGenome"])
 
     output: 
         cov = sumstatDir + "{sample}_coverage.txt",

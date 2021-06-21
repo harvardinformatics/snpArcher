@@ -18,9 +18,10 @@ fastqFilterDir = config["fastq2bamDir"] + config["fastqFilterDir"]
 bamDir = config["fastq2bamDir"] + config["bamDir"]
 sumstatDir = config["fastq2bamDir"] + config["sumstatDir"]
 
-# grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
-SAMPLES = helperFun.getFastqSampleNames(fastqDir, fastq_suffix1)
-
+# Get sample names from keys of dictionary
+sample_dict = helperFun.create_sample_dict("samples.csv")
+print(sample_dict)
+SAMPLES = [sample_dict.keys()]
 ###
 # workflow with rules
 ###

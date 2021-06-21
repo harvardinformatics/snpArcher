@@ -7,3 +7,4 @@ dependencies:
   - bwa==0.7.17
   - picard==2.22.8
   - samtools==1.10
+  - sra-tools>2.9.1
