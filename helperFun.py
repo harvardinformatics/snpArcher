@@ -4,6 +4,7 @@ import os
 import sys
 import re
 from collections import defaultdict
+from urllib.request import urlopen
 
 def collectDedupMetrics(dedupFiles):
 
@@ -405,3 +406,18 @@ def getListIndices(intDir):
         LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
     LISTS=sorted(LISTS)
     return(LISTS)
+
+def create_sample_dict(file_path: str) -> dict:
+    run_dict = defaultdict(dict)
+    sample_dict = defaultdict(dict)
+    sample_runs = defaultdict(list)
+    with open(file_path, "r") as f:
+        next(f)
+        for line in f:
+                line = line.strip().split(",")
+                run_dict[line[3]] = {'LibraryName': line[1], "refGenome": line[2], "Sample": line[0], "Organism": line[4].replace(" ", "_"), "BioProject": line[5]}
+                sample_dict[line[0]] = {'LibraryName': line[1], "refGenome": line[2], "Run": line[3], "Organism": line[4].replace(" ", "_"), "BioProject": line[5]}
+                sample_runs[line[0]].append(line[3])
+    return run_dict, sample_dict, sample_runs
+
+
