@@ -420,16 +420,4 @@ def create_sample_dict(file_path: str) -> dict:
                 sample_runs[line[0]].append(line[3])
     return run_dict, sample_dict, sample_runs
 
-def get_ref_link(acc: str) -> str:
-    assembly_link = f"https://www.ncbi.nlm.nih.gov/assembly/{acc}"
-    # opens ncbi assembly page and gets the ASM specifier thing from the html title tags because ncbi for some reason uses it in the ftp
-    with urlopen(assembly_link) as fh:
-        html = fh.read().decode('utf-8')
-    html_title = html[html.find("<title>")+7:html.find("</title>")]
-    asm = html_title.split()[0]
-    acc_asm = acc + "_" + asm
-    http = "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA"
-    link = os.path.join(http, acc[4:7], acc[7:10], acc[10:13], acc_asm, acc_asm) + "_genomic.fna.gz"
-    
-    return link
 
