@@ -14,7 +14,7 @@ After this workflow completes, you can proceed with splitting the reference geno
 
 Once the intervals have been created, you can proceed with the **bam2vcf** workflow, using either GATK4 or FreeBayes. 
 
-## How to use
+## How to run
 
 ### 0.) Install snakemake, if you haven't already
 Please follow the [installation via conda instructions](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html) to install snakemake in a conda environment called "snakemake". The script that ultimately runs the snakemake command is preceded by a line with `conda activate snakemake`, so the exact environment name is necessary unless you change this script. If you already have snakemake installed, you can remove this line with `conda activate snakemake` from all the \*sh files.
@@ -29,7 +29,7 @@ cd shortRead_mapping_variantCalling
 ### 2) Set values of important variables (config.yaml)
 Witin this directory a file named `config.yaml` stores many variables, including the location of files (e.g. reference genome) as well as file suffixes (e.g. forward read data end in "\_1.fastq.gz" with the names of samples preceding these suffixes). The top section of `config.yaml` contains the variables that *need* to be changed, and comments within this file describe these variables. 
 
-#### 2 b) Parameterize algorithm to split up genome (most complicated bit, may need to simplify)
+#### 2 b) Parameterize algorithm to split up genome
 `config.yaml` also contains two variables to define genomic intervals for parallel processing:
 
 1. `minNmer`: the minimum length of an Nmer used to define the beginning/end of an interval. Generally, smaller values (e.g. 200bp) will create many smaller intervals whereas larger ones (e.g. 2kb) will create fewer larger intervals. However,the number of intervals completely depends on the reference genome assembly and its distribution of Nmers. Values from 500bp to 2kb are a good place to start
@@ -38,54 +38,22 @@ Witin this directory a file named `config.yaml` stores many variables, including
 
 3. `maxBpPerList`: the maximum number of bp (summed length of intervals) allowed in a list file used by GATK4. I usually just set this to the same as `maxIntervalLen` above.
 
-If you specify a minNmer value that does not sufficiently break up the genome -- creating intervals larger than maxIntervalLen -- the workflow will halt and show you the maximum interval length it found for various Nmers in the genome. With these data you can adjust the parameters accordingly. For more info, see the interval creation workflow below.
+If you specify a minNmer value that does not sufficiently break up the genome -- creating intervals larger than maxIntervalLen -- the workflow will halt and output the maximum interval length it found for various Nmers in the genome. Using this as a guide, you can adjust the parameters accordingly. Because the outcome of this will vary by genome and depend on the parameters in the `config.yaml` file, we suggest you check the output of this workflow before submitting the **bam2vcf** workflow. For example, with a given assembly and set of parameters, it's possible that the algorithm found ~100k intervals. Dividing the genome into this many intervals may slow down the workflow, as these short jobs will spend more time pending in the queue than actually running. 
 
 ### 3) Set the resources to request for various steps (resources.yaml)
 The `resources.yaml` file may be changed to increase the amount of requested memory (in Megabytes) or the number of threads for the steps that support multi-threading. Not all steps in the workflows are included here, so these use the default amount of resources. **NOTE**: if any job fails, it gets resubmitted with increased memory calculated as (*attempt number*)\*(initial memory).
 
 ### 4) Are you alright with default number of jobs to submit to run simultaneously?
-There's a file in the `profiles/slurm` directory called `config.yaml` which contains various options for the workflow (this setup is from using [profiles](https://github.com/Snakemake-Profiles)). The most important is `jobs` at the top. If your workflow needs to submit ~10k jobs overall and many of them can be run in parallel (e.g. making GVCFs from BAM files for each sample), then this `jobs` variable determines how many jobs the workflow will submit at any given time. The default is 1000, meaning if 1k jobs are sitting in the queue (running or pending), it will not submit more. If you are concerned about your fairshare score decreasing dramatically because of this (e.g. you have 80k jobs to submit overall from having many samples), set `jobs` to something smaller, such as 300. This will of course make the workflow take longer but will leave resources for your colleagues!
+There's a file in the `profiles/slurm` directory called `config.yaml` which contains various options for the workflow (this setup is from using [profiles](https://github.com/Snakemake-Profiles)). The most important is `jobs` at the top. If your workflow needs to submit ~10k jobs overall and many of them can be run in parallel (e.g. making GVCFs from BAM files for each sample), then this `jobs` variable determines how many jobs the workflow will submit at any given time. The default is 1000, meaning if 1k jobs are sitting in the queue (running or pending), it will not submit more. If you are concerned about your fairshare score decreasing dramatically because of this (e.g. you have 80k jobs to submit overall because you have many samples), set `jobs` to something smaller, such as 300. This will of course make the workflow take longer but will leave resources for your colleagues!
 
 ### 5) Submit workflow!
-After updating the config.yaml file, you may now run one of the workflows, which gets submitted as a job that itself submits many jobs (max of 1000, may be changed).
+After updating the config.yaml file, you may now run one of the workflows, which gets submitted as a job that itself submits many jobs (max of 1000, see step 4 above if you want to change this). Once the workflow is submitted as a job, it may take a while to build the software environment before it does anything. The workflows will successfully complete if the final summary files (described in next section) are in the appropriate directory.
 
 #### e.g., fastq2bam workflow
 To run, simply type the following on the command line to submit this workflow as a job:
 ```
 sbatch run_fastq2bam.sh
 ```
-
-#### interval creation workflow (preprocessing step to variant calling)
-Before running the BAM -> VCF workflows, you must run a fast (depending on genome assembly) algorithm that splits up the genome into many intervals flanked by N's (described above). Because the outcome of this will vary by genome and depend on the parameters in the `config.yaml` file, we suggest you check the output of this short workflow to make sure everything went well. For instance, it's possible that, given the parameters and your assembly, the algorithm found ~100k intervals. Dividing the genome into this many intervals may slow down the workflow, as these short jobs will spend more time pending in the queue than actually running. 
-
-Type the following on the command line:
-```
-sbatch run_intervals.sh
-```
-and go to the `intervalFiles` directory. In the subdirectory `gatkLists` you'll find the list files used to partition the genome. GATK requires intervals be specified in this way, and each list file contains potentially many intervals. The number of list files will be proportional to how many jobs ultimately get submitted, and many 100's of list files is OK. Something around 10k is probably too many.
-
-For the Freebayes workflow, the file `intervals_fb.bed` contains the intervals used to partition the genome. Again, something on the order of 1000 to 10k intervals is probably fine (just count the number of lines in this file using `wc -l intervals_fb.bed`).
-
-If you dont get the desired number of intervals, you can change `minNmer` in the config file; increasing the value will result in fewer intervals, decreasing it will create more. You can also look at the `interval_algo.out` file in the `intervalFiles` directory to see how many intervals get created for each Nmer we found in your genome assembly and also the maximum interval length for each `minNmer`. You can use this information to select a `minNmer` that doesn't create too large of intervals (`MaxObservedInterval`), which can slow down the workflow.
-
-NOTE: a perfect assembly with no N's will have as many intervals as there are chromosomes (or scaffolds).
-
-#### bam2vcf workflows
-Once you are satisfied with how the genome will get split into intervals, to run GATK4, type the following on the command line:
-```
-sbatch run_bam2vcf_gatk.sh
-```
-
-To run Freebayes, type the following on the command line:
-
-```
-sbatch run_bam2vcf_fb.sh
-```
-
-Once the workflow is submitted as a job, it may take a while to build the software environment before it does anything. 
-
-The workflows successfully completed if the final summary files (described in next section) are in the appropriate directory.
-
 
 ## Description of output files
 ### fastq2bam workflow
@@ -101,9 +69,19 @@ Successful completion of this workflow will create `bam_sumstats.txt`, with colu
 8. Number of bases covered *at least* once
 9. Logical test for whether your BAM file is valid and ready for variant calling (according to picard's ValidateSamFile tool). If not, check the appropriate _validate.txt file in the 02_bamSumstats dir. "FALSE" values indicate that variant callers may fail downstream, although not necessarily as this validation step is very fussy.
 
+### intervals workflow
+
+Successful completion of this workflow will create a directory named `intervalFiles`. There is a subdirectory in `intervalFiles` named `gatkLists`, where you will find the list files used to partition the genome. GATK requires intervals be specified in this way, and each list file contains potentially many intervals. The number of list files will be proportional to how many jobs ultimately get submitted, and many 100's of list files is OK. Something around 10k is probably too many. 
+
+For the Freebayes workflow, the file `intervals_fb.bed` contains the intervals used to partition the genome. Again, something on the order of 1000 to 10k intervals is probably fine (just count the number of lines in this file using `wc -l intervals_fb.bed`).
+
+If you dont get the desired number of intervals, you can change `minNmer` in the config file; increasing the value will result in fewer intervals, decreasing it will create more. You can also look at the `interval_algo.out` file in the `intervalFiles` directory to see how many intervals get created for each Nmer we found in your genome assembly and also the maximum interval length for each `minNmer`. You can use this information to select a `minNmer` that doesn't create too large of intervals (`MaxObservedInterval`), which can slow down the workflow.
+
+NOTE: a perfect assembly with no N's will have as many intervals as there are chromosomes (or scaffolds).
+
 ### bam2vcf workflow
 
-Successful completion of this workflow will create a VCF file entitled `Combined_hardFiltered.vcf` as well as some files for quality control. These files include 
+Successful completion of this workflow will create a VCF file named `spp_hardFiltered.vcf`, where `spp` will be the variable you set in `config.yaml` as your species identifier, as well as some files for quality control. These files include:
 
 1. `SNP_per_interval.txt` showing how many SNPs were detected for each genomic interval. These data may be used to ensure that variants were called for each interval. The columns of this file correspond to
     1. scaffold/chromosome name
@@ -121,9 +99,23 @@ Successful completion of this workflow will create a VCF file entitled `Combined
 
 The versions of the various programs may be found in the YAML files in the `envs/` directory. You may update any programs listed under the 'dependencies' heading, replacing the version number with the latest you can find after searching the [Anaconda cloud](https://anaconda.org/).
 
-### Test Data
+## Test Data
 
-There are currently two different test datasets that accompany this workflow. The zebrafinch data consists of reads for 3 individuals that map to a genome with 3 scaffolds (each 200kb in length). The Black head duck data consists of reads for 3 individuals that maps to a genome with a single scaffold that gets split (by Nmers) into subintervals.
+There are currently two different test datasets that accompany these workflows. The zebrafinch data consists of reads for 3 individuals that map to a genome with 3 scaffolds (each 200kb in length). The Black head duck data consists of reads that maps to a genome with a single scaffold that gets split into subintervals.
+
+
+## Roadmap for Improvements <br>
+
+We are currently working on improvements to this suite of pipelines. Some of the additional features we're implementing and tweaks to functionality include:   
+- refactoring **fastq2bam** to run from only the sample sheet CSV, not relying on the config  
+- merging workflows to run with a single submission command e.g., ```sbatch run_pipeline.sh``` would download the FASTQs and reference genome, map reads, create genome intervals, and call variants  
+- integration of **vcf2mk** and quality control workflows (currently developing in [separate repo](https://github.com/sjswuitchik/compPopGen_ms))  
+- integration of demographic inferences  
+
+
+
+
+
 
 
 <br>
