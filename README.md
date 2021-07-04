@@ -49,8 +49,7 @@ There's a file in the `profiles/slurm` directory called `config.yaml` which cont
 ### 5) Submit workflow!
 After updating the config.yaml file, you may now run one of the workflows, which gets submitted as a job that itself submits many jobs (max of 1000, see step 4 above if you want to change this). Once the workflow is submitted as a job, it may take a while to build the software environment before it does anything. The workflows will successfully complete if the final summary files (described in next section) are in the appropriate directory.
 
-#### e.g., fastq2bam workflow
-To run, simply type the following on the command line to submit this workflow as a job:
+e.g., To run the **fastq2bam** workflow, simply type the following on the command line to submit this workflow as a job:
 ```
 sbatch run_fastq2bam.sh
 ```
