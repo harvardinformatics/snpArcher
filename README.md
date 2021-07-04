@@ -109,7 +109,7 @@ There are currently two different test datasets that accompany these workflows. 
 We are currently working on improvements to this suite of pipelines. Some of the additional features we're implementing and tweaks to functionality include:   
 - refactoring **fastq2bam** to run from only the sample sheet CSV, not relying on the config  
 - merging workflows to run with a single submission command e.g., ```sbatch run_pipeline.sh``` would download the FASTQs and reference genome, map reads, create genome intervals, and call variants  
-- integration of **vcf2mk** and quality control workflows (currently developing in [separate repo](https://github.com/sjswuitchik/compPopGen_ms))  
+- integration of **vcf2mk** and quality control workflows to run after the **bam2vcf** workflow (currently developing in a [separate repository](https://github.com/sjswuitchik/compPopGen_ms))  
 - integration of demographic inferences  
 
 
