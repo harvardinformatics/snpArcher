@@ -74,13 +74,13 @@ Successful completion of this workflow will create a directory named `intervalFi
 
 For the Freebayes workflow, the file `intervals_fb.bed` contains the intervals used to partition the genome. Again, something on the order of 1000 to 10k intervals is probably fine (just count the number of lines in this file using `wc -l intervals_fb.bed`).
 
-If you dont get the desired number of intervals, you can change `minNmer` in the config file; increasing the value will result in fewer intervals, decreasing it will create more. You can also look at the `interval_algo.out` file in the `intervalFiles` directory to see how many intervals get created for each Nmer we found in your genome assembly and also the maximum interval length for each `minNmer`. You can use this information to select a `minNmer` that doesn't create too large of intervals (`MaxObservedInterval`), which can slow down the workflow.
+If you don't get the desired number of intervals, you can change `minNmer` in the config file; increasing the value will result in fewer intervals, decreasing it will create more. You can also look at the `interval_algo.out` file in the `intervalFiles` directory to see how many intervals get created for each Nmer found in your genome assembly, and also the maximum interval length for each `minNmer`. You can use this information to select a `minNmer` that doesn't create too large of intervals (`MaxObservedInterval`), which can slow down the workflow.
 
 NOTE: a perfect assembly with no N's will have as many intervals as there are chromosomes (or scaffolds).
 
 ### bam2vcf workflow
 
-Successful completion of this workflow will create a VCF file named `spp_hardFiltered.vcf`, where `spp` will be the variable you set in `config.yaml` as your species identifier, as well as some files for quality control. These files include:
+Successful completion of this workflow will create a VCF file named `spp_hardFiltered.vcf`, where `spp` will be the variable you set in `config.yaml` as your species name/identifier, as well as some files for quality control. These files include:
 
 1. `SNP_per_interval.txt` showing how many SNPs were detected for each genomic interval. These data may be used to ensure that variants were called for each interval. The columns of this file correspond to
     1. scaffold/chromosome name
