@@ -8,9 +8,9 @@ This is a suite of snakemake pipelines to call variants with short-read sequence
 2. **invervals**: splits genome into intervals for parallelization and faster processing
 3. **bam2vcf**: calls variants with GATK4 or Freebayes
 
-Users start with a CSV file that contains the sample metadata (following the format of the example data sheet samples.csv) for the input to **fastq2bam**. You must inspect the quality of the BAM files after the workflow completes (e.g., by checking the summary file produced) and that the appropriate FASTQs and reference genome were downloaded. 
+Users start with a CSV file that contains the sample metadata (following the format of the example data sheet ```samples.csv```) for the input to **fastq2bam**. You must inspect the quality of the BAM files after the workflow completes (e.g., by checking the summary file produced) and that the appropriate FASTQs and reference genome were downloaded. 
 
-After this workflow completes, you can proceed with splitting the reference genome into intervals with the **intervals** workflow. This workflow uses a simple algorithm to split the reference genome into many smaller intervals that are processed in parallel on a computing cluster, speeding up both GATK4 and FreeBayes dramatically. These intervals are flanked by strings of N's found in the reference genome in order to avoid edge effects. While lists of intervals already exists for some organisms (e.g. humans), this workflow creates them so that they may be used with any non-model organisms. 
+After this workflow completes, you can proceed with splitting the reference genome into intervals with the **intervals** workflow. This workflow uses a simple algorithm to split the reference genome into many smaller intervals that are processed in parallel on a computing cluster, speeding up both GATK4 and FreeBayes dramatically. These intervals are flanked by strings of N's found in the reference genome in order to avoid edge effects. While lists of intervals already exists for some organisms (e.g., humans), this workflow creates them so that they may be used with any non-model organisms. 
 
 Once the intervals have been created, you can proceed with the **bam2vcf** workflow, using either GATK4 or FreeBayes. 
 
@@ -27,7 +27,7 @@ cd shortRead_mapping_variantCalling
 ```
 
 ### 2) Set values of important variables (config.yaml)
-Witin this directory a file named `config.yaml` stores many variables, including the location of files (e.g. reference genome) as well as file suffixes (e.g. forward read data end in "\_1.fastq.gz" with the names of samples preceding these suffixes). The top section of `config.yaml` contains the variables that *need* to be changed, and comments within this file describe these variables. 
+Witin this directory a file named `config.yaml` stores many variables, including the location of files (e.g., reference genome) as well as file suffixes (e.g., forward read data end in "\_1.fastq.gz" with the names of samples preceding these suffixes). The top section of `config.yaml` contains the variables that *need* to be changed, and comments within this file describe these variables. After the **fastq2bam** is completed, you must update the location of the reference genome in `config.yaml` before moving on to the **intervals** workflow. 
 
 #### 2 b) Parameterize algorithm to split up genome
 `config.yaml` also contains two variables to define genomic intervals for parallel processing:
