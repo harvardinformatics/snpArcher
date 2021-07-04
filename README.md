@@ -5,7 +5,8 @@
 This is a suite of snakemake pipelines to call variants with short-read sequence data. These pipelines are split into two modular parts, named by the primary type of input/output files: 
 
 1. **fastq -> BAM**: maps short reads to a reference genome with BWA
-2. **BAM -> VCF**: calls variants with GATK4 or Freebayes
+2. **Invervals**: split genome into intervals for parallelization and faster processing
+3. **BAM -> VCF**: calls variants with GATK4 or Freebayes
 
 Users may start with raw fastq files or with BAM files. If you start with raw fastq files, you must first use the **fastq -> BAM** workflow and inspect the quality of the output BAM files before proceeding (e.g. by checking the summary file we produce). After this workflow completes, you may use the **BAM -> VCF** workflows.
 
