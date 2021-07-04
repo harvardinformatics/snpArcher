@@ -2,15 +2,13 @@
 
 ## Design
 
-This is a suite of snakemake pipelines to call variants with short-read sequence data. These pipelines are split into two modular parts, named by the primary type of input/output files: 
+This is a suite of snakemake pipelines to call variants with short-read sequence data. These pipelines are split into three modular parts:  
 
-1. **fastq -> BAM**: maps short reads to a reference genome with BWA
-2. **Invervals**: split genome into intervals for parallelization and faster processing
-3. **BAM -> VCF**: calls variants with GATK4 or Freebayes
+1. **fastq2bam**: downloads FASTQ files from SRA and a reference genome from NCBI, then maps reads to the reference genome with BWA
+2. **invervals**: splits genome into intervals for parallelization and faster processing
+3. **bam2vcf**: calls variants with GATK4 or Freebayes
 
-Users may start with raw fastq files or with BAM files. If you start with raw fastq files, you must first use the **fastq -> BAM** workflow and inspect the quality of the output BAM files before proceeding (e.g. by checking the summary file we produce). After this workflow completes, you may use the **BAM -> VCF** workflows.
-
-A key feature of the **BAM -> VCF** workflows is a simple algorithm to split the reference genome into many smaller intervals that are processed in parallel on a computing cluster. This speeds up these programs dramatically. These intervals are flanked by strings of N's found in the reference genome in order to avoid edge effects. While lists of intervals already exists for some organisms (e.g. Humans), here we create them ourselves so that these workflows may be used with any non-model organisms.
+Users start with a CSV file that contains the sample metadata (following the format of the example data sheet samples.csv) for the input to **fastq2bam**. You must inspect the quality of the BAM files after the workflow completes (e.g., by checking the summary file produced) and that the appropriate FASTQs and reference genome were downloaded. After this workflow completes, you can proceed with splitting the reference genome into intervals with the **intervals** workflow. This workflow uses a simple algorithm to split the reference genome into many smaller intervals that are processed in parallel on a computing cluster, speeding up both GATK4 and FreeBayes dramatically. These intervals are flanked by strings of N's found in the reference genome in order to avoid edge effects. While lists of intervals already exists for some organisms (e.g. humans), this workflow creates them so that they may be used with any non-model organisms. Once the intervals have been created, you can proceed with the **bam2vcf** workflow, using either GATK4 or FreeBayes. 
 
 ## How to use
 
