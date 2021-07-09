@@ -8,9 +8,6 @@ get_fastq_pe:
 # compress fastq
 gzip_fastq:
     mem: 4000
-# reference download
-download_reference:
-    mem: 2000
 # fastp program
 fastp: 
     threads: 10 
