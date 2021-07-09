@@ -125,7 +125,7 @@ rule dedup:
         bamDir + "{sample}_sorted.bam.bai"
     output:
         dedupBam = bamDir + "{sample}_dedup.bam",
-        dedupMet = sumstatDir + "{sample}_dedupMetrics.txt",
+        dedupMet = sumstatDir + "{sample}_dedupMetrics.txt"
     conda:
         "../envs/fastq2bam.yml"
     resources:
