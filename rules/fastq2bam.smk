@@ -9,7 +9,7 @@ rule get_fastq_pe:
     params:
         outdir = "data/{Organism}/{sample}"
     resources:
-	mem_mb = lambda wildcards, attempt: attempt + res_config['get_fastq_pe']['mem']        
+	mem_mb = lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']        
     conda:
         "../envs/fastq2bam.yml"
     shell:
@@ -23,7 +23,7 @@ rule gzip_fastq:
         "data/{Organism}/{sample}/{run}_1.fastq.gz",
         "data/{Organism}/{sample}/{run}_2.fastq.gz"
     resources:
-	mem_mb = lambda wildcards, attempt: attempt + res_config['gzip_fastq']['mem'] 
+	mem_mb = lambda wildcards, attempt: attempt * res_config['gzip_fastq']['mem'] 
     shell:
         "gzip {input}"
 
