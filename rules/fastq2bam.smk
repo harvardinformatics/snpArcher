@@ -11,7 +11,7 @@ rule get_fastq_pe:
     conda:
         "../envs/fastq2bam.yml"
     resources:
-	mem_mb=lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']
+	mem_mb = lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']
     shell:
         "fasterq-dump {wildcards.run} -O {params.outdir}"
 
