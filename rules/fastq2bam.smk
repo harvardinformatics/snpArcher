@@ -8,10 +8,10 @@ rule get_fastq_pe:
         "data/{Organism}/{sample}/{run}_2.fastq"
     params:
         outdir = "data/{Organism}/{sample}"
-    resources:
-	mem_mb = lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']
     conda:
         "../envs/fastq2bam.yml"
+    resources:
+	mem_mb=lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']
     shell:
         "fasterq-dump {wildcards.run} -O {params.outdir}"
 
