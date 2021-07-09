@@ -27,8 +27,13 @@ minNmer = config["minNmer"]
 refBaseName = helperFun.getRefBaseName(config["ref"])
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
-#SAMPLES = ["ERR1013163"]
-SAMPLES = helperFun.getBamSampleNames(bamDir, bam_suffix)
+_, sample_dict, _ = helperFun.create_sample_dict("samples.csv")
+SAMPLES = sample_dict.keys()
+
+
+### DEFINE REFERENCE AND ORGANISM NAME:
+REFERENCE = "GCA_003018455.1"
+ORGANISM = "Escherichia_coli"
 
 if not os.path.isdir(config["gatkDir"]):
     os.system("mkdir " + config["gatkDir"])
@@ -38,7 +43,7 @@ os.system("mkdir -p " + dbDir + "tmp")
 os.system("mkdir -p " + vcfDir + "tmp")
 
 
-LISTS = helperFun.getListIndices(intDir)
+LISTS = helperFun.getListIndices(intDir, REFERENCE)
 if not LISTS:
     sys.exit("no gatk lists found! Make sure you ran the workflow that creates intervals, and that the results are in the expected subdirectory!")
 
