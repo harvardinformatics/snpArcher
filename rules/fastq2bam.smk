@@ -114,6 +114,8 @@ rule merge_bams:
     output: 
         bam = bamDir + "{sample}_sorted.bam",
         bai = bamDir + "{sample}_sorted.bam.bai"
+    conda:
+        "../envs/fastq2bam.yml"
     shell:
         "samtools merge {output.bam} {input} && samtools index {output.bam}"
 rule dedup:
