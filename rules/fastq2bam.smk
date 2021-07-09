@@ -1,4 +1,4 @@
-localrules: collect_sumstats
+localrules: collect_sumstats, download_reference
 import os
 
 rule get_fastq_pe:
