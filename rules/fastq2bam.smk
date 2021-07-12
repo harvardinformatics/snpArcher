@@ -38,7 +38,8 @@ rule download_reference:
     shell:
         "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {output.dataset} {wildcards.refGenome}"
         "&& unzip -o -d data/{wildcards.Organism}/genome {output.dataset}"
-        "&& mv data/{wildcards.Organism}/genome/ncbi_dataset/data/{wildcards.refGenome}/{wildcards.refGenome}*.fna {output.ref}" 
+        "&& cat data/{wildcards.Organism}/genome/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
+        #"&& mv data/{wildcards.Organism}/genome/ncbi_dataset/data/{wildcards.refGenome}/{wildcards.refGenome}*.fna {output.ref}" 
 
 rule index_ref:
     input:
