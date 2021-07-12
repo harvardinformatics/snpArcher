@@ -39,9 +39,9 @@ rule download_reference:
     conda:
         "../envs/fastq2bam.yml"
     shell:
-        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {output.dataset} {wildcards.refGenome} "
-        "&& unzip -o -d data/{wildcards.Organism}/genome {output.dataset} "
-        "&& mv data/{wildcards.Organism}/genome/ncbi_dataset/data/{wildcards.refGenome}/{wildcards.refGenome}*.fna {output.ref}" 
+        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {output.dataset} {wildcards.refGenome}\n"
+        "unzip -o -d data/{wildcards.Organism}/genome {output.dataset}\n"
+        "mv data/{wildcards.Organism}/genome/ncbi_dataset/data/{wildcards.refGenome}/{wildcards.refGenome}*.fna {output.ref}" 
 
 rule index_ref:
     input:
