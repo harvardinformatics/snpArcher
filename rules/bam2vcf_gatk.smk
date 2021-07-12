@@ -6,11 +6,11 @@ rule bam2gvcf:
     a GVCF is created for all the scaffolds present in a given list file.
     """
     input:
-        ref = expand("data/{organism}/genome/{ref}.fna", organism=ORGANISM, ref=REFERENCE),
-        fai = expand("data/{organism}/genome/{ref}.fna.fai", organism=ORGANISM, ref=REFERENCE),
-        dict = expand("data/{organism}/genome/{ref}.dict", organism=ORGANISM, ref=REFERENCE),
-        bam = "fastq2bam/01_mappedReads/{sample}_dedup.bam",
-        l = expand("intervalFiles/gatkLists/{ref}/list{{list}}.list", ref=REFERENCE)
+        ref = config['ref'],
+        fai = config['ref'] + ".fai",
+        dict = refBaseName + ".dict",
+        bam = bamDir + "{sample}" + bam_suffix,
+        l = intDir + "gatkLists/list{list}.list"
     output: 
         gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz",
         gvcf_idx = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi",
@@ -65,7 +65,7 @@ rule gvcf2DB:
     Samples are thus gathered by a shared list name, but lists are still scattered.
     """
     input:
-        l = expand("intervalFiles/gatkLists/{ref}/list{{list}}.list", ref=REFERENCE),
+        l = intDir + "gatkLists/list{list}.list",
         dbMapFile = dbDir + "DB_mapfile_L{list}"
     output: 
         DB = directory(dbDir + "DB_L{list}"),
@@ -93,7 +93,7 @@ rule DB2vcf:
     """
     input:
         DB = dbDir + "DB_L{list}",
-        ref = expand("data/{organism}/genome/{ref}.fna", organism=ORGANISM, ref=REFERENCE),
+        ref = config['ref'],
         doneFile = dbDir + "DB_L{list}.done"
     output: 
         vcf = vcfDir + "L{list}.vcf"
@@ -116,7 +116,7 @@ rule gatherVcfs:
     """
     input:
         vcfs = expand(vcfDir + "L{list}.vcf", list=LISTS),
-        ref = expand("data/{organism}/genome/{ref}.fna", organism=ORGANISM, ref=REFERENCE),
+        ref = config['ref']
     output: 
         vcfs = expand(vcfDir + "L{list}_filter.vcf", list=LISTS),
         vcfFinal = config["gatkDir"] + config['spp'] + "_final.vcf.gz"
@@ -148,7 +148,7 @@ rule gatherVcfs:
 rule vcftools:
     input:
         vcf = config["gatkDir"] + config['spp'] + "_final.vcf.gz",
-        int = intDir + REFERENCE + "_intervals_fb.bed"
+        int = intDir + "intervals_fb.bed"
     output: 
         missing = gatkDir + "missing_data_per_ind.txt",
         SNPsPerInt = gatkDir + "SNP_per_interval.txt"

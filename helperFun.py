@@ -406,8 +406,8 @@ def getVcfs_gatk(LISTS, vcfDir):
     out = " ".join(vcfs)
     return(out)
 
-def getListIndices(intDir, refName):
-    LISTS = glob.glob(intDir + f"gatkLists/{refName}/*.list")	
+def getListIndices(intDir):
+    LISTS = glob.glob(intDir + "gatkLists/*.list")	
     for i in range(len(LISTS)):
         LISTS[i] = os.path.basename(LISTS[i])
         LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
