@@ -8,5 +8,5 @@ dependencies:
   - picard==2.22.8
   - samtools==1.10
   - sra-tools>2.9.1
-  - ncbi-datasets-cli==11.25.1
+  - ncbi-datasets-cli==12.3.0
   - p7zip==16.02
