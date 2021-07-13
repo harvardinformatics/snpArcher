@@ -41,6 +41,7 @@ rule download_reference:
     shell:
         "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {output.dataset} {wildcards.refGenome}\n"
         "7z x {output.dataset} -aoa -odata/{wildcards.Organism}/genome/"
+        "&& cat data/{wildcards.Organism}/genome/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
 
 rule index_ref:
     input:
