@@ -157,6 +157,7 @@ def getBamSampleNames(BamDir, bam_suffix):
     return(SAMPLES)
 
 def createSeqDictGetScaffOrder(ref, refBaseName):
+    print(f"{ref=}, {refBaseName=}")
     seqDict = refBaseName + ".dict"
     index = ref + ".fai"
     seqDictScaffs = []
@@ -184,10 +185,12 @@ def createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerL
     # new intervals based on splitting by Nmer
     newIntervals = defaultdict(lambda: defaultdict(list))
     totalACGTmerLength = 0
-
+    
+    #get actual basename. refBaseName is defined earlier and its usage requires the full path
+    refFileName = refBaseName.rsplit("/")[-1]
 
     # read in picard output
-    f = open(intDir + "output.interval_list", 'r')
+    f = open(intDir + f"{refFileName}_output.interval_list", 'r')
     for line in f:
         line = line.strip()
         line = line.split()
@@ -287,7 +290,7 @@ def createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerL
             lessThan.append(Nmer)
                 
 
-    out = open(workDir + "interval_algo.out",'w')
+    out = open(workDir + f"{refFileName}_interval_algo.out",'w')
     print("Here are the actual maximum interval lengths we observed, for each minimum Nmer size used to split up the genome.", file=out)
     print("To proceed, specify a maxIntervalLen that is equal to or slightly greater than the ones observed here.", file=out)
     print("Nmer MaxObservedInterval NumIntervals", file=out)
@@ -319,7 +322,7 @@ def createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerL
     current_intervals = []
     listFile_index = 0
     # go through scaffolds in same order as they appear in the sequence dictionary, printing lists as we go
-    bed = open(workDir + "intervals_fb.bed", 'w')
+    bed = open(workDir + f"{refFileName}_intervals_fb.bed", 'w')
     for scaff in seqDictScaffs:
         for intv in newIntervals[optimalNmer][scaff]:
             start = intv[0]
@@ -333,7 +336,7 @@ def createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerL
                     # current_intervals that doesn't make it to subsequent else statement
                     current_intervals = [ (scaff, start, stop) ]
                 # flush out current_intervals into a list file
-                printIntervalsToListFile(intDir, listFile_index, current_intervals)
+                printIntervalsToListFile(intDir, listFile_index, current_intervals, refFileName)
                 #out = open(f"{intDir}list{listFile_index}.list", 'w')
                 #for i in current_intervals:
                 #    print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
@@ -349,7 +352,7 @@ def createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerL
                 runningSumBp += intervalLen
     # if part-way through the loop above ran out of intervals to print, print whatever remains
     if current_intervals:
-        printIntervalsToListFile(intDir, listFile_index, current_intervals)
+        printIntervalsToListFile(intDir, listFile_index, current_intervals, refFileName)
         #out = open(f"{intDir}list{listFile_index}.list", 'w')
         #for i in current_intervals:
         #    print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
@@ -357,12 +360,14 @@ def createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerL
     bed.close()
 
     # get list file indices
-    LISTS = glob.glob(intDir + "*.list")	
+    # this always returns an empty list, why? cm
+    LISTS = glob.glob(intDir + "*.list")
+    print(LISTS)	
     for i in range(len(LISTS)):
         LISTS[i] = os.path.basename(LISTS[i])
         LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
     LISTS=sorted(LISTS)
-    #print(LISTS)
+    print(LISTS)
     return(LISTS)
 
 def overlaps(a, b):     
@@ -375,8 +380,10 @@ def overlaps(a, b):
     """     
     return min(a[1], b[1]) - max(a[0], b[0])
 
-def printIntervalsToListFile(intDir, listFile_index, current_intervals):
-    out = open(f"{intDir}gatkLists/list{listFile_index}.list", 'w')
+def printIntervalsToListFile(intDir, listFile_index, current_intervals, refName):
+    if not os.path.isdir(f"{intDir}gatkLists/{refName}"):
+        os.mkdir(f"{intDir}gatkLists/{refName}")
+    out = open(f"{intDir}gatkLists/{refName}/list{listFile_index}.list", 'w')
     for i in current_intervals:
         print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
     out.close()

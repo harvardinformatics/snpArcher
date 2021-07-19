@@ -9,7 +9,7 @@ configfile: "config.yaml"
 res_config = yaml.load(open("resources.yaml"))
 
 # rename variables from config file for downstream simplicity
-ref = config["ref"]
+#ref = config["ref"]
 bam_suffix = config["bam_suffix"]
 
 # this is where Snakemake output will go, specify with 'gatkDir' in config.yml
@@ -20,7 +20,7 @@ maxBpPerList = int(config["maxBpPerList"])
 maxIntervalsPerList = int(config["maxIntervalsPerList"])
 minNmer = config["minNmer"]
 
-refBaseName = helperFun.getRefBaseName(config["ref"])
+#refBaseName = helperFun.getRefBaseName(config["ref"])
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
 SAMPLES = helperFun.getBamSampleNames(bamDir, bam_suffix)
@@ -29,43 +29,68 @@ SAMPLES = helperFun.getBamSampleNames(bamDir, bam_suffix)
 if not os.path.isdir(intDir + "gatkLists"):
     os.system("mkdir -p " + intDir + "gatkLists")
 
+_, sample_dict, _ = helperFun.create_sample_dict("samples.csv")
+
+GENOMES = {sample_dict[k]["refGenome"]: sample_dict[k]["Organism"] for k in sample_dict.keys()}
+print(GENOMES)
 ### workflow ###
 
 rule all:
     input:
-        intervals = intDir + "intervals_fb.bed"
+        intervals = expand(intDir + "{genome}_intervals_fb.bed", genome=GENOMES.keys()),
+
 
 rule process_ref:
     """
     This rule generates a .fai file from the reference genome, which are required for GATK to run properly. GATK also needs a .dict file, but this was previously generated.
     """
     input:
-        ref = config['ref'],
+        ref = lambda wildcards: 
+                    expand("data/{organism}/genome/{{genome}}.fna", organism=GENOMES[wildcards.genome])
     output: 
-        fai = config['ref'] + ".fai",
-        dict = refBaseName + ".dict",
-        intervals = temp(intDir + "output.interval_list")
+        fai = "data/{organism}/genome/{genome}.fna.fai",
+        dictf = "data/{organism}/genome/{genome}.dict",
     conda:
         "./envs/bam2vcf.yml"
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * res_config['process_ref']['mem']   
     shell:
         "samtools faidx {input.ref} --output {output.fai}\n"
-        "picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dict}\n"
-        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={minNmer} 2> err\n"
-
-
+        "picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dictf}\n"
+        
 rule create_intervals:
     input:
-        fai = config['ref'] + ".fai",
-        dict = refBaseName + ".dict",
-        intervals = intDir + "output.interval_list"
+        fai = lambda wildcards: 
+                expand("data/{organism}/genome/{{genome}}.fna.fai", organism=GENOMES[wildcards.genome]),
+        dictf = lambda wildcards: 
+                expand("data/{organism}/genome/{{genome}}.dict", organism=GENOMES[wildcards.genome]),
+        ref = lambda wildcards: 
+                    expand("data/{organism}/genome/{{genome}}.fna", organism=GENOMES[wildcards.genome]),
+        intervals = intDir + "{genome}_output.interval_list"
+    params:
+        refBaseName = lambda wildcards: 
+                expand("data/{organism}/genome/{genome}", genome=wildcards.genome, organism=GENOMES[wildcards.genome]),
     output: 
-        intervals = intDir + "intervals_fb.bed"
+        intervals = intDir + "{genome}_intervals_fb.bed"
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem'] 
     run:
-         LISTS = helperFun.createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName, intDir) 
+        LISTS = helperFun.createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, input.ref[0], params.refBaseName[0], intDir)
+
+rule picard_intervals:
+    input:
+        ref = lambda wildcards: 
+                expand("data/{organism}/genome/{{genome}}.fna", organism=GENOMES[wildcards.genome])
+    output:
+        intervals = temp(intDir + "{genome}_output.interval_list")
+    conda:
+        "./envs/bam2vcf.yml"
+    log:
+        "log/picard_intervals/{genome}.log"
+    resources: 
+        mem_mb = lambda wildcards, attempt: attempt * res_config['process_ref']['mem']   
+    shell:
+        "picard ScatterIntervalsByNs REFERENCE={input} OUTPUT={output.intervals} MAX_TO_MERGE={minNmer} > {log}\n" 
 
 
 

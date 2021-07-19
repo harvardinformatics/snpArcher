@@ -43,6 +43,7 @@ rule download_reference:
         "7z x {output.dataset} -aoa -odata/{wildcards.Organism}/genome/"
         "&& cat data/{wildcards.Organism}/genome/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
 
+
 rule index_ref:
     input:
         ref = "data/{Organism}/genome/{refGenome}.fna"
@@ -117,6 +118,8 @@ rule merge_bams:
     output: 
         bam = bamDir + "{sample}_sorted.bam",
         bai = bamDir + "{sample}_sorted.bam.bai"
+    conda:
+        "../envs/fastq2bam.yml"
     shell:
         "samtools merge {output.bam} {input} && samtools index {output.bam}"
 rule dedup:
