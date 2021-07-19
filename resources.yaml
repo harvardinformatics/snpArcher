@@ -39,7 +39,7 @@ process_ref:
     mem: 15000
 # custom python algo to create intervals
 create_intervals:
-    mem: 15000
+    mem: 5000
 
 
 
