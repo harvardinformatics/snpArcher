@@ -1,4 +1,4 @@
-localrules: collect_sumstats
+localrules: collect_sumstats, download_reference
 import os
 
 rule get_fastq_pe:
@@ -8,9 +8,10 @@ rule get_fastq_pe:
         "data/{Organism}/{sample}/{run}_2.fastq"
     params:
         outdir = "data/{Organism}/{sample}"
-        
     conda:
         "../envs/fastq2bam.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']
     shell:
         "fasterq-dump {wildcards.run} -O {params.outdir}"
 
@@ -21,6 +22,8 @@ rule gzip_fastq:
     output:
         "data/{Organism}/{sample}/{run}_1.fastq.gz",
         "data/{Organism}/{sample}/{run}_2.fastq.gz"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['gzip_fastq']['mem']
     shell:
         "gzip {input}"
 
@@ -36,10 +39,10 @@ rule download_reference:
     conda:
         "../envs/fastq2bam.yml"
     shell:
-        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {output.dataset} {wildcards.refGenome}"
-        "&& unzip -o -d data/{wildcards.Organism}/genome {output.dataset}"
+        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {output.dataset} {wildcards.refGenome}\n"
+        "7z x {output.dataset} -aoa -odata/{wildcards.Organism}/genome/"
         "&& cat data/{wildcards.Organism}/genome/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
-        #"&& mv data/{wildcards.Organism}/genome/ncbi_dataset/data/{wildcards.refGenome}/{wildcards.refGenome}*.fna {output.ref}" 
+
 
 rule index_ref:
     input:
@@ -125,7 +128,7 @@ rule dedup:
         bamDir + "{sample}_sorted.bam.bai"
     output:
         dedupBam = bamDir + "{sample}_dedup.bam",
-        dedupMet = sumstatDir + "{sample}_dedupMetrics.txt",
+        dedupMet = sumstatDir + "{sample}_dedupMetrics.txt"
     conda:
         "../envs/fastq2bam.yml"
     resources:

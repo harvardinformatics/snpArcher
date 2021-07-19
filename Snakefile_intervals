@@ -23,7 +23,6 @@ minNmer = config["minNmer"]
 #refBaseName = helperFun.getRefBaseName(config["ref"])
 
 # grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
-#SAMPLES = ["ERR1013163"]
 SAMPLES = helperFun.getBamSampleNames(bamDir, bam_suffix)
 
 # create directory to store GATK lists
@@ -73,6 +72,8 @@ rule create_intervals:
                 expand("data/{organism}/genome/{genome}", genome=wildcards.genome, organism=GENOMES[wildcards.genome]),
     output: 
         intervals = intDir + "{genome}_intervals_fb.bed"
+    resources: 
+        mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem'] 
     run:
         LISTS = helperFun.createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, input.ref[0], params.refBaseName[0], intDir)
 

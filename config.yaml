@@ -2,7 +2,8 @@
 # Variables you need to change
 ##############################
 
-ref: "data/BHduck/genome/MU014702.1.fa"    # location of the reference genome
+samples: "samples.csv"         # name of the sample metadata CSV 
+ref: "data/BHduck/genome/MU014702.1.fa"   # location of the reference genome
 spp: "hetAtr"                             # species name/code for the final VCF output file name
 
 # If using the fastq -> BAM workflow change these, otherwise ignore them
