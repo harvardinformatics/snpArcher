@@ -62,6 +62,8 @@ rule create_intervals:
         intervals = intDir + "output.interval_list"
     output: 
         intervals = intDir + "intervals_fb.bed"
+    resources: 
+        mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem'] 
     run:
          LISTS = helperFun.createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, ref, refBaseName, intDir) 
 
