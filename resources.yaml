@@ -2,6 +2,12 @@
 # fastq -> BAM workflow
 ##
 
+# fastq download
+get_fastq_pe:
+    mem: 2000
+# compress fastq
+gzip_fastq:
+    mem: 4000
 # fastp program
 fastp: 
     threads: 10 
@@ -33,7 +39,7 @@ process_ref:
     mem: 15000
 # custom python algo to create intervals
 create_intervals:
-    mem: 15000
+    mem: 5000
 
 
 
