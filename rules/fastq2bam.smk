@@ -38,7 +38,8 @@ rule download_reference:
     shell:
         "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {output.dataset} {wildcards.refGenome}"
         "&& unzip -o -d data/{wildcards.Organism}/genome {output.dataset}"
-        "&& mv data/{wildcards.Organism}/genome/ncbi_dataset/data/{wildcards.refGenome}/{wildcards.refGenome}*.fna {output.ref}" 
+        "&& cat data/{wildcards.Organism}/genome/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
+        #"&& mv data/{wildcards.Organism}/genome/ncbi_dataset/data/{wildcards.refGenome}/{wildcards.refGenome}*.fna {output.ref}" 
 
 rule index_ref:
     input:
@@ -114,6 +115,8 @@ rule merge_bams:
     output: 
         bam = bamDir + "{sample}_sorted.bam",
         bai = bamDir + "{sample}_sorted.bam.bai"
+    conda:
+        "../envs/fastq2bam.yml"
     shell:
         "samtools merge {output.bam} {input} && samtools index {output.bam}"
 rule dedup:
