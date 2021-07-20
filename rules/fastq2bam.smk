@@ -120,8 +120,11 @@ rule merge_bams:
         bai = bamDir + "{sample}_sorted.bam.bai"
     conda:
         "../envs/fastq2bam.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['merge_bams']['mem']
     shell:
         "samtools merge {output.bam} {input} && samtools index {output.bam}"
+
 rule dedup:
     input: 
         bamDir + "{sample}_sorted.bam",
