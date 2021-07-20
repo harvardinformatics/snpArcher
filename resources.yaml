@@ -28,6 +28,8 @@ dedup:
 # calculate BAM summaries with samtools and picard
 bam_sumstats: 
     mem: 9000 
+merge_bams:
+    mem: 9000
 
 ###
 # BAM -> VCF workflow
