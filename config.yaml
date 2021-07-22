@@ -5,6 +5,7 @@
 samples: "samples.csv"         # name of the sample metadata CSV 
 ref: "data/BHduck/genome/MU014702.1.fa"   # location of the reference genome 
 spp: "hetAtr"                             # species name/code for the final VCF output file name
+genome: "MU014702.1"                      # name of the reference genome without the path or file extension
 
 # If using the fastq -> BAM workflow change these, otherwise ignore them
 #fastqDir: "data/BHduck/fastq/"      # location of fastq files; must be followed by a "/"
