@@ -10,7 +10,7 @@ rule bam2gvcf:
         fai = config['ref'] + ".fai",
         dict = refBaseName + ".dict",
         bam = bamDir + "{sample}" + bam_suffix,
-        l = intDir + "gatkLists/list{list}.list"
+        l = intDir + "gatkLists/" + config['genome'] + "list{list}.list"
     output: 
         gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz",
         gvcf_idx = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi",
