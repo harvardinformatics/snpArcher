@@ -18,13 +18,13 @@ data/BHduck/genome/*.ann
 data/BHduck/genome/*.amb
 data/BHduck/genome/*.fai
 data/BHduck/genome/*.dict
-
+data/
 fastp.*
-
+intervalFiles/
 out
 err
 __pycache__
-
+log/
 fastq2bam/
 intervalFiles/
 freebayes/
