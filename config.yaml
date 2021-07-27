@@ -3,11 +3,12 @@
 ##############################
 
 samples: "samples.csv"         # name of the sample metadata CSV 
-ref: "data/BHduck/genome/MU014702.1.fa"   # location of the reference genome
+ref: "data/BHduck/genome/MU014702.1.fa"   # location of the reference genome 
 spp: "hetAtr"                             # species name/code for the final VCF output file name
+genome: "MU014702.1"                      # name of the reference genome without the path or file extension
 
 # If using the fastq -> BAM workflow change these, otherwise ignore them
-fastqDir: "data/BHduck/fastq/"      # location of fastq files; must be followed by a "/"
+#fastqDir: "data/BHduck/fastq/"      # location of fastq files; must be followed by a "/"
 fastq_suffix1: "_1.fastq.gz"            # the suffix for the forward reads that follows all the sample names, e.g. "_1.fastq.gz" for sample "sampleName_1.fastq.gz"
 fastq_suffix2: "_2.fastq.gz"            # the suffix for the reverse reads that follows all the sample names, e.g. "_2.fastq.gz" for sample "sampleName_2.fastq.gz"
 

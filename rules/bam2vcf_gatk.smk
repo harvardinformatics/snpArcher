@@ -148,7 +148,7 @@ rule gatherVcfs:
 rule vcftools:
     input:
         vcf = config["gatkDir"] + config['spp'] + "_final.vcf.gz",
-        int = intDir + "intervals_fb.bed"
+        int = intDir + config["genome"] + "_intervals_fb.bed"
     output: 
         missing = gatkDir + "missing_data_per_ind.txt",
         SNPsPerInt = gatkDir + "SNP_per_interval.txt"
