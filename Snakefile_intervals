@@ -29,7 +29,7 @@ SAMPLES = helperFun.getBamSampleNames(bamDir, bam_suffix)
 if not os.path.isdir(intDir + "gatkLists"):
     os.system("mkdir -p " + intDir + "gatkLists")
 
-_, sample_dict, _ = helperFun.create_sample_dict("samples.csv")
+_, sample_dict, _ = helperFun.create_sample_dict(config["samples"])
 
 GENOMES = {sample_dict[k]["refGenome"]: sample_dict[k]["Organism"] for k in sample_dict.keys()}
 print(GENOMES)
