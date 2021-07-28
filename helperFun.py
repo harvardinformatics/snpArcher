@@ -336,8 +336,8 @@ def createListsGetIndices(intDir, maxIntervalLen, maxBpPerList, maxIntervalsPerL
                     runningSumBp = 0
                     runningSum_intervals = 0
                 else: 
-	            printIntervalsToListFile(intDir, listFile_index, current_intervals, refFileName)
-	            current_intervals = [ (scaff, start, stop) ]
+                    printIntervalsToListFile(intDir, listFile_index, current_intervals, refFileName)
+                    current_intervals = [ (scaff, start, stop) ]
                     runningSumBp = intervalLen
                     runningSum_intervals = 1 
             listFile_index += 1
