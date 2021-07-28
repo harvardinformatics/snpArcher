@@ -1,5 +1,5 @@
 ###
-# fastq -> BAM workflow
+# fastq2bam workflow
 ##
 
 # fastq download
@@ -32,7 +32,7 @@ merge_bams:
     mem: 9000
 
 ###
-# BAM -> VCF workflow
+# Intervals workflow
 ###
 
 # preprocess genome, create intervals
@@ -45,6 +45,10 @@ create_intervals:
 
 
 
+###
+# bam2vcf workflows
+###
+
 # gatk workflow
 
 # gatk HaplotypeCaller
@@ -55,6 +59,9 @@ gvcf2DB:
     mem: 30000
 # gatk GenotypeGVCFs 
 DB2vcf: 
+    mem: 30000
+# gatk filterVcfs
+filterVcfs:
     mem: 30000
 # gatk GatherVcfs
 gatherVcfs:
