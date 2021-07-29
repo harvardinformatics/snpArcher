@@ -65,9 +65,9 @@ rule fastp:
         r1 = config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz",
         r2 = config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz"
     output: 
-        r1 = config['output'] + config['fastqFilterDir'] + "{Organism}/{refGenome}/{sample}/{run}_1.fastq.gz",
-        r2 = config['output'] + config['fastqFilterDir'] + "{Organism}/{refGenome}/{sample}/{run}_2.fastq.gz",
-        summ = config['output'] + config['sumstatDir'] + "{Organism}/{refGenome}/{sample}/{run}.out"
+        r1 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz",
+        r2 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz",
+        summ = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}/{run}.out"
     conda:
         "../envs/fastq2bam.yml"
     threads: res_config['fastp']['threads']
@@ -83,12 +83,12 @@ rule fastp:
 rule bwa_map:
     input:
         ref = config["refGenomeDir"] + "{refGenome}.fna",
-        r1 = config['output'] + config['fastqFilterDir'] + "{Organism}/{refGenome}/{sample}/{run}_1.fastq.gz",
-        r2 = config['output'] + config['fastqFilterDir'] + "{Organism}/{refGenome}/{sample}/{run}_2.fastq.gz",
+        r1 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz",
+        r2 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz",
         # the following files are bwa index files that aren't directly input into command below, but needed
         indexes = expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"])
     output: 
-        bam = config['output'] + config['bamDir'] + "{Organism}/{refGenome}/preMerge/{sample}/{run}.bam"
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}/{run}.bam"
     params:
         get_read_group
     conda:
@@ -100,10 +100,10 @@ rule bwa_map:
         "bwa mem -M -t {threads} {params} {input.ref} {input.r1} {input.r2} | samtools sort -o {output.bam} -"
 
 rule merge_bams:
-    input: lambda wildcards: expand(config['output'] + config['bamDir'] + "{{Organism}}/{{refGenome}}/preMerge/{{sample}}/{run}.bam", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
+    input: lambda wildcards: expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
     output: 
-        bam = config['output'] + config['bamDir'] + "{Organism}/{refGenome}/postMerge/{sample}.bam",
-        bai = config['output'] + config['bamDir'] + "{Organism}/{refGenome}/postMerge/{sample}.bam.bai"
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam",
+        bai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam.bai"
 
     conda:
         "../envs/fastq2bam.yml"
@@ -114,11 +114,11 @@ rule merge_bams:
 
 rule dedup:
     input: 
-        bam = config['output'] + config['bamDir'] + "{Organism}/{refGenome}/postMerge/{sample}.bam",
-        bai = config['output'] + config['bamDir'] + "{Organism}/{refGenome}/postMerge/{sample}.bam.bai"
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam",
+        bai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam.bai"
     output:
-        dedupBam = config['output'] + config['bamDir'] + "{Organism}/{refGenome}/{sample}_final.bam",
-        dedupMet = config['output'] + config['sumstatDir'] + "{Organism}/{refGenome}/{sample}_dedupMetrics.txt"
+        dedupBam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
+        dedupMet = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_dedupMetrics.txt"
     conda:
         "../envs/fastq2bam.yml"
     resources:
@@ -129,13 +129,13 @@ rule dedup:
 
 rule bam_sumstats:
     input: 
-        bam = config['output'] + config['bamDir'] + "{Organism}/{refGenome}/{sample}_final.bam",
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
         ref = config["refGenomeDir"] + "{refGenome}.fna"
 
     output: 
-        cov = config['output'] + config['sumstatDir'] + "{Organism}/{refGenome}/{sample}_coverage.txt",  
-        alnSum = config['output'] + config['sumstatDir'] + "{Organism}/{refGenome}/{sample}_AlnSumMets.txt",
-        val = config['output'] + config['sumstatDir'] + "{Organism}/{refGenome}/{sample}_validate.txt"
+        cov = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_coverage.txt",  
+        alnSum = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_AlnSumMets.txt",
+        val = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_validate.txt"
     conda:
         "../envs/fastq2bam.yml"
     resources:
@@ -149,15 +149,15 @@ rule bam_sumstats:
         "picard ValidateSamFile I={input.bam} R={input.ref} O={output.val} IGNORE=INVALID_TAG_NM || true"
 rule collect_fastp_stats:
     input: lambda wildcards:
-            expand(config['output'] + config['sumstatDir'] + "{{Organism}}/{{refGenome}}/{{sample}}/{run}.out", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
-    output: config['output'] + config['sumstatDir'] + "{Organism}/{refGenome}/{sample}_fastp.out"
+            expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{{sample}}/{run}.out", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
+    output: config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_fastp.out"
     shell:
         "cat {input} > {output}"
 rule collect_sumstats:
     input:
         unpack(get_sumstats)
     output:
-        config['output'] + config["fastq2bamDir"] + "{Organism}/{refGenome}/bam_sumstats.txt"
+        config['output'] + "{Organism}/{refGenome}/" + config["fastq2bamDir"] + "bam_sumstats.txt"
     run:
         FractionReadsPassFilter, NumFilteredReads = helperFun.collectFastpOutput(input.fastpFiles)
         PercentDuplicates = helperFun.collectDedupMetrics(input.dedupFiles)
