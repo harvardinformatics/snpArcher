@@ -115,9 +115,9 @@ def collectCoverageMetrics(coverageFiles):
         CoveredBases[sample] = covbases
     return(SeqDepths, CoveredBases)
 
-def printBamSumStats(FractionReadsPassFilter, NumFilteredReads, PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams, fastq2bamDir):
-
-    o = open(fastq2bamDir + "bam_sumstats.txt", 'w')
+def printBamSumStats(FractionReadsPassFilter, NumFilteredReads, PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams, fastq2bamDir, outputDir, wildcards):
+    out_path = os.path.join(outputDir, fastq2bamDir, wildcards.Organism, wildcards.refGenome, "bam_sumstats.txt")
+    o = open(out_path, 'w')
     print("sample", "FractionReadsPassFilter", "NumFilteredReads", "PercentDuplicates", "PercentHQ20alignedReads", "PercentHQ20bases", "MeanSeqDepth", "BasesCoveredMoreThanOnce", "validBAM", file=o, sep="\t")
     for sample in PercentDuplicates:
         print(sample,file=o, end="\t")
@@ -413,18 +413,5 @@ def getListIndices(intDir):
         LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
     LISTS=sorted(LISTS)
     return(LISTS)
-
-def create_sample_dict(file_path: str) -> dict:
-    run_dict = defaultdict(dict)
-    sample_dict = defaultdict(dict)
-    sample_runs = defaultdict(list)
-    with open(file_path, "r") as f:
-        next(f)
-        for line in f:
-                line = line.strip().split(",")
-                run_dict[line[3]] = {'LibraryName': line[1], "refGenome": line[2], "Sample": line[0], "Organism": line[4].replace(" ", "_"), "BioProject": line[5]}
-                sample_dict[line[0]] = {'LibraryName': line[1], "refGenome": line[2], "Run": line[3], "Organism": line[4].replace(" ", "_"), "BioProject": line[5]}
-                sample_runs[line[0]].append(line[3])
-    return run_dict, sample_dict, sample_runs
 
 
