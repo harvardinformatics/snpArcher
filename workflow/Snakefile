@@ -12,8 +12,8 @@ ORGANISM, REFGENOME = map(list, zip(*org_ref))  # Split above back to indiviudal
 
 rule all:
     input:
-        #config['output'] + config['bamDir'] + "Escherichia_coli/GCA_000008865.2/preMerge/SAMN12676327/SRR10058855.bam"
-        expand(config['output'] + config["fastq2bamDir"] + "{Organism}/{refGenome}/bam_sumstats.txt", zip, Organism=ORGANISM, refGenome=REFGENOME)
+        expand(config['output'] + "{Organism}/{refGenome}/" + config["fastq2bamDir"] + "bam_sumstats.txt", zip, Organism=ORGANISM, refGenome=REFGENOME)
+
 include: "rules/common.smk"	
 include: "rules/fastq2bam.smk"
 
