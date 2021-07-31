@@ -10,13 +10,14 @@ rule get_fastq_pe:
         outdir = config["fastqDir"] + "{Organism}/{sample}/",
         tmpdir = config['tmp_dir']
     conda:
+    threads: int(res_config['get_fastq_pe']['threads'])
         "../envs/fastq2bam.yml"
     log:
         "logs/{Organism}/fasterq_dump/{sample}/{run}.log"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']
     shell:
-        "fasterq-dump {wildcards.run} -O {params.outdir} -t {params.tmpdir}"
+        "fasterq-dump {wildcards.run} -O {params.outdir} -t {params.tmpdir} &> {log}"
 
 rule gzip_fastq:
     input:
