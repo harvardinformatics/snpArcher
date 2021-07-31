@@ -9,9 +9,8 @@ rule get_fastq_pe:
     params:
         outdir = config["fastqDir"] + "{Organism}/{sample}/",
         tmpdir = config['tmp_dir']
-    conda:
+    conda: "../envs/fastq2bam.yml"
     threads: int(res_config['get_fastq_pe']['threads'])
-        "../envs/fastq2bam.yml"
     log:
         "logs/{Organism}/fasterq_dump/{sample}/{run}.log"
     resources:
