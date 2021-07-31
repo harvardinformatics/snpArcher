@@ -4,6 +4,7 @@
 
 # fastq download
 get_fastq_pe:
+    threads: 10
     mem: 2000
 # compress fastq
 gzip_fastq:
