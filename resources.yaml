@@ -66,7 +66,7 @@ gatherVcfs:
     mem: 30000
 # vcftools program
 vcftools:
-    mem: 50000
+    mem: 30000
 
 ## freebayes workflow
 
