@@ -164,12 +164,23 @@ rule vcftools:
         vcf = config["gatkDir"] + config['spp'] + "_final.vcf.gz",
         int = intDir + config["genome"] + "_intervals_fb.bed"
     output: 
-        missing = gatkDir + "missing_data_per_ind.txt",
-        SNPsPerInt = gatkDir + "SNP_per_interval.txt"
+        missing = gatkDir + "missing_data_per_ind.txt"
     conda:
         "../envs/bam2vcf.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
     shell:
-        "vcftools --gzvcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}\n"
+        "vcftools --gzvcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}"
+
+rule bedtools:
+    input:
+        vcf = config["gatkDir"] + config['spp'] + "_final.vcf.gz",
+        int = intDir + config["genome"] + "_intervals_fb.bed"
+    output: 
+        SNPsPerInt = gatkDir + "SNP_per_interval.txt"
+    conda:
+        "../envs/bam2vcf.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']    # this is the overall memory requested
+    shell:
         "bedtools intersect -a {input.int} -b {input.vcf} -c > {output.SNPsPerInt}"
