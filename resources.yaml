@@ -64,6 +64,9 @@ filterVcfs:
 # gatk GatherVcfs
 gatherVcfs:
     mem: 30000
+# picard SortVcf
+sortVcf:
+    mem: 30000
 # vcftools program
 vcftools:
     mem: 30000
@@ -78,6 +81,9 @@ bam2vcf:
     mem: 30000
 # gatk GatherVcfs, same as above!
 gatherVcfs:
+    mem: 30000
+# picard SortVcf
+sortVcf:
     mem: 30000
 # vcftools program
 vcftools:
