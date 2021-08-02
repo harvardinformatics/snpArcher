@@ -147,7 +147,7 @@ rule gatherVcfs:
     input:
         vcfs = expand(vcfDir + "L{list}_filter.vcf", list=LISTS)
     output:
-        vcfFinal = config["gatkDir"] + config['spp'] + "_final.vcf.gz"
+        vcf = config["gatkDir"] + config["spp"] + ".vcf.gz"
     params:
         gatherVcfsInput = helperFun.getVcfs_gatk(LISTS, vcfDir)
     conda:
@@ -157,7 +157,22 @@ rule gatherVcfs:
     shell:
         "gatk GatherVcfs "
         "{params.gatherVcfsInput} "
-        "-O {output.vcfFinal}"
+        "-O {output.vcf}"
+
+rule sortVcf:
+    """
+    Rule description
+    """
+    input:
+        vcf = config["gatkDir"] + config["spp"] + ".vcf.gz"
+    output:
+        vcf = config["gatkDir"] + config["spp"] + "_final.vcf.gz"
+    conda:
+        "../envs/bam2vcf.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['sortVcf']['mem']   # this is the overall memory requested
+    shell:
+        "picard SortVcf -I {input.vcf} -O {output.vcf}"
 
 rule vcftools:
     input:
