@@ -198,4 +198,4 @@ rule bedtools:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']    # this is the overall memory requested
     shell:
-        "bedtools coverage -a {input.int} -b {input.vcf} -counts > {output.SNPsPerInt}"
+        "bedtools coverage -a {input.int} -b {input.vcf} -counts -sorted > {output.SNPsPerInt}"
