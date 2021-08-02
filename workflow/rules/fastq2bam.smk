@@ -23,8 +23,8 @@ rule gzip_fastq:
         config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq",
         config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq"
     output:
-        config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz",
-        config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz"
+        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz"),
+        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz")
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['gzip_fastq']['mem']
     shell:
