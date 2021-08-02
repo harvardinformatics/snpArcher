@@ -43,13 +43,11 @@ process_ref:
 create_intervals:
     mem: 5000
 
-
-
 ###
 # bam2vcf workflows
 ###
 
-# gatk workflow
+## gatk workflow
 
 # gatk HaplotypeCaller
 bam2gvcf: 
@@ -70,8 +68,7 @@ gatherVcfs:
 vcftools:
     mem: 50000
 
-
-# freebayes workflow
+## freebayes workflow
 
 # freebayes program
 bam2vcf:
