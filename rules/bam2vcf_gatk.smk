@@ -161,7 +161,7 @@ rule gatherVcfs:
 
 rule sortVcf:
     """
-    Rule description
+    Sort VCF for more efficient processing of vcftools and bedtools
     """
     input:
         vcf = config["gatkDir"] + config["spp"] + ".vcf.gz"
@@ -198,4 +198,4 @@ rule bedtools:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']    # this is the overall memory requested
     shell:
-        "bedtools intersect -a {input.int} -b {input.vcf} -c > {output.SNPsPerInt}"
+        "bedtools coverage -a {input.int} -b {input.vcf} -counts > {output.SNPsPerInt}"
