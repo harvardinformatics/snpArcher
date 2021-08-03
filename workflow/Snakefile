@@ -12,7 +12,7 @@ ORGANISM, REFGENOME = map(list, zip(*org_ref))  # Split above back to indiviudal
 
 rule all:
     input:
-        expand(config['output'] + "{Organism}/{refGenome}/" + config["fastq2bamDir"] + "bam_sumstats.txt", zip, Organism=ORGANISM, refGenome=REFGENOME)
+        expand(config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.txt", zip, Organism=ORGANISM, refGenome=REFGENOME)
 
 include: "rules/common.smk"	
 include: "rules/fastq2bam.smk"
