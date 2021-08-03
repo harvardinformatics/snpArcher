@@ -47,8 +47,6 @@ create_intervals:
 # bam2vcf workflows
 ###
 
-## gatk workflow
-
 # gatk HaplotypeCaller
 bam2gvcf: 
     mem: 30000
@@ -58,28 +56,13 @@ gvcf2DB:
 # gatk GenotypeGVCFs 
 DB2vcf: 
     mem: 30000
+## freebayes program only! ##
+bam2vcf:
+    mem: 30000
 # gatk filterVcfs
 filterVcfs:
     mem: 30000
 # gatk GatherVcfs
-gatherVcfs:
-    mem: 30000
-# picard SortVcf
-sortVcf:
-    mem: 30000
-# vcftools program
-vcftools:
-    mem: 30000
-# bedtools program
-bedtools:
-    mem: 30000
-
-## freebayes workflow
-
-# freebayes program
-bam2vcf:
-    mem: 30000
-# gatk GatherVcfs, same as above!
 gatherVcfs:
     mem: 30000
 # picard SortVcf
