@@ -6,15 +6,15 @@ rule bam2gvcf:
     a GVCF is created for all the scaffolds present in a given list file.
     """
     input:
-        ref = config['ref'],
-        fai = config['ref'] + ".fai",
-        dict = refBaseName + ".dict",
-        bam = bamDir + "{sample}" + bam_suffix,
-        l = intDir + "gatkLists/list{list}.list"
+        ref = config["refGenomeDir"] + "{refGenome}.fna",
+        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
+        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict",
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
+        l = config['output'] + "{Organism}/{refGenome}/" + config['intDir'] + "list{list}.list",
     output: 
-        gvcf = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz",
-        gvcf_idx = gvcfDir + "{sample}_L{list}.raw.g.vcf.gz.tbi",
-        doneFile = touch(gvcfDir + "{sample}_L{list}.done")
+        gvcf = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.raw.g.vcf.gz",
+        gvcf_idx = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.raw.g.vcf.gz.tbi",
+        doneFile = touch(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.done")
     resources: 
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
         # subtract that memory here
@@ -43,20 +43,11 @@ rule mkDBmapfile:
     input:
         # NOTE: the double curly brackets around 'list' prevent the expand function from operating on that variable
         # thus, we expand by sample but not by list, such that we gather by sample for each list value
-        gvcfs = expand(gvcfDir + "{sample}_L{{list}}.raw.g.vcf.gz", sample=SAMPLES),
-        gvcfs_idx = expand(gvcfDir + "{sample}_L{{list}}.raw.g.vcf.gz.tbi", sample=SAMPLES),
-        doneFiles = expand(gvcfDir + "{sample}_L{{list}}.done", sample=SAMPLES)
+        unpack(get_input_for_mapfile)
     output:
-        dbMapFile = dbDir + "DB_mapfile_L{list}"
-    params:
-        # to use wildcards in 'run' statement below, specify them here
-        l = "{list}"
+        dbMapFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_mapfile_L{list}"
     run:
-        fileName = dbDir + f"DB_mapfile_L{params.l}"
-        f=open(fileName, 'w') 
-        for s in SAMPLES:
-            print(s, gvcfDir + s + f"_L{params.l}.raw.g.vcf.gz", sep="\t", file=f)  
-        f.close() 
+        write_db_mapfile
 
 rule gvcf2DB:
     """
@@ -65,11 +56,13 @@ rule gvcf2DB:
     Samples are thus gathered by a shared list name, but lists are still scattered.
     """
     input:
-        l = intDir + "gatkLists/list{list}.list",
-        dbMapFile = dbDir + "DB_mapfile_L{list}"
+        l = config['output'] + "{Organism}/{refGenome}/" + config['intDir'] + "list{list}.list",
+        dbMapFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_mapfile_L{list}"
     output: 
-        DB = directory(dbDir + "DB_L{list}"),
-        doneFile = temp(touch(dbDir + "DB_L{list}.done"))
+        DB = directory(config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}"),
+        doneFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}.done"
+    params:
+        tmp_dir = config['tmp_dir']
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * res_config['gvcf2DB']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (res_config['gvcf2DB']['mem'] - 3000)  # this is the maximum amount given to java
@@ -83,7 +76,7 @@ rule gvcf2DB:
         "--java-options \"-Xmx{resources.reduced}m -Xms{resources.reduced}m\" "
         "--genomicsdb-workspace-path {output.DB} "
         "-L {input.l} "
-        "--tmp-dir {dbDir}tmp "
+        "--tmp-dir {params.tmp_dir} "
         "--sample-name-map {input.dbMapFile} \n"
 
 rule DB2vcf:
@@ -92,11 +85,13 @@ rule DB2vcf:
     are still scattered.
     """
     input:
-        DB = dbDir + "DB_L{list}",
-        ref = config['ref'],
-        doneFile = dbDir + "DB_L{list}.done"
+        DB = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}",
+        ref = config["refGenomeDir"] + "{refGenome}.fna",
+        doneFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}.done"
     output: 
-        vcf = vcfDir + "L{list}.vcf"
+        config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "L{list}.vcf",
+    params:
+        tmp_dir = config['tmp_dir']
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * res_config['DB2vcf']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (res_config['DB2vcf']['mem'] - 3000)  # this is the maximum amount given to java
@@ -107,21 +102,18 @@ rule DB2vcf:
         "--java-options \"-Xmx{resources.reduced}m -Xms{resources.reduced}m\" "
         "-R {input.ref} "
         "-V gendb://{input.DB} "
-        "-O {output.vcf} "
-        "--tmp-dir {vcfDir}tmp"
+        "-O {output} "
+        "--tmp-dir {params.tmp_dir}"
 
-rule gatherVcfs:
+rule filterVcfs:
     """
     This rule filters all of the VCFs, then gathers, one per list, into one final VCF
     """
     input:
-        vcfs = expand(vcfDir + "L{list}.vcf", list=LISTS),
-        ref = config['ref']
+        vcf = config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "L{list}.vcf",
+        ref = config["refGenomeDir"] + "{refGenome}.fna"
     output: 
-        vcfs = expand(vcfDir + "L{list}_filter.vcf", list=LISTS),
-        vcfFinal = config["gatkDir"] + config['spp'] + "_final.vcf.gz"
-    params:
-        gatherVcfsInput = helperFun.getVcfs_gatk(LISTS, vcfDir)
+        vcf = config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf"
     conda:
         "../envs/bam2vcf.yml"
     resources:
@@ -129,8 +121,8 @@ rule gatherVcfs:
     shell:
         "gatk VariantFiltration "
         "-R {input.ref} "
-        "-V {input.vcfs} " 
-        "--output {output.vcfs} "
+        "-V {input.vcf} " 
+        "--output {output.vcf} "
         "--filter-name \"RPRS_filter\" "
         "--filter-expression \"(vc.isSNP() && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -8.0)) || ((vc.isIndel() || vc.isMixed()) && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -20.0)) || (vc.hasAttribute('QD') && QD < 2.0)\" "
         "--filter-name \"FS_SOR_filter\" "
@@ -140,18 +132,30 @@ rule gatherVcfs:
         "--filter-name \"QUAL_filter\" "
         "--filter-expression \"QUAL < 30.0\" "
         "--invalidate-previous-filters true\n"
-        
+
+rule gatherVcfs:
+    input: 
+        get_gather_vcfs
+    output: 
+        vcfFinal = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
+    params:
+        gather_vcfs_CLI
+    conda:
+        "../envs/bam2vcf.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['gatherVcfs']['mem']
+    shell:
         "gatk GatherVcfs "
-        "{params.gatherVcfsInput} "
+        "{params} "
         "-O {output.vcfFinal}"
 
 rule vcftools:
     input:
-        vcf = config["gatkDir"] + config['spp'] + "_final.vcf.gz",
-        int = intDir + config["genome"] + "_intervals_fb.bed"
+        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
+        int = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
     output: 
-        missing = gatkDir + "missing_data_per_ind.txt",
-        SNPsPerInt = gatkDir + "SNP_per_interval.txt"
+        missing = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_missing_data_per_ind.txt",
+        SNPsPerInt = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_SNP_per_interval.txt"
     conda:
         "../envs/bam2vcf.yml"
     resources:

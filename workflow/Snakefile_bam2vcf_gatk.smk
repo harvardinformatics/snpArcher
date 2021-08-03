@@ -2,52 +2,22 @@ import os
 from collections import defaultdict
 import sys
 import yaml
-sys.path.append(os.getcwd())
 import helperFun
-
+import pandas as pd
 configfile: "config.yaml"
 res_config = yaml.load(open("resources.yaml"))
 
-# rename variables from config file for downstream simplicity
-ref = config["ref"]
-bam_suffix = config["bam_suffix"]
-
-# this is where Snakemake output will go, specify with 'gatkDir' in config.yml
-gatkDir = config["gatkDir"]
-bamDir = config["bamsForGatk"] 
-gvcfDir = gatkDir + config["gvcfDir"]
-dbDir = gatkDir + config["dbDir"]
-vcfDir = gatkDir + config["vcfDir_gatk"]
-intDir = config["intDir"] 
-maxIntervalLen = int(config["maxIntervalLen"])
-maxBpPerList = int(config["maxBpPerList"])
-maxIntervalsPerList = int(config["maxIntervalsPerList"])
-minNmer = config["minNmer"]
-
-refBaseName = helperFun.getRefBaseName(config["ref"])
-
-# grab all samples for R1 to get list of names, no need to look at R2 which should have identical names
-SAMPLES = helperFun.getBamSampleNames(bamDir, bam_suffix)
-
-if not os.path.isdir(config["gatkDir"]):
-    os.system("mkdir " + config["gatkDir"])
-
-# this directory needs to be made beforehand since it is specified within GATK, which doesn't automatically make directories
-os.system("mkdir -p " + dbDir + "tmp")
-os.system("mkdir -p " + vcfDir + "tmp")
-
-
-LISTS = helperFun.getListIndices(intDir)
-if not LISTS:
-    sys.exit("no gatk lists found! Make sure you ran the workflow that creates intervals, and that the results are in the expected subdirectory!")
+samples = pd.read_table(config["samples"], sep=",").replace(' ', '_', regex=True)
+org_ref = set(zip(samples.Organism.tolist(), samples.refGenome.tolist()))  # To get only unique combinations of organism and ref accession.
+ORGANISM, REFGENOME = map(list, zip(*org_ref))  # Split above back to indiviudal lists for expand. There probably is a better way?
 
 ### workflow ###
 
 rule all:
     input:
-        missing = config["gatkDir"] + "missing_data_per_ind.txt",
-        SNPsPerInt = config["gatkDir"] + "SNP_per_interval.txt"
+        expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz", zip, Organism=ORGANISM, refGenome=REFGENOME)
 
+include: "rules/common.smk"
 include: "rules/bam2vcf_gatk.smk"
 
 
