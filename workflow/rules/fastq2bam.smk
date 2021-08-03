@@ -16,7 +16,7 @@ rule get_fastq_pe:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']
     shell:
-        "fasterq-dump {wildcards.run} -O {params.outdir} -t {params.tmpdir} &> {log}"
+        "fasterq-dump {wildcards.run} -O {params.outdir} -t {params.tmpdir} -e {threads} &> {log}"
 
 rule gzip_fastq:
     input:

@@ -31,5 +31,4 @@ freebayes/
 gatk/
 logs/
 *_dryrun.txt
-
-
+results/
