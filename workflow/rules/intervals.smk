@@ -1,52 +1,52 @@
-import os
-from collections import defaultdict
-import sys
-import yaml
-sys.path.append(os.getcwd())
-import helperFun
-
-
-
-configfile: "config.yaml"
-res_config = yaml.load(open("resources.yaml"))
-
-# rename variables from config file for downstream simplicity
-ref = config["ref"]
-bam_suffix = config["bam_suffix"]
-
-# this is where Snakemake output will go, specify with 'gatkDir' in config.yml
-bamDir = config["bamsForGatk"] 
-intDir = config["intDir"]
-
-# create directory to store GATK lists
-if not os.path.isdir(intDir + "gatkLists"):
-    os.system("mkdir -p " + intDir + "gatkLists")
-
-_, sample_dict, _ = helperFun.create_sample_dict("samples.csv")
-
-GENOMES = {sample_dict[k]["refGenome"]: sample_dict[k]["Organism"] for k in sample_dict.keys()}
-print(GENOMES)
-print(GENOMES.keys())
-
-### workflow ###
-
-rule all:
-    input: expand("data/Escherichia_coli/genome/{genome}{ext}/", genome=GENOMES.keys(), ext=[".fai", ".dict"])
-
 rule process_ref:
     """
     This rule generates a .fai file from the reference genome, which are required for GATK to run properly. GATK also needs a .dict file, but this was previously generated.
     """
     input:
-        ref = lambda wildcards: 
-            expand("data/{organism}/genome/{{genome}}.fna", organism=GENOMES[wildcards.genome])
+        ref = config["refGenomeDir"] + "{refGenome}.fna"
     output: 
-        fai = "data/{organism}/genome/{genome}.fai",
-        dictf = "data/{organism}/genome/{genome}.dict",
+        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
+        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict",
     conda:
-        "./envs/bam2vcf.yml"
+        "../envs/bam2vcf.yml"
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * res_config['process_ref']['mem']   
     shell:
         "samtools faidx {input.ref} --output {output.fai}\n"
         "picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dictf}\n"
+
+rule picard_intervals:
+    input:
+        ref = config["refGenomeDir"] + "{refGenome}.fna",
+        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
+        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict",
+    output:
+        intervals = temp(config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list")
+    params:
+        minNmer = int(config['minNmer'])
+    conda:
+        "../envs/bam2vcf.yml"
+    log:
+        "log/{Organism}/{refGenome}/picard_intervals/log"
+    resources: 
+        mem_mb = lambda wildcards, attempt: attempt * res_config['process_ref']['mem']   
+    shell:
+        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} > {log}\n" 
+
+rule create_intervals:
+    input:
+        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
+        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict",
+        ref = config["refGenomeDir"] + "{refGenome}.fna",
+        intervals = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list"
+    params:
+        maxIntervalLen = int(config['maxIntervalLen']),
+        maxBpPerList = int(config['maxBpPerList']),
+        maxIntervalsPerList = int(config['maxIntervalsPerList']),
+        minNmer = int(config['minNmer'])
+    output: 
+        config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
+    resources: 
+        mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem'] 
+    run:
+        LISTS = helperFun.createListsGetIndices(params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
