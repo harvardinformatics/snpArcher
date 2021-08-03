@@ -47,7 +47,7 @@ rule mkDBmapfile:
     output:
         dbMapFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_mapfile_L{list}"
     run:
-        write_db_mapfile
+        write_db_mapfile(wildcards)
 
 rule gvcf2DB:
     """
