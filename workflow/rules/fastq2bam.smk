@@ -165,5 +165,5 @@ rule collect_sumstats:
         SeqDepths, CoveredBases = helperFun.collectCoverageMetrics(input.coverageFiles)
         validateSams = helperFun.collectValidationStatus(input.validateFiles)
 
-        helperFun.printBamSumStats(FractionReadsPassFilter, NumFilteredReads, PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams, config["fastq2bamDir"], config["output"], wildcards)
+        helperFun.printBamSumStats(FractionReadsPassFilter, NumFilteredReads, PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams, config["output"], wildcards)
 
