@@ -1,5 +1,5 @@
 ###
-# fastq -> BAM workflow
+# fastq2bam workflow
 ##
 
 # fastq download
@@ -32,7 +32,7 @@ merge_bams:
     mem: 9000
 
 ###
-# BAM -> VCF workflow
+# Intervals workflow
 ###
 
 # preprocess genome, create intervals
@@ -43,9 +43,9 @@ process_ref:
 create_intervals:
     mem: 5000
 
-
-
-# gatk workflow
+###
+# bam2vcf workflows
+###
 
 # gatk HaplotypeCaller
 bam2gvcf: 
@@ -56,22 +56,21 @@ gvcf2DB:
 # gatk GenotypeGVCFs 
 DB2vcf: 
     mem: 30000
+## freebayes program only! ##
+bam2vcf:
+    mem: 30000
+# gatk filterVcfs
+filterVcfs:
+    mem: 30000
 # gatk GatherVcfs
 gatherVcfs:
     mem: 30000
-# vcftools program
-vcftools:
-    mem: 30000
-
-
-# freebayes workflow
-
-# freebayes program
-bam2vcf:
-    mem: 30000
-# gatk GatherVcfs, same as above!
-gatherVcfs:
+# picard SortVcf
+sortVcf:
     mem: 30000
 # vcftools program
 vcftools:
+    mem: 30000
+# bedtools program
+bedtools:
     mem: 30000
