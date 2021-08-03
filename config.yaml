@@ -3,16 +3,7 @@
 ##############################
 
 samples: "samples.csv"         # name of the sample metadata CSV 
-ref: "data/BHduck/genome/MU014702.1.fa"   # location of the reference genome 
-spp: "hetAtr"                             # species name/code for the final VCF output file name
-genome: "MU014702.1"                      # name of the reference genome without the path or file extension
-
-# If using the fastq -> BAM workflow change these, otherwise ignore them
-#fastqDir: "data/BHduck/fastq/"      # location of fastq files; must be followed by a "/"
-fastq_suffix1: "_1.fastq.gz"            # the suffix for the forward reads that follows all the sample names, e.g. "_1.fastq.gz" for sample "sampleName_1.fastq.gz"
-fastq_suffix2: "_2.fastq.gz"            # the suffix for the reverse reads that follows all the sample names, e.g. "_2.fastq.gz" for sample "sampleName_2.fastq.gz"
-
-
+tmp_dir: "/hb/scratch/cmirchan"
 ##############################
 # Variables you *might* need to change
 ##############################
@@ -20,7 +11,7 @@ fastq_suffix2: "_2.fastq.gz"            # the suffix for the reverse reads that 
 # if using the BAM -> VCF workflows
 bamsForGatk: "fastq2bam/01_mappedReads/" # directory containing BAMs for GATK. If you used the fastq -> bam workflow above, simply keep the default value; must be followed by a "/"
 bamsForFB: "fastq2bam/01_mappedReads/"   # directory containing BAMs for Freebayes. If you used the fastq -> bam workflow above, simply keep the default value; must be followed by a "/"
-bam_suffix: "_dedup.bam"                 # the suffix for your BAM files that follow all the sample names. If you use the fastq->BAM workflow above, simply keep the default value 
+bam_suffix: "_final.bam"                 # the suffix for your BAM files that follow all the sample names. If you use the fastq->BAM workflow above, simply keep the default value 
 
 # These parameters control how the genome gets split into intervals according to Nmers in the reference genome
 minNmer: 500                    # the minimum Nmer used to split up the genome; e.g. a value of 200 means only Nmers 200 or greater are used to define the boundaries of intervals. The minimum is 50.
@@ -46,18 +37,20 @@ minD: 1
 # Variables you DO NOT need to change
 # if you do, ensure all path/directory names are followed by a "/"
 ##############################
-
+output: "results/"
 # These variables control the output of the fastq2bam workflow. You don't need to change these, but if you do please have a forward slash follow name!
-fastq2bamDir: "fastq2bam/"              # this is the name of the directory for all the output
+fastqDir: "data/fastq/"                           # this is where raw fastqs are downloaded
+refGenomeDir: "data/genome/"                      # where reference genomes go
+fastq2bamDir: "fastq2bam/"
 fastqFilterDir: "00_fastqFiltered/"     # new directory created for filtered fastq reads
 bamDir: "01_mappedReads/"               # new directory created for BAM files
 sumstatDir: "02_bamSumstats/"           # new directory created for BAM summary statistics
 
 # These variables control the output of the GATK4 workflow (please have forward slash follow name!)
 gatkDir: "gatk/"
-gvcfDir: "01_gvcfs/"
-dbDir: "02_genomicsDB/"
-vcfDir_gatk: "03_vcfs/"
+gvcfDir: "03_gvcfs/"
+dbDir: "04_genomicsDB/"
+vcfDir_gatk: "05_vcfs/"
 intDir: "intervalFiles/"
 
 # These variables control the output of the FreeBayes workflow (please have forward slash follow name!)   

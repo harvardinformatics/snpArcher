@@ -1,0 +1,12 @@
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+dependencies:
+  - fastp==0.20.1
+  - bwa==0.7.17
+  - picard==2.22.8
+  - samtools==1.10
+  - sra-tools>2.9.1
+  - ncbi-datasets-cli==11.25.1
+  - p7zip==16.02
