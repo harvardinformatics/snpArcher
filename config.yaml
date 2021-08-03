@@ -42,15 +42,15 @@ output: "results/"
 fastqDir: "data/fastq/"                           # this is where raw fastqs are downloaded
 refGenomeDir: "data/genome/"                      # where reference genomes go
 fastq2bamDir: "fastq2bam/"
-fastqFilterDir: "fastq2bam/00_fastqFiltered/"     # new directory created for filtered fastq reads
-bamDir: "fastq2bam/01_mappedReads/"               # new directory created for BAM files
-sumstatDir: "fastq2bam/02_bamSumstats/"           # new directory created for BAM summary statistics
+fastqFilterDir: "00_fastqFiltered/"     # new directory created for filtered fastq reads
+bamDir: "01_mappedReads/"               # new directory created for BAM files
+sumstatDir: "02_bamSumstats/"           # new directory created for BAM summary statistics
 
 # These variables control the output of the GATK4 workflow (please have forward slash follow name!)
 gatkDir: "gatk/"
-gvcfDir: "01_gvcfs/"
-dbDir: "02_genomicsDB/"
-vcfDir_gatk: "03_vcfs/"
+gvcfDir: "03_gvcfs/"
+dbDir: "04_genomicsDB/"
+vcfDir_gatk: "05_vcfs/"
 intDir: "intervalFiles/"
 
 # These variables control the output of the FreeBayes workflow (please have forward slash follow name!)   
