@@ -157,7 +157,7 @@ rule collect_sumstats:
     input:
         unpack(get_sumstats)
     output:
-        config['output'] + "{Organism}/{refGenome}/" + config["fastq2bamDir"] + "bam_sumstats.txt"
+        config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.txt"
     run:
         FractionReadsPassFilter, NumFilteredReads = helperFun.collectFastpOutput(input.fastpFiles)
         PercentDuplicates = helperFun.collectDedupMetrics(input.dedupFiles)
