@@ -7,4 +7,4 @@
 #SBATCH -t 9000
 #SBATCH --mem=10000
 
-snakemake --snakefile workflow/Snakefile --profile profiles/slurm
+snakemake --snakefile workflow/Snakefile_fastq2bam --profile profiles/slurm
