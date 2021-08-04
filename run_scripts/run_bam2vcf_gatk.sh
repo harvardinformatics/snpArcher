@@ -9,5 +9,5 @@
 
 
 source activate snakemake
-snakemake --snakefile Snakefile_bam2vcf_gatk --profile ./profiles/slurm
+snakemake --snakefile workflow/Snakefile_bam2vcf_gatk --profile ./profiles/slurm
 
