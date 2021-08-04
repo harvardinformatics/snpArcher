@@ -16,4 +16,3 @@ rule all:
 
 include: "rules/common.smk"	
 include: "rules/fastq2bam.smk"
-
