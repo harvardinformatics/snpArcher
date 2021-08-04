@@ -2,8 +2,9 @@
 # Variables you need to change
 ##############################
 
-samples: "samples.csv"         # name of the sample metadata CSV 
-tmp_dir: "/hb/scratch/cmirchan"
+samples: "samples.csv"            # name of the sample metadata CSV 
+tmp_dir: "/hb/scratch/cmirchan"   # directory path for a temp dir 
+
 ##############################
 # Variables you *might* need to change
 ##############################
@@ -32,11 +33,11 @@ minD: 1
 #minP: 2
 #minD: 4
 
-
 ##############################
 # Variables you DO NOT need to change
 # if you do, ensure all path/directory names are followed by a "/"
 ##############################
+
 output: "results/"
 # These variables control the output of the fastq2bam workflow. You don't need to change these, but if you do please have a forward slash follow name!
 fastqDir: "data/fastq/"                           # this is where raw fastqs are downloaded
@@ -63,4 +64,3 @@ flowcell: "FLOWCELL"
 platform: "ILLUMINA"
 
 cluster_config: "profiles/slurm/cluster_config.yml"
-
