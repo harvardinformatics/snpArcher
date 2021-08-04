@@ -1,5 +1,5 @@
 __default__:
-    partition: "256x20"
+    partition: "shared"
     time: 9000
     nodes: 1
     output: "slurm_logs/slurm-%j.out"
