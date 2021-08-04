@@ -1,4 +1,3 @@
-
 rule intervals:
     """
     Because snakemake input MUST be a file, this hack is necessary to iterate through intervals in the next step,
