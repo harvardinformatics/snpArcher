@@ -7,8 +7,7 @@
 #SBATCH -t 9000
 #SBATCH --mem=10000
 
-
-source activate snakemake
+conda activate snakemake
 snakemake --snakefile workflow/Snakefile_intervals --profile ./profiles/slurm
 
 snakemake --snakefile workflow/Snakefile_bam2vcf_gatk --profile ./profiles/slurm --dryrun > bam2vcf_gatk_dryrun.txt
