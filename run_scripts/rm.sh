@@ -2,7 +2,7 @@
 #SBATCH -J rm
 #SBATCH -o out
 #SBATCH -e err
-#SBATCH -p holy-info
+#SBATCH -p shared
 #SBATCH -n 1
 #SBATCH -t 40
 #SBATCH --mem=1000
@@ -19,5 +19,3 @@ rm data/zebraFinch/genome/Tgut_subseg_renamed.dict
 
 rm data/BHduck/genome/MU014702.1.fa.*
 rm data/BHduck/genome/MU014702.1.dict
-
-
