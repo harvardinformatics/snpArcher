@@ -1,7 +1,9 @@
 localrules: collect_sumstats, download_reference
 
 ruleorder: index_ref > download_reference
+    
 ### RULES ###
+
 rule get_fastq_pe:
     output:
         config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq",
@@ -166,4 +168,3 @@ rule collect_sumstats:
         validateSams = helperFun.collectValidationStatus(input.validateFiles)
 
         helperFun.printBamSumStats(FractionReadsPassFilter, NumFilteredReads, PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams, config["output"], wildcards)
-
