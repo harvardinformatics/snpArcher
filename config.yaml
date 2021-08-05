@@ -10,6 +10,7 @@ tmp_dir: "/hb/scratch/cmirchan"   # directory path for a temp dir
 ##############################
 
 # if using the BAM -> VCF workflows
+fastqDir: "fastqs/"
 bamsForGatk: "fastq2bam/01_mappedReads/" # directory containing BAMs for GATK. If you used the fastq -> bam workflow above, simply keep the default value; must be followed by a "/"
 bamsForFB: "fastq2bam/01_mappedReads/"   # directory containing BAMs for Freebayes. If you used the fastq -> bam workflow above, simply keep the default value; must be followed by a "/"
 bam_suffix: "_final.bam"                 # the suffix for your BAM files that follow all the sample names. If you use the fastq->BAM workflow above, simply keep the default value 
