@@ -67,8 +67,8 @@ rule fastp:
         r1 = config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz",
         r2 = config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz"
     output: 
-        temp(r1 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz"),
-        temp(r2 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz"),
+        r1 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz"),
+        r2 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz"),
         summ = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}/{run}.out"
     conda:
         "../envs/fastq2bam.yml"
@@ -106,7 +106,6 @@ rule merge_bams:
     output: 
         bam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam"),
         bai = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam.bai")
-
     conda:
         "../envs/fastq2bam.yml"
     resources:
@@ -149,10 +148,13 @@ rule bam_sumstats:
         # causing snakemake to exit and remove these output files.  I cirumvent this by appending "|| true".
         # I also ignore "INVALID_TAG_NM" because it isn't used by GATK but causes errors at this step
         "picard ValidateSamFile I={input.bam} R={input.ref} O={output.val} IGNORE=INVALID_TAG_NM || true"
+        
 rule collect_fastp_stats:
-    input: lambda wildcards:
+    input: 
+        lambda wildcards:
             expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{{sample}}/{run}.out", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
-    output: config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_fastp.out"
+    output: 
+        config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_fastp.out"
     shell:
         "cat {input} > {output}"
         
