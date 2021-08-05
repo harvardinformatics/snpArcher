@@ -25,8 +25,8 @@ rule gzip_fastq:
         config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq",
         config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq"
     output:
-        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz"),
-        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz")
+        config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz",
+        config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['gzip_fastq']['mem']
     shell:
@@ -35,22 +35,22 @@ rule gzip_fastq:
 rule download_reference:
     output:
         outdir = directory(config["refGenomeDir"] + "{refGenome}"),
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
+        ref = config["refGenomeDir"] + "{refGenome}.fna"
+    params:
         dataset = config["refGenomeDir"] + "{refGenome}_dataset.zip"
     log:
         "logs/dl_reference/{refGenome}.log"
     conda:
         "../envs/fastq2bam.yml"
     shell:
-        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {output.dataset} {wildcards.refGenome} > {log}"
-        "&& 7z x {output.dataset} -aoa -o{output.outdir}"
+        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} > {log}"
+        "&& 7z x {params.dataset} -aoa -o{output.outdir}"
         "&& cat {output.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
 
 
 rule index_ref:
     input:
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
-        dataset = config["refGenomeDir"] + "{refGenome}_dataset.zip"
+        ref = config["refGenomeDir"] + "{refGenome}.fna"
     output: 
         indexes = expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"])
     conda:
@@ -67,8 +67,8 @@ rule fastp:
         r1 = config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz",
         r2 = config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz"
     output: 
-        r1 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz",
-        r2 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz",
+        temp(r1 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz"),
+        temp(r2 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz"),
         summ = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}/{run}.out"
     conda:
         "../envs/fastq2bam.yml"
@@ -88,9 +88,9 @@ rule bwa_map:
         r1 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz",
         r2 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz",
         # the following files are bwa index files that aren't directly input into command below, but needed
-        indexes = expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"])
+        indices = expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"])
     output: 
-        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}/{run}.bam"
+        bam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}/{run}.bam")
     params:
         get_read_group
     conda:
@@ -104,8 +104,8 @@ rule bwa_map:
 rule merge_bams:
     input: lambda wildcards: expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
     output: 
-        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam",
-        bai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam.bai"
+        bam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam"),
+        bai = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam.bai")
 
     conda:
         "../envs/fastq2bam.yml"
@@ -155,6 +155,7 @@ rule collect_fastp_stats:
     output: config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_fastp.out"
     shell:
         "cat {input} > {output}"
+        
 rule collect_sumstats:
     input:
         unpack(get_sumstats)
