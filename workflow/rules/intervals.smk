@@ -27,7 +27,7 @@ rule picard_intervals:
     conda:
         "../envs/bam2vcf.yml"
     log:
-        "log/{Organism}/{refGenome}/picard_intervals/log"
+        "logs/{Organism}/{refGenome}/picard_intervals/log"
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * res_config['process_ref']['mem']   
     shell:
