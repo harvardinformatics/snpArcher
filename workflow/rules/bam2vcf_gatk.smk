@@ -10,7 +10,7 @@ rule bam2gvcf:
         fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
         dictf = config["refGenomeDir"] + "{refGenome}" + ".dict",
         bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
-        l = config['output'] + "{Organism}/{refGenome}/" + config['intDir'] + "list{list}.list",
+        int = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
     output:
         gvcf = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.raw.g.vcf.gz",
         gvcf_idx = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.raw.g.vcf.gz.tbi",
@@ -22,7 +22,8 @@ rule bam2gvcf:
         reduced = lambda wildcards, attempt: attempt * (res_config['bam2gvcf']['mem'] - 3000)  # this is the maximum amount given to java
     params:
         minPrun = config['minP'],
-        minDang = config['minD']
+        minDang = config['minD'],
+        l = config['output'] + "{Organism}/{refGenome}/" + config['intDir'] + "list{list}.list"
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -113,7 +114,7 @@ rule filterVcfs:
         vcf = config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "L{list}.vcf",
         ref = config["refGenomeDir"] + "{refGenome}.fna"
     output:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf"
+        vcf = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf")
     conda:
         "../envs/bam2vcf.yml"
     resources:
@@ -137,7 +138,7 @@ rule gatherVcfs:
     input:
         get_gather_vcfs
     output:
-        vcfFinal = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.unsorted.vcf.gz"
+        vcfFinal = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.unsorted.vcf.gz")
     params:
         gather_vcfs_CLI
     conda:
