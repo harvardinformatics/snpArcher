@@ -2,7 +2,7 @@ __default__:
     partition: "shared"
     time: 9000
     nodes: 1
-    output: "slurm_logs/slurm-%j.out"
+    output: "slurm_logs/{Organism}/slurm-%j.out"
 
 
 ###
