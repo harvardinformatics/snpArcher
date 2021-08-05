@@ -11,8 +11,10 @@ rule get_fastq_pe:
     params:
         outdir = config["fastqDir"] + "{Organism}/{sample}/",
         tmpdir = config['tmp_dir']
-    conda: "../envs/fastq2bam.yml"
-    threads: int(res_config['get_fastq_pe']['threads'])
+    conda: 
+        "../envs/fastq2bam.yml"
+    threads: 
+        int(res_config['get_fastq_pe']['threads'])
     log:
         "logs/{Organism}/fasterq_dump/{sample}/{run}.log"
     resources:
@@ -72,7 +74,8 @@ rule fastp:
         summ = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}/{run}.out"
     conda:
         "../envs/fastq2bam.yml"
-    threads: res_config['fastp']['threads']
+    threads: 
+        res_config['fastp']['threads']
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['fastp']['mem'] 
     shell:
@@ -87,7 +90,6 @@ rule bwa_map:
         ref = config["refGenomeDir"] + "{refGenome}.fna",
         r1 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz",
         r2 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz",
-        # the following files are bwa index files that aren't directly input into command below, but needed
         indices = expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"])
     output: 
         bam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}/{run}.bam")
@@ -95,14 +97,17 @@ rule bwa_map:
         get_read_group
     conda:
         "../envs/fastq2bam.yml"
-    threads: res_config['bwa_map']['threads']
+    threads: 
+        res_config['bwa_map']['threads']
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bwa_map']['mem'] 
     shell:
         "bwa mem -M -t {threads} {params} {input.ref} {input.r1} {input.r2} | samtools sort -o {output.bam} -"
 
 rule merge_bams:
-    input: lambda wildcards: expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
+    input: 
+        lambda wildcards: 
+        expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
     output: 
         bam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam"),
         bai = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam.bai")
@@ -132,7 +137,6 @@ rule bam_sumstats:
     input: 
         bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
         ref = config["refGenomeDir"] + "{refGenome}.fna"
-
     output: 
         cov = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_coverage.txt",  
         alnSum = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_AlnSumMets.txt",
