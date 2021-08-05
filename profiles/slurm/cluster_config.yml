@@ -3,7 +3,6 @@ __default__:
     time: 9000
     nodes: 1
     output: "slurm_logs/slurm-%j.out"
-    #error: "logs/slurm-%j.err"
 
 
 ###
@@ -20,4 +19,3 @@ bam2gvcf:
 
 bam2vcf: 
     partition: "serial_requeue"
-    #mem: 5000 # MEMORY IS SPECIFIED WITHIN RULE, TO INCREASE WITH ATTEMPTS
