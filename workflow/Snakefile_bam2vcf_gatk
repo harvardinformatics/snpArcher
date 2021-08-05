@@ -15,11 +15,8 @@ ORGANISM, REFGENOME = map(list, zip(*org_ref))  # Split above back to indiviudal
 
 rule all:
     input:
-        expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz", zip, Organism=ORGANISM, refGenome=REFGENOME)
+        expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_SNP_per_interval.txt", Organism=ORGANISM, refGenome=REFGENOME),
+        expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_missing_data_per_ind.txt", Organism=ORGANISM, refGenome=REFGENOME)
 
 include: "rules/common.smk"
 include: "rules/bam2vcf_gatk.smk"
-
-
-
-
