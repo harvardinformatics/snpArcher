@@ -32,7 +32,7 @@ rule bam2gvcf:
         "-R {input.ref} "
         "-I {input.bam} "
         "-O {output.gvcf} "
-        "-L {input.l} "
+        "-L {params.l} "
         "--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang}"
 
 rule mkDBmapfile:
