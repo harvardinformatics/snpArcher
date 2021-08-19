@@ -10,7 +10,6 @@ tmp_dir: "/hb/scratch/cmirchan"   # directory path for a temp dir
 ##############################
 
 # if using the BAM -> VCF workflows
-fastqDir: "fastqs/"
 bamsForGatk: "fastq2bam/01_mappedReads/" # directory containing BAMs for GATK. If you used the fastq -> bam workflow above, simply keep the default value; must be followed by a "/"
 bamsForFB: "fastq2bam/01_mappedReads/"   # directory containing BAMs for Freebayes. If you used the fastq -> bam workflow above, simply keep the default value; must be followed by a "/"
 bam_suffix: "_final.bam"                 # the suffix for your BAM files that follow all the sample names. If you use the fastq->BAM workflow above, simply keep the default value 
@@ -37,10 +36,10 @@ minD: 1
 ##############################
 # Variables you DO NOT need to change
 # if you do, ensure all path/directory names are followed by a "/"
+# These variables control the output of the fastq2bam workflow. You don't need to change these, but if you do please have a forward slash follow name!
 ##############################
 
 output: "results/"
-# These variables control the output of the fastq2bam workflow. You don't need to change these, but if you do please have a forward slash follow name!
 fastqDir: "data/fastq/"                           # this is where raw fastqs are downloaded
 refGenomeDir: "data/genome/"                      # where reference genomes go
 fastq2bamDir: "fastq2bam/"
