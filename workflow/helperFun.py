@@ -416,5 +416,5 @@ def getListIndices(intDir):
     return(LISTS)
 
 def make_temp_dir():
-    if not os.path.exists("./tmp)"):
+    if not os.path.exists("./tmp"):
         os.mkdir("./tmp")
