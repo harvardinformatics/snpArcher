@@ -8,7 +8,7 @@ rule picard_intervals:
     params:
         minNmer = int(config['minNmer'])
     conda:
-        "../envs/bam2vcf.yml"
+        '../envs/bam2vcf.yml'
     log:
         "logs/{Organism}/{refGenome}/picard_intervals/log"
     resources: 
