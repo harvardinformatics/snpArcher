@@ -163,7 +163,7 @@ rule sortVcf:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['sortVcf']['mem']   # this is the overall memory requested
     shell:
-        "picard SortVcf -I {input.vcf} -O {output.vcf}"
+        "picard SortVcf I={input.vcf} O={output.vcf}"
 
 rule vcftools:
     input:

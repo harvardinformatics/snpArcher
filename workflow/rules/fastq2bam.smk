@@ -54,7 +54,9 @@ rule index_ref:
     input:
         ref = config["refGenomeDir"] + "{refGenome}.fna"
     output: 
-        indexes = expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"])
+        indexes = expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"]),
+        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
+        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict"
     conda:
         "../envs/fastq2bam.yml"
     resources:
@@ -62,8 +64,11 @@ rule index_ref:
     log:
         "logs/index_ref/{refGenome}.log" 
     shell:
-        "bwa index {input.ref} 2> {log}"
-
+        """
+        bwa index {input.ref} 2> {log}
+        samtools faidx {input.ref} --output {output.fai}
+        picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dictf}
+        """
 rule fastp:
     input:
         r1 = config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz",

@@ -2,8 +2,8 @@
 # Variables you need to change
 ##############################
 
-samples: "samples.csv"            # name of the sample metadata CSV 
-tmp_dir: "/hb/scratch/cmirchan"   # directory path for a temp dir 
+samples: "config/ecoli_samples.csv"            # name of the sample metadata CSV 
+tmp_dir: "tmp/"   # directory path for a temp dir 
 
 ##############################
 # Variables you *might* need to change
