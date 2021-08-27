@@ -32,3 +32,4 @@ gatk/
 logs/
 *_dryrun.txt
 results/
+tmp/
