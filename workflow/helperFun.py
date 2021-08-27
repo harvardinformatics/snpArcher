@@ -414,3 +414,7 @@ def getListIndices(intDir):
         LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
     LISTS=sorted(LISTS)
     return(LISTS)
+
+def make_temp_dir():
+    if not os.path.exists("./tmp)"):
+        os.mkdir("./tmp")
