@@ -5,32 +5,32 @@
 # fastq download
 get_fastq_pe:
     threads: 1
-    mem: 1000
+    mem: 4000
 # compress fastq
 gzip_fastq:
-    mem: 1000
+    mem: 4000
 # fastp program
 fastp: 
     threads: 1 
-    mem: 1000
+    mem: 4000
 # index reference
 index_ref:
-    mem: 1000
+    mem: 4000
 # bwa mapping
 bwa_map: 
     threads: 1 
-    mem: 1000
+    mem: 4000
 # sort bam with picard's SortSam tool
 sort_bam: 
-    mem: 1000 
+    mem: 4000 
 # mark duplicates with picard's MarkDuplicates
 dedup: 
-    mem: 1000 
+    mem: 4000 
 # calculate BAM summaries with samtools and picard
 bam_sumstats: 
-    mem: 1000 
+    mem: 4000 
 merge_bams:
-    mem: 1000
+    mem: 4000
 
 ###
 # Intervals workflow
@@ -39,10 +39,10 @@ merge_bams:
 # preprocess genome, create intervals
 # picard's create CreateSequenceDictionary, samtools faidx
 process_ref:
-    mem: 1000
+    mem: 4000
 # custom python algo to create intervals
 create_intervals:
-    mem: 1000
+    mem: 4000
 
 ###
 # bam2vcf workflows
@@ -50,28 +50,28 @@ create_intervals:
 
 # gatk HaplotypeCaller
 bam2gvcf: 
-    mem: 1000
+    mem: 4000
 # gatk GenomicsDBImport
 gvcf2DB:
-    mem: 1000
+    mem: 4000
 # gatk GenotypeGVCFs 
 DB2vcf: 
-    mem: 1000
+    mem: 4000
 ## freebayes program only! ##
 bam2vcf:
-    mem: 1000
+    mem: 4000
 # gatk filterVcfs
 filterVcfs:
-    mem: 1000
+    mem: 4000
 # gatk GatherVcfs
 gatherVcfs:
-    mem: 1000
+    mem: 4000
 # picard SortVcf
 sortVcf:
-    mem: 1000
+    mem: 4000
 # vcftools program
 vcftools:
-    mem: 1000
+    mem: 4000
 # bedtools program
 bedtools:
-    mem: 1000
+    mem: 4000
