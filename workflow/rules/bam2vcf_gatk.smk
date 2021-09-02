@@ -150,21 +150,6 @@ rule gatherVcfs:
         "{params} "
         "-O {output.vcf}"
 
-#rule sortVcf:
-#    """
-#    Sort VCF for more efficient processing of vcftools and bedtools
-#    """
-#    input:
-#        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.unsorted.vcf.gz"
-#    output:
-#        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
-#    conda:
-#        "../envs/bam2vcf.yml"
-#    resources:
-#        mem_mb = lambda wildcards, attempt: attempt * res_config['sortVcf']['mem']   # this is the overall memory requested
-#    shell:
-#        "picard SortVcf -I {input.vcf} -O {output.vcf}"
-
 rule vcftools:
     input:
         vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
