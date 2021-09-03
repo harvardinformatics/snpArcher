@@ -38,10 +38,10 @@ def get_gather_vcfs(wildcards):
 
 def gather_vcfs_CLI(wildcards):
     """
-    Gatk enforces that you have I= before each input vcf, so this function makes that string
+    Gatk enforces that you have a -I before each input vcf, so this function makes that string
     """
     vcfs = get_gather_vcfs(wildcards)
-    out = " ".join(["I=" + vcf for vcf in vcfs])
+    out = " ".join(["-I " + vcf for vcf in vcfs])
     return out
 
 def write_db_mapfile(wildcards):

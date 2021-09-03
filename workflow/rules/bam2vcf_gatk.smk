@@ -134,11 +134,11 @@ rule filterVcfs:
         "--filter-expression \"QUAL < 30.0\" "
         "--invalidate-previous-filters true\n"
 
-rule gatherVcfs:
-    input:
+rule sort_gatherVcfs:
+    input: 
         get_gather_vcfs
-    output:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
+    output: 
+        vcfFinal = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
     params:
         gather_vcfs_CLI
     conda:
@@ -146,10 +146,9 @@ rule gatherVcfs:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['gatherVcfs']['mem']
     shell:
-        "picard GatherVcfs "
+        "gatk SortVcf "
         "{params} "
-        "={output.vcf}"
-
+        "-O {output.vcfFinal}"
 rule vcftools:
     input:
         vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
