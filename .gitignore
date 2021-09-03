@@ -18,7 +18,7 @@ data/BHduck/genome/*.ann
 data/BHduck/genome/*.amb
 data/BHduck/genome/*.fai
 data/BHduck/genome/*.dict
-data/
+/data/
 fastp.*
 intervalFiles/
 out
@@ -32,3 +32,4 @@ gatk/
 logs/
 *_dryrun.txt
 results/
+tmp/

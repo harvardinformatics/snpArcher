@@ -148,7 +148,7 @@ rule gatherVcfs:
     shell:
         "picard SortVcf "
         "{params} "
-        "-O {output.vcf}"
+        "-O {output.vcfFinal}"
 
 rule vcftools:
     input:
