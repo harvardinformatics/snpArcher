@@ -146,7 +146,7 @@ rule gatherVcfs:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['gatherVcfs']['mem']
     shell:
-        "picard SortVcf "
+        "picard GatherVcfs "
         "{params} "
         "-O {output.vcf}"
 
