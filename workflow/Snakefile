@@ -1,0 +1,21 @@
+import pandas as pd
+import yaml
+import helperFun
+
+configfile: "config/config.yaml"
+res_config = yaml.load(open("config/resources.yaml"))
+
+helperFun.make_temp_dir()
+samples = pd.read_table(config["samples"], sep=",").replace(' ', '_', regex=True)
+org_ref = set(zip(samples.Organism.tolist(), samples.refGenome.tolist()))  # To get only unique combinations of organism and ref accession.
+ORGANISM, REFGENOME = map(list, zip(*org_ref))  # Split above back to indiviudal lists for expand. There probably is a better way?
+
+rule all:
+    input:
+        expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_SNP_per_interval.txt", zip, Organism=ORGANISM, refGenome=REFGENOME),
+        expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_missing_data_per_ind.txt", zip, Organism=ORGANISM, refGenome=REFGENOME)
+
+include: "rules/common.smk"	
+include: "rules/fastq2bam.smk"
+include: "rules/intervals.smk"
+include: "rules/bam2vcf_gatk.smk"
