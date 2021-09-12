@@ -1,29 +1,10 @@
 #!/usr/bin/env Rscript
-#args = commandArgs(trailingOnly=TRUE)
 
 library(tidyverse)
 library(patchwork)
-
-# PCA plot --------------------------------------------------------------
-
-#pca.path <- args[1]
-#out.name <- args[2]
+library(plotly)
 
 generate_qcplots <- function(prefix){
-  # PCA plot --------------------------------------------------------------
-  pca.path <- paste0(prefix, ".eigenvec")
-  tmp.head <- sub("#", "", readLines(pca.path))
-  df.pca <- read.table(text = tmp.head, header = TRUE)
-  df.val <- read.table(gsub("vec","val", pca.path), header = FALSE)
-  df.val$prop <- (df.val$V1 / (sum(df.val$V1))) * 100
-  
-  p.pca <- ggplot(data = df.pca) + 
-    geom_point(aes(x = PC1, y = PC2), alpha = 0.8) + 
-    theme_bw() +
-    theme(text = element_text(size = 14)) +
-    xlab(paste0("PC1", ": ", round(df.val[1,2],1),"% variance")) +
-    ylab(paste0("PC2", ": ", round(df.val[2,2],1),"% variance"))
-  
   
   # depth plot --------------------------------------------------------------
   
@@ -34,8 +15,28 @@ generate_qcplots <- function(prefix){
     geom_histogram(aes(x = MEAN_DEPTH), bins = nrow(df.depth)/4,
                    fill = "grey80", color = "black") +
     theme_bw() +
-    xlab("SNP Depth")
+    labs(x = "SNP Depth", y = "Number of individuals")
 
+  
+  # PCA plot --------------------------------------------------------------
+  pca.path <- paste0(prefix, ".eigenvec")
+  tmp.head <- sub("#", "", readLines(pca.path))
+  df.pca <- read.table(text = tmp.head, header = TRUE)
+  df.val <- read.table(gsub("vec","val", pca.path), header = FALSE)
+  df.val$prop <- (df.val$V1 / (sum(df.val$V1))) * 100
+  
+  #add depth
+  df.pca <- left_join(df.pca, df.depth, by = c("IID" = "INDV"))
+  
+  p.pca <- ggplot(data = df.pca, aes(x = PC1, y = PC2, text = IID, color = MEAN_DEPTH)) + 
+    geom_point(alpha = 0.8, shape = 21, fill = "black") + 
+    theme_bw() +
+    theme(text = element_text(size = 14),
+          legend.position = "none") +
+    xlab(paste0("PC1", ": ", round(df.val[1,2],1),"% variance")) +
+    ylab(paste0("PC2", ": ", round(df.val[2,2],1),"% variance"))
+  
+  
   # admixture ---------------------------------------------------------------
   
   k2 <- paste0(prefix, ".2.Q")
@@ -69,7 +70,7 @@ generate_qcplots <- function(prefix){
   
   p.k2 <- cat_snmf %>% 
     filter(k == 2 | k == 3) %>% 
-    ggplot(aes(x = factor(sampleID), y = prob, fill = factor(popGroup))) +
+    ggplot(aes(x = factor(sampleID), y = prob, fill = factor(popGroup), text = sampleID)) +
     geom_col(aes(fill = factor(popGroup)), size = 0.1) +
     facet_grid(rows = vars(k), switch = "x", scales = "free", space = "free") +
     theme_minimal() +
@@ -93,8 +94,7 @@ generate_qcplots <- function(prefix){
   names(df.qual) <- c("CHROM","POS","ID","QUAL","AF","ReadPosRankSum","FS","SOR","MQ","MQRankSum")
   
   # read pos rank sum -------------------------------------------------------
-  print(df.qual)
-  
+
   RPRS.fail <- df.qual %>% filter(ReadPosRankSum < -8) %>% nrow()
   FS.fail <- df.qual %>% filter(FS > 60) %>% nrow()
   SOR.fail <- df.qual %>% filter(SOR > 3) %>% nrow()
@@ -136,10 +136,19 @@ generate_qcplots <- function(prefix){
     plot_layout(design = layout)
   ggsave(paste0(prefix, "_qc.pdf"), width = 8.5, height = 11)
   
-  #pdf(paste0(prefix, "_qc.pdf"), width = 8.5, height = 11)
-  #p.RPRS + p.FS + p.SOR + p.MQ + p.MQRS
-  #(p.pca + p.depth) / p.k2 
-  #dev.off()
+  # save as interactive html ------------------------------------------------------------
+
+  #make pca interactive
+  pl.pca <- ggplotly(p.pca, tooltip=c("text","MEAN_DEPTH", "x","y")) 
+  #make admix interactive
+  pl.admix <- ggplotly(p.k2, tooltip=c("text", "y"))
+  #make first row
+  pl.row1 <- subplot(pl.pca, p.depth, titleY = TRUE, titleX = TRUE, margin = 0.06)
+  #combine first two plots above admix
+  pl.out <- subplot(pl.row1, pl.admix, nrows = 2, margin = 0.08,
+                    titleY = TRUE, titleX = TRUE) 
+  #save as an html file
+  htmlwidgets::saveWidget(as_widget(pl.out), paste0(prefix, "_qc.html"))
   
 }
 
