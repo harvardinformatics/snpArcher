@@ -11,3 +11,4 @@ dependencies:
   - r-base==3.6.3
   - r-tidyverse==1.2.1
   - r-patchwork==1.1.1
+  - r-plotly==4.9.3
