@@ -3,7 +3,7 @@
 ##############################
 
 samples: "config/ecoli_samples.csv"            # name of the sample metadata CSV 
-tmp_dir: "/scratch/swuitchik/cpg_tmp/"   # directory path for a temp dir 
+tmp_dir: "tmp/"   # directory path for a temp dir 
 
 ##############################
 # Variables you *might* need to change
