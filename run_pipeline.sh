@@ -8,4 +8,4 @@
 #SBATCH --mem=10000
 
 source activate snakemake
-snakemake --snakefile workflow/Snakefile_bam2vcf_fb --profile ./profiles/slurm 
+snakemake --snakefile workflow/Snakefile --profile ./profiles/slurm
