@@ -5,7 +5,7 @@ import yaml
 import helperFun
 import pandas as pd
 
-configfile: "config.yaml"
+configfile: "config/config.yaml"
 res_config = yaml.load(open("resources.yaml"))
 
 # create directory to store GATK lists
