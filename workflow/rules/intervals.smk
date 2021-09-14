@@ -26,10 +26,15 @@ checkpoint create_intervals:
         maxIntervalLen = int(config['maxIntervalLen']),
         maxBpPerList = int(config['maxBpPerList']),
         maxIntervalsPerList = int(config['maxIntervalsPerList']),
-        minNmer = int(config['minNmer'])
+        minNmer = int(config['minNmer']),
+        num_intervals = config['num_intervals'],
+        min_int_size = config['min_int_size']
     output: 
-        config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
+        touch(config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed")
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem'] 
     run:
-        LISTS = helperFun.createListsGetIndices(params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
+        if config['split_by_n']:
+            LISTS = helperFun.createListsGetIndices(params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
+        else:
+            LISTS = make_intervals(config["output"], config["intDir"], wildcards, input.dictf, params.num_intervals, params.min_int_size)
