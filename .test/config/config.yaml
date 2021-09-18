@@ -4,9 +4,7 @@
 
 samples: "config/ecoli_samples.csv"            # name of the sample metadata CSV 
 tmp_dir: "tmp/"   # directory path for a temp dir 
-split_by_n: True
-num_intervals: 5
-min_int_size: 10000
+split_by_n: False
 ##############################
 # Variables you *might* need to change
 ##############################
