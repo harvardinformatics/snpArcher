@@ -135,7 +135,7 @@ rule dedup:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['dedup']['mem'] 
     shell:
-        "picard MarkDuplicates I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All\n"
+        "picard MarkDuplicates -Xmx{resources.mem_mb}M I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All\n"
         "picard BuildBamIndex I={output.dedupBam} "
 
 rule bam_sumstats:
