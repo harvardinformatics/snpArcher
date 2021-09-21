@@ -33,3 +33,4 @@ logs/
 *_dryrun.txt
 results/
 tmp/
+config/
