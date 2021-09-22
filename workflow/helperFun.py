@@ -333,11 +333,11 @@ def createListsGetIndices(maxIntervalLen, maxBpPerList, maxIntervalsPerList, min
             # does adding the next interval put us over the maximum values for our two thresholds?
             if (runningSumBp + intervalLen) >= maxBpPerList or (runningSum_intervals + 1) >= maxIntervalsPerList:
                 if len(current_intervals) == 0:
-                    printIntervalsToListFile(intDir, listFile_index, [ (scaff, start, stop) ], outputDir)
+                    printIntervalsToListFile(intDir, listFile_index, [ (scaff, start, stop) ], wildcards, outputDir)
                     runningSumBp = 0
                     runningSum_intervals = 0
                 else:
-                    printIntervalsToListFile(intDir, listFile_index, current_intervals, outputDir)
+                    printIntervalsToListFile(intDir, listFile_index, current_intervals, wildcards, outputDir)
                     current_intervals = [ (scaff, start, stop) ]
                     runningSumBp = intervalLen
                     runningSum_intervals = 1

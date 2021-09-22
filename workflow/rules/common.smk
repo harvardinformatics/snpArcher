@@ -61,9 +61,8 @@ def get_input_for_mapfile(wildcards):
     print({'gvcfs': gvcfs, 'gvcfs_idx': gvcfs_idx, 'doneFiles': doneFiles})
     return {'gvcfs': gvcfs, 'gvcfs_idx': gvcfs_idx, 'doneFiles': doneFiles}
 
-def make_intervals(outputDir, intDir, wildcards, dict_file, num_intervals, min_int_size):
-    """Creates intervals by splitting all contigs by N number of splits. num_intervals is the number of interval FILES. min_intsize defines
-    the bp size of each interval that a contig can be split into."""
+def make_intervals(outputDir, intDir, wildcards, dict_file):
+    """Creates interval list files for parallelizing haplotypeCaller and friends. Writes one contig/chromosome per list file."""
     
     with open(dict_file, "r") as f:  # Read dict file to get contig info
         contigs = defaultdict()
@@ -74,48 +73,14 @@ def make_intervals(outputDir, intDir, wildcards, dict_file, num_intervals, min_i
                 ln = int(line[2].split("LN:")[1])
                 contigs[chrom] = ln
         
-        ln_sum = sum(contigs.values())
-        bp_per_interval = ln_sum // int(num_intervals)
+        interval_file = os.path.join(outputDir,wildcards.Organism,wildcards.refGenome,intDir, f"{wildcards.refGenome}_intervals_fb.bed")
+        with open(interval_file, "w") as fh:
+            for contig, ln in contigs.items():
+                print(f"{contig}:1-{ln}", file=fh)
         
-        int_file = 0
-        running_bp_total = 0
-        out = deque()
-        
-        for chrom, ln in contigs.items():
-            if ln <= int(min_int_size):
-                out.append(f"{chrom}:1-{ln}")
-                running_bp_total += ln
-                if running_bp_total >= bp_per_interval:
-                    interval_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{int_file}.list")
-                    with open(interval_file, "a+") as f:
-                        for _ in range(len(out)):
-                            line = out.popleft()
-                            print(line, file=f)
-                    int_file += 1
-                    running_bp_total = 0
-                    
-            else:
-                interval_ends = list(range(1, ln, int(min_int_size)))
-                interval_lists = [[interval_ends[i-1], interval_ends[i]] for i in range(1, len(interval_ends))]  # Make the split ranges eg 1-100, 100-200 ...
-                interval_lists[-1][1] = ln  # Sets last value of last interval list to the size of the contig
-                for l in interval_lists:
-                    if l[0] != 1:  # Increment first num of each range by 1 if its not 1, so no overlapping
-                        l[0] += 1
-                    out.append(f"{chrom}:{l[0]}-{l[1]}")
-                    running_bp_total += (l[1] - l[0])
-                    if running_bp_total >= bp_per_interval:
-                        interval_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{int_file}.list")
-                        with open(interval_file, "a+") as f:
-                            for _ in range(len(out)):
-                                line = out.popleft()
-                                print(line, file=f)
-                        int_file += 1
-                        running_bp_total = 0
-        if out:
-            interval_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{int_file}.list")
-            with open(interval_file, "a+") as f:
-                for _ in range(len(out)):
-                    line = out.popleft()
-                    print(line, file=f)
-
-                        
+        for i, (contig, ln) in enumerate(contigs.items()):
+            interval_list_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{i}.list")
+            with open(interval_list_file, "w") as f:
+                print(f"{contig}:1-{ln}", file=f)
+            
+            
