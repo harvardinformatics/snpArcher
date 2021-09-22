@@ -10,18 +10,22 @@ rule snp_filters_qc:
     shell:
         "bcftools query -f '%CHROM\t%POS\t%ID\t%INFO/AF\t%QUAL\t%INFO/ReadPosRankSum\t%INFO/FS\t%INFO/SOR\t%INFO/MQ\t%INFO/MQRankSum\n' {input.vcf} > {output.snpqc}"
 
-rule vcftools_depth:
+rule vcftools_individuals:
     input:
-        #vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
-        vcf = "data/vcf_example/multisample_vcf.vcf.gz"
+        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
+        #vcf = "data/vcf_example/multisample_vcf.vcf.gz"
     output:
         depth = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.idepth",
+        miss = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.imiss"
     conda:
         "../envs/qc.yml"
     params:
         prefix=config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}"
     shell:
-        "vcftools --gzvcf {input.vcf} --out {params.prefix} --depth"
+        """
+        vcftools --gzvcf {input.vcf} --out {params.prefix} --depth
+        vcftools --gzvcf {input.vcf} --out {params.prefix} --missing-indv
+        """
 
 rule subsample_snps:
     input:
@@ -35,13 +39,13 @@ rule subsample_snps:
     shell:
         "bcftools +prune -n 1 -w 10000bp --nsites-per-win-mode rand --random-seed 42 -O v -o {output.pruned} {input.vcf}"
 
-rule plinkPCA:
+rule plink:
     """
     Call plink PCA.
     """
     input:
-        #vcf = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.final.vcf.gz"
-        vcf = "data/vcf_example/multisample_vcf.vcf.gz"
+        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
+        #vcf = "data/vcf_example/multisample_vcf.vcf.gz"
     params:
         prefix=config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}"
     output: 
@@ -53,7 +57,11 @@ rule plinkPCA:
     conda:
         "../envs/qc.yml"
     shell:
-        "plink2 --vcf {input.vcf} --pca 10 --out {params.prefix} --allow-extra-chr --autosome-num 30 --make-bed --const-fid"
+        #plink 2 for king relatedness matrix (robust to structure) and plink 1.9 for distance matrix
+        """
+        plink2 --vcf {input.vcf} --pca 10 --out {params.prefix} --allow-extra-chr --autosome-num 30 --make-bed --make-king square --const-fid
+        plink --vcf {input.vcf} --out {params.prefix} --allow-extra-chr --autosome-num 30 --distance square --const-fid
+        """
 
 rule admixture:
     """
@@ -91,20 +99,20 @@ rule admixture:
 
 rule qc_plots:
     """
-    Call plink PCA.
+    Call plotting script
     """
     input:
         eigenvec = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.eigenvec",
         depth = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.idepth",
         admix = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.3.Q",
-        snpqc = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_snpqc.txt"
+        snpqc = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_snpqc.txt",
     params:
         prefix = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}"
     output: 
-        qcpdf = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_qc.pdf"
+        qcpdf = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_qc.html"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem'] # this is the overall memory requested
     conda:
         "../envs/qc.yml"
     script:
-        "../scripts/qc_plots_pipeline.R"
+        "../scripts/qc_dashboard_render.R"
