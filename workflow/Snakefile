@@ -14,11 +14,7 @@ rule all:
     input:
         expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_SNP_per_interval.txt", zip, Organism=ORGANISM, refGenome=REFGENOME),
         expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_missing_data_per_ind.txt", zip, Organism=ORGANISM, refGenome=REFGENOME),
-        expand(config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.bed", zip, Organism=ORGANISM, refGenome=REFGENOME),
-        expand(config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.3.Q", zip, Organism=ORGANISM, refGenome=REFGENOME),
-        expand(config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.idepth", zip, Organism=ORGANISM, refGenome=REFGENOME),
-        expand(config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_snpqc.txt", zip, Organism=ORGANISM, refGenome=REFGENOME),
-        expand(config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_qc.pdf", zip, Organism=ORGANISM, refGenome=REFGENOME)
+        expand(config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_qc.html", zip, Organism=ORGANISM, refGenome=REFGENOME)
 
 include: "rules/common.smk"	
 include: "rules/fastq2bam.smk"
