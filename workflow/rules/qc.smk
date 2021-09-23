@@ -60,7 +60,7 @@ rule plink:
     shell:
         #plink 2 for king relatedness matrix (robust to structure) and plink 1.9 for distance matrix
         """
-        plink2 --vcf {input.vcf} --pca 2 --out {params.prefix} --allow-extra-chr --autosome-num 30 --make-bed --make-king square --const-fid
+        plink2 --vcf {input.vcf} --pca 2 --out {params.prefix} --allow-extra-chr --autosome-num 30 --make-bed --make-king square --const-fid --bad-freqs
         plink --vcf {input.vcf} --out {params.prefix} --allow-extra-chr --autosome-num 30 --distance square --const-fid
         """
 
