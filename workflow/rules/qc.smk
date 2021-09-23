@@ -12,7 +12,7 @@ rule snp_filters_qc:
 
 rule vcftools_individuals:
     input:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
+        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
         
     output:
         depth = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.idepth",
@@ -23,28 +23,38 @@ rule vcftools_individuals:
         prefix=config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}"
     shell:
         """
+        vcftools --gzvcf {input.vcf} --FILTER-summary --out {params.prefix}
         vcftools --gzvcf {input.vcf} --out {params.prefix} --depth
         vcftools --gzvcf {input.vcf} --out {params.prefix} --missing-indv
         """
 
 rule subsample_snps:
     input:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
+        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
     output:
-        pruned = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.pruned.vcf.gz",
+        filt_snps = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_filt_snps.txt",
+        tmp_rand_snps = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_tmp_rand_snps.txt",
+        filtered = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.filtered.vcf.gz",
+        pruned = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.pruned.vcf.gz"
     conda:
         "../envs/qc.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
     shell:
-        "bcftools +prune -n 1 -w 10000bp --nsites-per-win-mode rand --random-seed 42 -O v -o {output.pruned} {input.vcf}"
+        """
+        bcftools view -v snps -m2 -M2 -f PASS -e 'ALT="*" | TYPE~"indel" | ref="N"' {input.vcf} -O z -o {output.filtered}
+        bcftools index {output.filtered}
+        bcftools query -f '%CHROM\t%POS\n' {output.filtered} > {output.filt_snps}
+        sort -R {output.filt_snps}| head -50000 > {output.tmp_rand_snps}
+        bcftools view -R {output.tmp_rand_snps} {output.filtered} -O z -o {output.pruned}
+        """
 
 rule plink:
     """
     Call plink PCA.
     """
     input:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
+        vcf = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.pruned.vcf.gz"
         
     params:
         prefix=config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}",
@@ -60,8 +70,8 @@ rule plink:
     shell:
         #plink 2 for king relatedness matrix (robust to structure) and plink 1.9 for distance matrix
         """
-        plink2 --vcf {input.vcf} --pca 2 --out {params.prefix} --allow-extra-chr --autosome-num 30 --make-bed --make-king square --const-fid --bad-freqs
-        plink --vcf {input.vcf} --out {params.prefix} --allow-extra-chr --autosome-num 30 --distance square --const-fid
+        plink2 --vcf {input.vcf} --pca 2 --out {params.prefix} --allow-extra-chr --autosome-num 95 --make-bed --make-king square --const-fid --bad-freqs
+        plink --vcf {input.vcf} --out {params.prefix} --allow-extra-chr --autosome-num 95 --distance square --const-fid
         """
 
 rule admixture:
