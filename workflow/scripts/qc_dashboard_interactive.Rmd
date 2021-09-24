@@ -20,7 +20,7 @@ suppressMessages(library(ape))
 suppressMessages(library(reshape2))
 
 prefix <- params$prefix
-
+#prefix <- "/Volumes/GoogleDrive/My\ Drive/SantaCruz/Projects/Variant_pipeline/data/anenome_qc/anemone_short_jaAntSola1.0.p_ctg"
 set.colors <- c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a')
 ```
 
@@ -176,34 +176,45 @@ df.rel <- read.table(paste0(prefix, ".king"))
 colnames(df.rel) <- dist.id$V2
 rownames(df.rel) <- dist.id$V2
 
-# Run clustering
 mat.rel <- as.matrix(df.rel)
-rel.dendro <- as.dendrogram(hclust(d = dist(x = mat.rel)))
-sample.order <- order.dendrogram(rel.dendro)
-#we could also plot the dendrogram, but it is potentially confusing
-#with the already plotted NJ tree
 
-#pivot does not seem to work with matrices, so reverting to melt from reshape2
-df.rel.long <- melt(as.matrix(df.rel))
-names(df.rel.long) <- c("Sample1", "Sample2", "relatedness")
+#check for -Inf in the matrix
+l.inf <- grep("-Inf", mat.rel, value = T)
 
-df.rel.long$Sample2 <- factor(x = df.rel.long$Sample2,
-                               levels = dist.id$V2[sample.order], 
-                               ordered = TRUE)
+#clustering will fail if there are -Inf
+if(length(l.inf)==0){
 
-pl.1 <- (ggplot(data = df.rel.long, aes(x=Sample1, y=Sample2, fill=relatedness)) + 
-  geom_tile() +
-  theme(
-    axis.text.x = element_text(angle = 90),
-    axis.title = element_blank(),
-    legend.position = "top"
-  ) +
-   scale_fill_gradient2(low = "blue", high = "red", mid = "white",
-                        midpoint = mean(df.rel.long$relatedness),  
-                        name="relatedness")) %>% 
-  ggplotly(tooltip=c("relatedness","x","y"))
+  # Run clustering
+  rel.dendro <- as.dendrogram(hclust(d = dist(x = mat.rel)))
+  sample.order <- order.dendrogram(rel.dendro)
+  #we could also plot the dendrogram, but it is potentially confusing
+  #with the already plotted NJ tree
+  
+  #pivot does not seem to work with matrices, so reverting to melt from reshape2
+  df.rel.long <- melt(as.matrix(df.rel))
+  names(df.rel.long) <- c("Sample1", "Sample2", "relatedness")
+  
+  df.rel.long$Sample2 <- factor(x = df.rel.long$Sample2,
+                                 levels = dist.id$V2[sample.order], 
+                                 ordered = TRUE)
+  
+  pl.1 <- (ggplot(data = df.rel.long, aes(x=Sample1, y=Sample2, fill=relatedness)) + 
+    geom_tile() +
+    theme(
+      axis.text.x = element_text(angle = 90),
+      axis.title = element_blank(),
+      legend.position = "top"
+    ) +
+     scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                          midpoint = mean(df.rel.long$relatedness),  
+                          name="relatedness")) %>% 
+    ggplotly(tooltip=c("relatedness","x","y"))
+  
+  pl.1
 
-pl.1
+}else{
+  print("too little data (SNPs or Individuals) to cluster relatedness matrix")
+}
 
 ```
 
