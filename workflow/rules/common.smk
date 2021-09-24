@@ -76,7 +76,7 @@ def make_intervals(outputDir, intDir, wildcards, dict_file):
         interval_file = os.path.join(outputDir,wildcards.Organism,wildcards.refGenome,intDir, f"{wildcards.refGenome}_intervals_fb.bed")
         with open(interval_file, "w") as fh:
             for contig, ln in contigs.items():
-                print(f"{contig}:1-{ln}", file=fh)
+                print(f"{contig}\t1\t{ln}", file=fh)
         
         for i, (contig, ln) in enumerate(contigs.items()):
             interval_list_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{i}.list")
