@@ -2,15 +2,18 @@ import glob
 import re
 import os
 from collections import defaultdict, deque
-
+from snakemake.exceptions import WorkflowError
 ### INPUT FUNCTIONS ###
 def get_reads(wildcards):
     """Returns local read files if present. Defaults to SRR if no local reads in sample sheet."""
     row = samples.loc[samples['Run'] == wildcards.run]
-    if os.path.exists(row.fq1.item()) and os.path.exists(row.fq2.item()):
-        r1 = row.fq1.item()
-        r2 = row.fq2.item()
-        return {"r1": r1, "r2": r2}
+    if 'fq1' in samples.columns and 'fq2' in samples.columns:
+        if os.path.exists(row.fq1.item()) and os.path.exists(row.fq2.item()):
+            r1 = row.fq1.item()
+            r2 = row.fq2.item()
+            return {"r1": r1, "r2": r2}
+        else:
+            raise WorkflowError(f"fq1 and fq2 specified for {wildcards.sample}, but files were not found.")
     else:
         r1 = config["fastqDir"] + f"{wildcards.Organism}/{wildcards.sample}/{wildcards.run}_1.fastq.gz",
         r2 = config["fastqDir"] + f"{wildcard.sOrganism}/{wildcards.sample}/{wildcards.run}_2.fastq.gz"
