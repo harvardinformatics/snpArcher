@@ -4,7 +4,7 @@
 
 samples: "config/ecoli_samples.csv"            # name of the sample metadata CSV 
 tmp_dir: "tmp/"   # directory path for a temp dir 
-
+split_by_n: False
 ##############################
 # Variables you *might* need to change
 ##############################
@@ -52,6 +52,7 @@ gatkDir: "gatk/"
 gvcfDir: "03_gvcfs/"
 dbDir: "04_genomicsDB/"
 vcfDir_gatk: "05_vcfs/"
+qcDir: "06_QC/"
 intDir: "intervalFiles/"
 
 # These variables control the output of the FreeBayes workflow (please have forward slash follow name!)   

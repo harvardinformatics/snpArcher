@@ -149,28 +149,3 @@ rule sort_gatherVcfs:
         "gatk SortVcf "
         "{params} "
         "-O {output.vcfFinal}"
-rule vcftools:
-    input:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
-        int = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
-    output:
-        missing = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_missing_data_per_ind.txt",
-    conda:
-        "../envs/bam2vcf.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
-    shell:
-        "vcftools --gzvcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}"
-
-rule bedtools:
-    input:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
-        int = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
-    output:
-        SNPsPerInt = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_SNP_per_interval.txt"
-    conda:
-        "../envs/bam2vcf.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']    # this is the overall memory requested
-    shell:
-        "bedtools coverage -a {input.int} -b {input.vcf} -counts -sorted > {output.SNPsPerInt}"

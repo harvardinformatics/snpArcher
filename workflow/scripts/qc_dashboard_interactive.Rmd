@@ -1,0 +1,302 @@
+---
+title: "QC Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: scroll
+    theme: bootstrap
+editor_options: 
+  chunk_output_type: console
+params:
+  prefix: files.idepth
+
+---
+
+```{r setup, include=FALSE}
+suppressMessages(library(flexdashboard))
+suppressMessages(library(tidyverse))
+suppressMessages(library(plotly))
+suppressMessages(library(ape))
+suppressMessages(library(reshape2))
+
+prefix <- params$prefix
+#prefix <- "/Volumes/GoogleDrive/My\ Drive/SantaCruz/Projects/Variant_pipeline/data/anenome_qc/anemone_short_jaAntSola1.0.p_ctg"
+set.colors <- c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a')
+```
+
+Individuals
+===================================== 
+
+Row
+-----------------------------------------------------------------------
+### Individuals
+```{r}
+num.samples <- nrow(read.table(paste0(prefix, ".idepth"), header = T))
+valueBox(num.samples, icon = "fa-check-double")
+```
+
+### SNPs
+
+```{r}
+nums.nps <- max(read.table(paste0(prefix, ".idepth"), header = T)$N_SITES)
+valueBox(nums.nps, icon = "fa-dna")
+```
+
+### Mean depth
+
+```{r}
+mean.depth <- round(mean(read.table(paste0(prefix, ".idepth"), header = T)$MEAN_DEPTH), 1)
+valueBox(mean.depth, icon = "fa-align-center")
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+### About
+
+This report is intended to act as a first-pass exploratory analysis of the variants in your dataset. Looking for points that are e.g. extreme outliers in the PCA plot and the depth/missingness plot are a good way to identify potentially problematic (or interesting!) samples. Several basic analysis are included, many of which are colored by the result of a k-means clustering on the first two principal components. A map is possible to generate if you place a tab-separated file with sample ID, longitude, and latitude (decimal degrees) with the extension `.coords` in the directory the contains all of the QC output. By default in this pipeline, these are in the subdirectory `06_QC`. 
+
+Row 
+-----------------------------------------------------------------------
+
+```{r}
+#Column {.sidebar}
+#-----------------------------------------------------------------------
+#shiny sider bar
+#sliderInput('clusters', 'Cluster count', 3,
+#              min = 1, max = 6)
+
+input <- list()
+input$clusters <- 3
+
+```
+
+### Genomic PCA
+
+```{r, fig.width = 5, fig.height = 5}
+# PCA plot --------------------------------------------------------------
+pca.path <- paste0(prefix, ".eigenvec")
+#this makes it reasonably robust to running with plink 1.9 or plink 2.0
+tmp.head <- sub("#", "", readLines(pca.path))
+df.pca <- read.table(text = tmp.head, header = TRUE)
+df.val <- read.table(gsub("vec","val", pca.path), header = FALSE)
+df.val$prop <- (df.val$V1 / (sum(df.val$V1))) * 100
+
+#add depth
+depth.path <- paste0(prefix, ".idepth")
+df.depth <- read.table(depth.path, header = T)
+df.depth <- df.depth %>%  mutate_if(is.numeric, round, digits = 2)
+
+df.pca <- left_join(df.pca, df.depth, by = c("IID" = "INDV"))
+
+k <- kmeans(df.pca[,c("PC1","PC2")], input$clusters, nstart = 25, iter.max = 100)
+df.pca$cluster <- paste("cluster",k$cluster, sep = "_")
+
+
+##PCA plot
+(ggplot(data = df.pca, aes(x = PC1, y = PC2, text = IID, fill = cluster), color = "grey90") + 
+  geom_point(alpha = 0.9, shape = 21, size = 3) + 
+  theme_bw() +
+  theme(text = element_text(size = 14),
+        legend.position = "none") +
+  xlab(paste0("PC1", ": ", round(df.val[1,2],1),"% variance")) +
+  ylab(paste0("PC2", ": ", round(df.val[2,2],1),"% variance")) + 
+  scale_fill_manual(values = set.colors)) %>% 
+  ggplotly(tooltip=c("text","x","y")) 
+
+```
+
+### SNP Depth
+
+```{r, fig.width = 5, fig.height = 5}
+# depth plot --------------------------------------------------------------
+#depth is read in the PCA chunk
+imiss.path <- paste0(prefix, ".imiss")
+df.imiss <- read.table(imiss.path, header =T)
+
+df.depth.miss <- inner_join(df.depth, df.imiss, by = "INDV")
+df.depth.miss <- df.depth.miss %>% 
+ mutate_if(is.numeric, round, digits = 2)
+
+#replace df.pca with clusters() for shiny
+#r.missing <- reactive(
+  df.depth.miss <- left_join(df.depth.miss, df.pca[,c("IID","cluster")], by = c("INDV" = "IID"))
+#)
+
+#replace df.depth.miis with r.missing for shiny
+#renderPlotly(
+  #need to wrap ggplot in () to pipe to plotly
+  (ggplot(data = df.depth.miss, aes(text = INDV)) +
+    geom_point(aes(x = MEAN_DEPTH, y = F_MISS, fill = cluster), 
+               size = 3, color = "black") +
+    theme_bw() +
+    theme(legend.position = "top") + 
+    scale_fill_manual(values = set.colors)+ 
+    labs(x = "SNP Depth", y = "Missingness")) %>% 
+    ggplotly(tooltip=c("text","x","y"))
+#)
+
+```
+
+Row 
+-----------------------------------------------------------------------
+
+### Tree 
+
+```{r, fig.height=12, fig.width=10}
+
+dist.id <- read.table(paste0(prefix, ".dist.id"))["V2"]
+dist.id <- left_join(dist.id, df.pca[,c("IID","cluster")], by = c("V2" = "IID"))
+
+df.dist <- read.table(paste0(prefix, ".dist"))
+
+mat.dist <- as.dist(df.dist)
+
+nj.dist <- ape::nj(mat.dist)
+nj.dist$tip.label <- dist.id$V2
+
+mycol <- set.colors[factor(dist.id$cluster)]
+
+plot(nj.dist, tip.color = mycol)
+
+#p <- ggtree(nj.dist, layout = "fan")
+#p %<+% dist.id + geom_tiplab(pch = 16, aes(col = cluster)) +
+#  theme(legend.position = "none") +
+#  scale_color_manual(values = set.colors)
+
+```
+
+Row
+-----------------------------------------------------------------------
+
+### Relatedness matrix
+
+```{r,  fig.height=10, fig.width=6}
+
+df.rel <- read.table(paste0(prefix, ".king"))
+colnames(df.rel) <- dist.id$V2
+rownames(df.rel) <- dist.id$V2
+
+mat.rel <- as.matrix(df.rel)
+
+#check for -Inf in the matrix
+l.inf <- grep("-Inf", mat.rel, value = T)
+
+#clustering will fail if there are -Inf
+if(length(l.inf)==0){
+
+  # Run clustering
+  rel.dendro <- as.dendrogram(hclust(d = dist(x = mat.rel)))
+  sample.order <- order.dendrogram(rel.dendro)
+  #we could also plot the dendrogram, but it is potentially confusing
+  #with the already plotted NJ tree
+  
+  #pivot does not seem to work with matrices, so reverting to melt from reshape2
+  df.rel.long <- melt(as.matrix(df.rel))
+  names(df.rel.long) <- c("Sample1", "Sample2", "relatedness")
+  
+  df.rel.long$Sample2 <- factor(x = df.rel.long$Sample2,
+                                 levels = dist.id$V2[sample.order], 
+                                 ordered = TRUE)
+  
+  pl.1 <- (ggplot(data = df.rel.long, aes(x=Sample1, y=Sample2, fill=relatedness)) + 
+    geom_tile() +
+    theme(
+      axis.text.x = element_text(angle = 90),
+      axis.title = element_blank(),
+      legend.position = "top"
+    ) +
+     scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                          midpoint = mean(df.rel.long$relatedness),  
+                          name="relatedness")) %>% 
+    ggplotly(tooltip=c("relatedness","x","y"))
+  
+  pl.1
+
+}else{
+  print("too little data (SNPs or Individuals) to cluster relatedness matrix")
+}
+
+```
+
+
+Row
+-----------------------------------------------------------------------
+
+### Admixture
+
+Important to note that the colors in the admixture plot are not neccessarily the same groupings as those in the other plots, as K was set independently of the k-means clustering on the PCA. 
+
+
+```{r, width = 10, height = 5}
+  # admixture ---------------------------------------------------------------
+
+k2 <- paste0(prefix, ".2.Q")
+k3 <- paste0(prefix, ".3.Q")
+samps <- paste0(prefix, ".fam")
+
+x <- read.table(k2, header = F)
+
+struct_files <- c(k2,k3)
+cat_snmf <- do.call("rbind",lapply(struct_files,
+                               FUN=function(files){
+                                 x <- read.table(files, header = F)
+                                 names(x) <- gsub("V", "pop", names(x)) #rename ancestral pops
+                                 x.samps <- read.table(samps) %>% select(V2) #get sample names from .fam file
+                                 x$sampleID <- x.samps$V2 #add sample name to df
+                                 x$k <- gsub(".Q","",substr(files, nchar(files)-3+1, nchar(files)))
+                                 x.long <- x %>% #pivot longer 
+                                   pivot_longer(names_to = "popGroup", values_to = "prob", cols = -c(sampleID, k))
+                                 x.long
+                               }))
+
+p.k2 <- cat_snmf %>% 
+  filter(k == 2 | k == 3) %>% 
+  ggplot(aes(x = factor(sampleID), y = prob, fill = factor(popGroup), text = sampleID)) +
+  geom_col(aes(fill = factor(popGroup)), size = 0.1) +
+  facet_grid(rows = vars(k), switch = "x", scales = "free", space = "free") +
+  theme_minimal() +
+  labs(x = NULL, y = "Ancestry") +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_x_discrete(expand = expansion(add = 1)) +
+  theme(
+    panel.spacing.x = unit(0.0, "lines"),
+    axis.text.x = element_text(angle = 90, size = 6),
+    panel.grid = element_blank(),
+    strip.text.x = element_text(angle = 90, size = 6),
+    legend.position = "none"
+  ) +
+  scale_fill_manual(name = "grp",values = set.colors, guide = F) +xlab(NULL)  + theme(legend.position = "none")
+
+#make admix interactive
+pl.admix <- ggplotly(p.k2, tooltip=c("text", "y"))
+pl.admix
+```
+
+Row {data-width=1200}
+-----------------------------------------------------------------------
+
+### Map
+
+```{r, fig.width = 10, height = 5}
+if(file.exists(paste0(prefix, ".coords.txt"))){
+  df.coords <- read.table(paste0(prefix, ".coords.txt"))
+  names(df.coords) <- c("sample.ID","long","lat")
+  
+  df.coords <- left_join(df.pca, df.coords, by = c("IID" = "sample.ID"))
+    
+  df.coords$color <- set.colors[factor(dist.id$cluster)]
+  
+  mycol <- set.colors[factor(df.coords$cluster)]
+ plot_geo(df.coords, lat = ~lat, lon = ~long) %>% 
+   add_markers(
+      text = ~paste(IID, cluster, PC1, PC2, sep = "<br />"),
+      color = ~cluster, symbol = I("circle"), size = I(30), hoverinfo = "text", colors = set.colors[1:input$clusters]
+    ) %>% 
+   colorbar(title = "cluster") %>% 
+   layout(legend = list(orientation = 'h'))
+  
+}else{
+  print("a map will appear here if you includes a .coords file ")
+}
+```
+

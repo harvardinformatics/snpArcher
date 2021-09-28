@@ -75,3 +75,6 @@ vcftools:
 # bedtools program
 bedtools:
     mem: 30000
+# plink
+plink:
+    threads: 5
