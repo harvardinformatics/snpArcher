@@ -1,0 +1,22 @@
+
+name: Test QC
+
+on: push
+  paths:
+    - "workflow/rules/qc.smk"
+
+jobs:
+
+  Testing:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Checkout submodules
+      uses: textbook/git-checkout-submodule-action@2.0.0
+
+    - name: Test workflow (Fastq > VCF QC)
+      uses: snakemake/snakemake-github-action@v1.22.0
+      with:
+        directory: .test
+        snakefile: workflow/Snakefile
+        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
