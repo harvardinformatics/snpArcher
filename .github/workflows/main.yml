@@ -1,8 +1,9 @@
 name: Tests
 
-on: push
-  paths-ignore:
-    - "workflow/rules/qc.smk"
+on: 
+  push:
+    paths-ignore:
+      - "workflow/rules/qc.smk"
 
 jobs:
 
