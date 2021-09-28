@@ -1,6 +1,8 @@
 name: Tests
 
 on: push
+  paths-ignore:
+    - "workflow/rules/qc.smk"
 
 jobs:
 
@@ -17,12 +19,5 @@ jobs:
         directory: .test
         snakefile: workflow/Snakefile
         args: "--configfile .test/config_local_fastqs/config.yaml --until snp_filters_qc --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
-    
-    - name: Test workflow (Fastq > VCF QC)
-      uses: snakemake/snakemake-github-action@v1.22.0
-      with:
-        directory: .test
-        snakefile: workflow/Snakefile
-        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
         
 
