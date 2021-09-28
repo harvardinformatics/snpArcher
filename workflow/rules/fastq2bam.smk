@@ -1,7 +1,5 @@
 localrules: collect_sumstats, download_reference
-
 ruleorder: index_ref > download_reference
-    
 ### RULES ###
 
 rule get_fastq_pe:
@@ -71,8 +69,7 @@ rule index_ref:
         """
 rule fastp:
     input:
-        r1 = config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz",
-        r2 = config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz"
+        unpack(get_reads)
     output: 
         r1 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz"),
         r2 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz"),
