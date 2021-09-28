@@ -1,9 +1,10 @@
 
 name: Test QC
 
-on: push
-  paths:
-    - "workflow/rules/qc.smk"
+on: 
+  push:
+    paths:
+      - "workflow/rules/qc.smk"
 
 jobs:
 
