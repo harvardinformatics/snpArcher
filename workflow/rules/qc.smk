@@ -32,8 +32,6 @@ rule subsample_snps:
     input:
         vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
     output:
-        filt_snps = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_filt_snps.txt",
-        tmp_rand_snps = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_tmp_rand_snps.txt",
         filtered = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.filtered.vcf.gz",
         filtered_idx = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.filtered.vcf.gz.csi",
         pruned = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.pruned.vcf.gz"
@@ -43,11 +41,20 @@ rule subsample_snps:
         mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
     shell:
         """
+        #first remove filtered sites and retain only biallelic variants
         bcftools view -v snps -m2 -M2 -f .,PASS -e 'AF==1 | AF==0 | ALT="*" | TYPE~"indel" | ref="N"' {input.vcf} -O z -o {output.filtered}
         bcftools index {output.filtered}
-        bcftools query -f '%CHROM\t%POS\n' {output.filtered} > {output.filt_snps}
-        sort -R {output.filt_snps}| head -50000 > {output.tmp_rand_snps}
-        bcftools view -R {output.tmp_rand_snps} {output.filtered} -O z -o {output.pruned}
+        #figure out how many SNPs are left, then identify how big of SNP window size to get down to between 100 and 150k snps        
+        ALLSITES=`bcftools query -f '%CHROM\t%POS\n' {output.filtered} | wc -l`
+        SITES=`echo $(( ${{ALLSITES}} / 100000 ))`
+
+        #if the top VCF has < 150k SNPs, then just take all the SNPs
+        if [[ $SITES -gt 1 ]]
+        then
+            bcftools +prune -w $SITES -n 1 -N rand -O z -o {output.pruned} {output.filtered}
+        else
+            bcftools view -O z -o {output.pruned} {output.filtered}
+        fi
         """
 
 rule plink:
@@ -92,15 +99,8 @@ rule admixture:
         "../envs/qc.yml"
     shell:
         """
-        cut -f 1 {input.bim} > {params.tmpbim}_contig_names.tmp #get names of contigs
-        sed 's/[^0-9]//g' {params.tmpbim}_contig_names.tmp > {params.tmpbim}_new_names.tmp #remove any letters from their names
-        cp {input.bim} {params.tmpbim}.bim.bak #make a backup of the original bim (probably not neccessary)
-        cut -f 2,3,4,5,6 {input.bim} > {params.tmpbim}_data.tmp # grab other columns from the bim file
-        paste {params.tmpbim}_new_names.tmp {params.tmpbim}_data.tmp > {input.bim} # add updated names (no charecters) to the new bim, give it same name as original bim
-
-        rm {params.tmpbim}_contig_names.tmp
-        rm {params.tmpbim}_new_names.tmp
-        rm {params.tmpbim}_data.tmp
+        mv {input.bim} {input.bim}.orig
+        paste <(cut -f 1 {input.bim}.orig | sed 's/[^0-9]//g') <(cut -f 2,3,4,5,6 {input.bim}.orig) >  {input.bim}
 
         admixture {input.bed} 2
         admixture {input.bed} 3
