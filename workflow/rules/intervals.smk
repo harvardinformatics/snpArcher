@@ -14,7 +14,7 @@ rule picard_intervals:
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * res_config['process_ref']['mem']   
     shell:
-        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} > {log}\n" 
+        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} &> {log}\n" 
 
 checkpoint create_intervals:
     input:
