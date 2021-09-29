@@ -1,9 +1,7 @@
 #!/usr/bin/env Rscript
 
-
-
 render_qcplots <- function(prefix){
-    #specify the snakemake pipelien working d to knit with
+    #specify the snakemake pipeline working d to knit with
     workd <- getwd()
     output.path <- gsub(".idepth", "_qc.html", normalizePath(paste0(prefix, ".idepth"))) #generate full path of output - brute force because I had issues with relative paths
 
