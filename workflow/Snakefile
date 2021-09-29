@@ -6,7 +6,7 @@ configfile: "config/config.yaml"
 res_config = yaml.load(open("config/resources.yaml"))
 
 helperFun.make_temp_dir()
-samples = pd.read_table(config["samples"], sep=",").replace(' ', '_', regex=True)
+samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
 org_ref = set(zip(samples.Organism.tolist(), samples.refGenome.tolist()))  # To get only unique combinations of organism and ref accession.
 ORGANISM, REFGENOME = map(list, zip(*org_ref))  # Split above back to indiviudal lists for expand. There probably is a better way?
 
