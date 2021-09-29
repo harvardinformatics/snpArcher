@@ -16,7 +16,7 @@ def get_reads(wildcards):
             raise WorkflowError(f"fq1 and fq2 specified for {wildcards.sample}, but files were not found.")
     else:
         r1 = config["fastqDir"] + f"{wildcards.Organism}/{wildcards.sample}/{wildcards.run}_1.fastq.gz",
-        r2 = config["fastqDir"] + f"{wildcard.sOrganism}/{wildcards.sample}/{wildcards.run}_2.fastq.gz"
+        r2 = config["fastqDir"] + f"{wildcards.Organism}/{wildcards.sample}/{wildcards.run}_2.fastq.gz"
         return {"r1": r1, "r2": r2}
 def get_read_group(wildcards):
     """Denote sample name and library_id in read group."""
