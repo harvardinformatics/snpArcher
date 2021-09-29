@@ -99,15 +99,8 @@ rule admixture:
         "../envs/qc.yml"
     shell:
         """
-        cut -f 1 {input.bim} > {params.tmpbim}_contig_names.tmp #get names of contigs
-        sed 's/[^0-9]//g' {params.tmpbim}_contig_names.tmp > {params.tmpbim}_new_names.tmp #remove any letters from their names
-        cp {input.bim} {params.tmpbim}.bim.bak #make a backup of the original bim (probably not neccessary)
-        cut -f 2,3,4,5,6 {input.bim} > {params.tmpbim}_data.tmp # grab other columns from the bim file
-        paste {params.tmpbim}_new_names.tmp {params.tmpbim}_data.tmp > {input.bim} # add updated names (no charecters) to the new bim, give it same name as original bim
-
-        rm {params.tmpbim}_contig_names.tmp
-        rm {params.tmpbim}_new_names.tmp
-        rm {params.tmpbim}_data.tmp
+        mv {input.bim} {input.bim}.orig
+        paste <(cut -f 1 {input.bim}.orig | sed 's/[^0-9]//g) <(cut -f 2,3,4,5,6 {input.bim}.orig) >  {input.bim}
 
         admixture {input.bed} 2
         admixture {input.bed} 3
