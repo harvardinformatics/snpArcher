@@ -14,7 +14,7 @@ rule picard_intervals:
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * res_config['process_ref']['mem']   
     shell:
-        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} > {log}\n" 
+        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} &> {log}\n" 
 
 checkpoint create_intervals:
     input:
@@ -26,10 +26,13 @@ checkpoint create_intervals:
         maxIntervalLen = int(config['maxIntervalLen']),
         maxBpPerList = int(config['maxBpPerList']),
         maxIntervalsPerList = int(config['maxIntervalsPerList']),
-        minNmer = int(config['minNmer'])
+        minNmer = int(config['minNmer']),
     output: 
         config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem'] 
     run:
-        LISTS = helperFun.createListsGetIndices(params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
+        if config['split_by_n']:
+            LISTS = helperFun.createListsGetIndices(params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
+        else:
+            LISTS = make_intervals(config["output"], config["intDir"], wildcards, input.dictf)
