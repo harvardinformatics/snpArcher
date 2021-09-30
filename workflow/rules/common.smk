@@ -75,7 +75,7 @@ def get_input_for_mapfile(wildcards):
     
     return {'gvcfs': gvcfs, 'gvcfs_idx': gvcfs_idx, 'doneFiles': doneFiles}
 
-def make_intervals(outputDir, intDir, wildcards, dict_file):
+def make_intervals(outputDir, intDir, wildcards, dict_file, max_intervals):
     """Creates interval list files for parallelizing haplotypeCaller and friends. Writes one contig/chromosome per list file."""
     
     with open(dict_file, "r") as f:  # Read dict file to get contig info
@@ -92,9 +92,33 @@ def make_intervals(outputDir, intDir, wildcards, dict_file):
             for contig, ln in contigs.items():
                 print(f"{contig}\t1\t{ln}", file=fh)
         
-        for i, (contig, ln) in enumerate(contigs.items()):
-            interval_list_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{i}.list")
-            with open(interval_list_file, "w") as f:
-                print(f"{contig}:1-{ln}", file=f)
-            
-            
+        if len(contigs.values()) <= max_intervals:
+            for i, (contig, ln) in enumerate(contigs.items()):
+                interval_list_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{i}.list")
+                with open(interval_list_file, "w") as f:
+                    print(f"{contig}:1-{ln}", file=f)
+                
+        else:
+            ln_sum = sum(contigs.values())
+            bp_per_interval = ln_sum // int(max_intervals)
+            int_file = 0
+            running_bp_total = 0
+            out = deque()
+
+            for chrom, ln in contigs.items():
+                out.append(f"{chrom}:1-{ln}")
+                running_bp_total += ln
+                if running_bp_total >= bp_per_interval:
+                    interval_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{int_file}.list")
+                    with open(interval_file, "a+") as f:
+                        for _ in range(len(out)):
+                            line = out.popleft()
+                            print(line, file=f)
+                    int_file += 1
+                    running_bp_total = 0
+            if out:
+                interval_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{int_file}.list")
+                with open(interval_file, "a+") as f:
+                    for _ in range(len(out)):
+                        line = out.popleft()
+                        print(line, file=f)

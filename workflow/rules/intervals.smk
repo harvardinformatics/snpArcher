@@ -27,6 +27,7 @@ checkpoint create_intervals:
         maxBpPerList = int(config['maxBpPerList']),
         maxIntervalsPerList = int(config['maxIntervalsPerList']),
         minNmer = int(config['minNmer']),
+        max_intervals = config['maxNumIntervals']
     output: 
         config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
     resources: 
@@ -35,4 +36,4 @@ checkpoint create_intervals:
         if config['split_by_n']:
             LISTS = helperFun.createListsGetIndices(params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
         else:
-            LISTS = make_intervals(config["output"], config["intDir"], wildcards, input.dictf)
+            LISTS = make_intervals(config["output"], config["intDir"], wildcards, input.dictf, params.max_intervals)
