@@ -9,6 +9,7 @@ editor_options:
   chunk_output_type: console
 params:
   prefix: files.idepth
+  nClusters: 3
 
 ---
 
@@ -66,7 +67,7 @@ Row
 #              min = 1, max = 6)
 
 input <- list()
-input$clusters <- 3
+input$clusters <- params$nClusters
 
 ```
 
