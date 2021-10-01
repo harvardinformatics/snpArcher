@@ -34,6 +34,9 @@ minD: 1
 #minP: 2
 #minD: 4
 
+## QC options ##
+nClusters: 3
+
 ##############################
 # Variables you DO NOT need to change
 # if you do, ensure all path/directory names are followed by a "/"
