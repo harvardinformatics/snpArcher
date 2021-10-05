@@ -54,7 +54,7 @@ Column {.sidebar}
 -----------------------------------------------------------------------
 ### About
 
-This report is intended to act as a first-pass exploratory analysis of the variants in your dataset. Looking for points that are e.g. extreme outliers in the PCA plot and the depth/missingness plot are a good way to identify potentially problematic (or interesting!) samples. Several basic analysis are included, many of which are colored by the result of a k-means clustering on the first two principal components. A map is possible to generate if you place a tab-separated file with sample ID, longitude, and latitude (decimal degrees) with the extension `.coords` in the directory the contains all of the QC output. By default in this pipeline, these are in the subdirectory `06_QC`. 
+This report is intended to act as a first-pass exploratory analysis of the variants in your dataset. Looking for points that are e.g. extreme outliers in the PCA plot and the depth/missingness plot are a good way to identify potentially problematic (or interesting!) samples. Several basic analysis are included, many of which are colored by the result of a k-means clustering on the first two principal components. A map is possible to generate if you place a tab-separated file with sample ID, longitude, and latitude (decimal degrees) with the extension `.coords` in the directory the contains all of the QC output. By default in this pipeline, these are in the subdirectory `06_QC`. By default, three populations are assumed for k-means clustering, which may be a sensible starting point for visual inspection of your results, but this value can be changed in the config file. 
 
 Row 
 -----------------------------------------------------------------------
