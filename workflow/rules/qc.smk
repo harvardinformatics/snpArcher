@@ -1,3 +1,15 @@
+rule check_fai:
+    """
+    checks fai file for numeric first column, then do not run QC pipeline if they are all numeric
+    """
+    input:
+        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
+        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai"
+    output:
+        faiResult = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_fai_tmp.txt"
+    run:
+        check_contig_names(input.fai, output.faiResult)
+        
 rule snp_filters_qc:
     input:
         vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
@@ -13,7 +25,6 @@ rule snp_filters_qc:
 rule vcftools_individuals:
     input:
         vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
-        
     output:
         depth = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.idepth",
         miss = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.imiss"
@@ -62,8 +73,8 @@ rule plink:
     Call plink PCA.
     """
     input:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.pruned.vcf.gz"
-        
+        vcf = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.pruned.vcf.gz",
+        faiResult = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_fai_tmp.txt"        
     params:
         prefix=config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}",
         threads = res_config['plink']['threads']
@@ -118,6 +129,7 @@ rule qc_plots:
         depth = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.idepth",
         admix = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.3.Q",
         snpqc = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_snpqc.txt",
+        faiResult = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_fai_tmp.txt" 
     params:
         prefix = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}",
         nClusters = config['nClusters']
