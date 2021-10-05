@@ -1,6 +1,7 @@
 import glob
 import re
 import os
+import pandas as pd
 from collections import defaultdict, deque
 from snakemake.exceptions import WorkflowError
 ### INPUT FUNCTIONS ###
@@ -18,12 +19,23 @@ def get_reads(wildcards):
         r1 = config["fastqDir"] + f"{wildcards.Organism}/{wildcards.sample}/{wildcards.run}_1.fastq.gz",
         r2 = config["fastqDir"] + f"{wildcards.Organism}/{wildcards.sample}/{wildcards.run}_2.fastq.gz"
         return {"r1": r1, "r2": r2}
+
 def get_read_group(wildcards):
     """Denote sample name and library_id in read group."""
     return r"-R '@RG\tID:{lib}\tSM:{sample}\tPL:ILLUMINA'".format(
         sample=wildcards.sample,
         lib=samples.loc[samples['BioSample'] == wildcards.sample]["LibraryName"].tolist()[0]
     )
+
+def check_contig_names(fai, touch_file):
+
+    dffai = pd.read_table(fai, sep='\t', header = None)
+    fai_result=pd.to_numeric(dffai[0], errors='coerce').notnull().all()
+    if fai_result==True:
+        print("QC plots not generated because contig names are numeric and plink does not accept numeric contig names")
+    elif fai_result==False:
+        with open(touch_file, "w") as writer:
+            writer.write("contigs are strings")
 
 def get_sumstats(wildcards):
     # Gets the correct sample given the organism and reference genome
