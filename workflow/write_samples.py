@@ -42,7 +42,7 @@ def copy_reference(ref: Path) -> str:
 
 def write_sample_sheet(sample_dict: dict, ref_name: str, organism: str, ) -> None:
     """Writes the sample sheet"""
-    with open(Path("config", "samples.csv"), "w+") as out:
+    with open(Path("../config", "samples.csv"), "w") as out:
         out.write("BioSample,LibraryName,refGenome,Run,Organism,BioProject,fq1,fq2\n")
         for i, (k, v) in enumerate(sample_dict.items()):
             out.write(f"{k},lib_{k},{ref_name},{i},{organism},NaN,{v[0]},{v[1]}\n")
