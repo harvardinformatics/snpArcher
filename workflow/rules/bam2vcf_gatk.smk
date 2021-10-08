@@ -20,6 +20,10 @@ rule bam2gvcf:
         # subtract that memory here
         mem_mb = lambda wildcards, attempt: attempt * res_config['bam2gvcf']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (res_config['bam2gvcf']['mem'] - 3000)  # this is the maximum amount given to java
+    log:
+        "logs/{Organism}/bam2gvcf/{refGenome}_{sample}_{list}.txt"
+    benchmark:
+        "benchmarks/{Organism}/bam2gvcf/{refGenome}_{sample}_{list}.txt"
     params:
         minPrun = config['minP'],
         minDang = config['minD'],
@@ -33,7 +37,7 @@ rule bam2gvcf:
         "-I {input.bam} "
         "-O {output.gvcf} "
         "-L {params.l} "
-        "--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang}"
+        "--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang} &> {log}"
 
 rule mkDBmapfile:
     """
@@ -67,6 +71,10 @@ rule gvcf2DB:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['gvcf2DB']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (res_config['gvcf2DB']['mem'] - 3000)  # this is the maximum amount given to java
+    log:
+        "logs/{Organism}/gvcf2DB/{refGenome}_{list}.txt"
+    benchmark:
+        "benchmarks/{Organism}/gvcf2DB/{refGenome}_{list}.txt"
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -78,7 +86,7 @@ rule gvcf2DB:
         "--genomicsdb-workspace-path {output.DB} "
         "-L {input.l} "
         "--tmp-dir {params.tmp_dir} "
-        "--sample-name-map {input.dbMapFile} \n"
+        "--sample-name-map {input.dbMapFile} &> {log}"
 
 rule DB2vcf:
     """
@@ -96,6 +104,10 @@ rule DB2vcf:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['DB2vcf']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (res_config['DB2vcf']['mem'] - 3000)  # this is the maximum amount given to java
+    log:
+        "logs/{Organism}/db2vcf/{refGenome}_{list}.txt"
+    benchmark:
+        "benchmarks/{Organism}/db2vcf/{refGenome}_{list}.txt"
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -104,7 +116,7 @@ rule DB2vcf:
         "-R {input.ref} "
         "-V gendb://{input.DB} "
         "-O {output} "
-        "--tmp-dir {params.tmp_dir}"
+        "--tmp-dir {params.tmp_dir} &> {log}"
 
 rule filterVcfs:
     """
@@ -119,6 +131,10 @@ rule filterVcfs:
         "../envs/bam2vcf.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['filterVcfs']['mem']   # this is the overall memory requested
+    log:
+        "logs/{Organism}/filterVcfs/{refGenome}_{list}.txt"
+    benchmark:
+        "benchmarks/{Organism}/filterVcfs/{refGenome}_{list}.txt"
     shell:
         "gatk VariantFiltration "
         "-R {input.ref} "
@@ -132,7 +148,7 @@ rule filterVcfs:
         "--filter-expression \"vc.isSNP() && ((vc.hasAttribute('MQ') && MQ < 40.0) || (vc.hasAttribute('MQRankSum') && MQRankSum < -12.5))\" "
         "--filter-name \"QUAL_filter\" "
         "--filter-expression \"QUAL < 30.0\" "
-        "--invalidate-previous-filters true\n"
+        "--invalidate-previous-filters true &> {log}"
 
 rule sort_gatherVcfs:
     input: 
@@ -145,32 +161,11 @@ rule sort_gatherVcfs:
         "../envs/bam2vcf.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['gatherVcfs']['mem']
+    log:
+        "logs/{Organism}/sortVcf/{refGenome}.txt"
+    benchmark:
+        "benchmarks/{Organism}/sortVcf/{refGenome}.txt"
     shell:
         "gatk SortVcf "
         "{params} "
-        "-O {output.vcfFinal}"
-rule vcftools:
-    input:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
-        int = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
-    output:
-        missing = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_missing_data_per_ind.txt",
-    conda:
-        "../envs/bam2vcf.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
-    shell:
-        "vcftools --gzvcf {input.vcf} --remove-filtered-all --minDP 1 --stdout --missing-indv > {output.missing}"
-
-rule bedtools:
-    input:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
-        int = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
-    output:
-        SNPsPerInt = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_SNP_per_interval.txt"
-    conda:
-        "../envs/bam2vcf.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']    # this is the overall memory requested
-    shell:
-        "bedtools coverage -a {input.int} -b {input.vcf} -counts -sorted > {output.SNPsPerInt}"
+        "-O {output.vcfFinal} &> {log}"

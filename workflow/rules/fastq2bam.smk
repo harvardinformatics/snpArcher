@@ -1,7 +1,5 @@
 localrules: collect_sumstats, download_reference
-
 ruleorder: index_ref > download_reference
-    
 ### RULES ###
 
 rule get_fastq_pe:
@@ -14,9 +12,9 @@ rule get_fastq_pe:
     conda: 
         "../envs/fastq2bam.yml"
     threads: 
-        int(res_config['get_fastq_pe']['threads'])
+        res_config['get_fastq_pe']['threads']
     log:
-        "logs/{Organism}/fasterq_dump/{sample}/{run}.log"
+        "logs/{Organism}/fasterq_dump/{sample}/{run}.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']
     shell:
@@ -45,7 +43,7 @@ rule download_reference:
     conda:
         "../envs/fastq2bam.yml"
     shell:
-        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} > {log}"
+        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} &> {log}"
         "&& 7z x {params.dataset} -aoa -o{output.outdir}"
         "&& cat {output.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
 
@@ -66,13 +64,12 @@ rule index_ref:
         """
         bwa index {input.ref} 2> {log}
         samtools faidx {input.ref} --output {output.fai}
-        picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dictf}
+        picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dictf} &>> {log}
         """
 
 rule fastp:
     input:
-        r1 = config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz",
-        r2 = config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz"
+        unpack(get_reads)
     output: 
         r1 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz"),
         r2 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz"),
@@ -82,13 +79,15 @@ rule fastp:
     threads: 
         res_config['fastp']['threads']
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['fastp']['mem'] 
+        mem_mb = lambda wildcards, attempt: attempt * res_config['fastp']['mem']
+    log:
+        "logs/{Organism}/fastp/{refGenome}_{sample}_{run}.txt"
     shell:
         "fastp --in1 {input.r1} --in2 {input.r2} "
         "--out1 {output.r1} --out2 {output.r2} "
         "--thread {threads} "
         "--detect_adapter_for_pe "
-        "2> {output.summ}"
+        "2> {output.summ} > {log}"
 
 rule bwa_map:
     input:
@@ -105,9 +104,13 @@ rule bwa_map:
     threads: 
         res_config['bwa_map']['threads']
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['bwa_map']['mem'] 
+        mem_mb = lambda wildcards, attempt: attempt * res_config['bwa_map']['mem']
+    log:
+        "logs/{Organism}/bwa/{refGenome}_{sample}_{run}.txt"
+    benchmark:
+        "benchmarks/{Organism}/bwa/{refGenome}_{sample}_{run}.txt"
     shell:
-        "bwa mem -M -t {threads} {params} {input.ref} {input.r1} {input.r2} | samtools sort -o {output.bam} -"
+        "bwa mem -M -t {threads} {params} {input.ref} {input.r1} {input.r2} 2> {log} | samtools sort -o {output.bam} -"
 
 rule merge_bams:
     input: 
@@ -133,10 +136,14 @@ rule dedup:
     conda:
         "../envs/fastq2bam.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['dedup']['mem'] 
+        mem_mb = lambda wildcards, attempt: attempt * res_config['dedup']['mem']
+    log:
+        "logs/{Organism}/dedup/{refGenome}_{sample}.txt"
+    benchmark:
+        "benchmarks/{Organism}/dedup/{refGenome}_{sample}.txt"
     shell:
-        "picard MarkDuplicates -Xmx{resources.mem_mb}M I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All\n"
-        "picard BuildBamIndex I={output.dedupBam} "
+        "picard MarkDuplicates -Xmx{resources.mem_mb}M I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All &> {log}\n"
+        "picard BuildBamIndex I={output.dedupBam} &> {log}"
 
 rule bam_sumstats:
     input: 
