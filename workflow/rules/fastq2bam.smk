@@ -47,7 +47,6 @@ rule download_reference:
         "&& 7z x {params.dataset} -aoa -o{output.outdir}"
         "&& cat {output.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
 
-
 rule index_ref:
     input:
         ref = config["refGenomeDir"] + "{refGenome}.fna"
@@ -67,6 +66,7 @@ rule index_ref:
         samtools faidx {input.ref} --output {output.fai}
         picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dictf} &>> {log}
         """
+
 rule fastp:
     input:
         unpack(get_reads)
@@ -142,7 +142,7 @@ rule dedup:
     benchmark:
         "benchmarks/{Organism}/dedup/{refGenome}_{sample}.txt"
     shell:
-        "picard MarkDuplicates I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All &> {log}\n"
+        "picard MarkDuplicates -Xmx{resources.mem_mb}M I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All &> {log}\n"
         "picard BuildBamIndex I={output.dedupBam} &> {log}"
 
 rule bam_sumstats:
