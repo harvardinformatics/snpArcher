@@ -1,14 +1,41 @@
 import glob
 import re
 import os
-
+import pandas as pd
+from collections import defaultdict, deque
+from snakemake.exceptions import WorkflowError
 ### INPUT FUNCTIONS ###
+def get_reads(wildcards):
+    """Returns local read files if present. Defaults to SRR if no local reads in sample sheet."""
+    row = samples.loc[samples['Run'] == wildcards.run]
+    if 'fq1' in samples.columns and 'fq2' in samples.columns:
+        if os.path.exists(row.fq1.item()) and os.path.exists(row.fq2.item()):
+            r1 = row.fq1.item()
+            r2 = row.fq2.item()
+            return {"r1": r1, "r2": r2}
+        else:
+            raise WorkflowError(f"fq1 and fq2 specified for {wildcards.sample}, but files were not found.")
+    else:
+        r1 = config["fastqDir"] + f"{wildcards.Organism}/{wildcards.sample}/{wildcards.run}_1.fastq.gz",
+        r2 = config["fastqDir"] + f"{wildcards.Organism}/{wildcards.sample}/{wildcards.run}_2.fastq.gz"
+        return {"r1": r1, "r2": r2}
+
 def get_read_group(wildcards):
     """Denote sample name and library_id in read group."""
     return r"-R '@RG\tID:{lib}\tSM:{sample}\tPL:ILLUMINA'".format(
         sample=wildcards.sample,
         lib=samples.loc[samples['BioSample'] == wildcards.sample]["LibraryName"].tolist()[0]
     )
+
+def check_contig_names(fai, touch_file):
+
+    dffai = pd.read_table(fai, sep='\t', header = None)
+    fai_result=pd.to_numeric(dffai[0], errors='coerce').notnull().all()
+    if fai_result==True:
+        print("QC plots not generated because contig names are numeric and plink does not accept numeric contig names")
+    elif fai_result==False:
+        with open(touch_file, "w") as writer:
+            writer.write("contigs are strings")
 
 def get_sumstats(wildcards):
     # Gets the correct sample given the organism and reference genome
@@ -57,5 +84,53 @@ def get_input_for_mapfile(wildcards):
     gvcfs = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}/" + "L{{list}}.raw.g.vcf.gz", sample=sample_names, **wildcards)
     gvcfs_idx = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}/" + "L{{list}}.raw.g.vcf.gz.tbi", sample=sample_names, **wildcards)
     doneFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}/" + "L{{list}}.done", sample=sample_names, **wildcards)
-    print({'gvcfs': gvcfs, 'gvcfs_idx': gvcfs_idx, 'doneFiles': doneFiles})
+    
     return {'gvcfs': gvcfs, 'gvcfs_idx': gvcfs_idx, 'doneFiles': doneFiles}
+
+def make_intervals(outputDir, intDir, wildcards, dict_file, max_intervals):
+    """Creates interval list files for parallelizing haplotypeCaller and friends. Writes one contig/chromosome per list file."""
+    
+    with open(dict_file, "r") as f:  # Read dict file to get contig info
+        contigs = defaultdict()
+        for line in f:
+            if line.startswith("@SQ"):
+                line = line.split("\t")
+                chrom = line[1].split("SN:")[1]
+                ln = int(line[2].split("LN:")[1])
+                contigs[chrom] = ln
+        
+        interval_file = os.path.join(outputDir,wildcards.Organism,wildcards.refGenome,intDir, f"{wildcards.refGenome}_intervals_fb.bed")
+        with open(interval_file, "w") as fh:
+            for contig, ln in contigs.items():
+                print(f"{contig}\t1\t{ln}", file=fh)
+        
+        if len(contigs.values()) <= max_intervals:
+            for i, (contig, ln) in enumerate(contigs.items()):
+                interval_list_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{i}.list")
+                with open(interval_list_file, "w") as f:
+                    print(f"{contig}:1-{ln}", file=f)
+                
+        else:
+            ln_sum = sum(contigs.values())
+            bp_per_interval = ln_sum // int(max_intervals)
+            int_file = 0
+            running_bp_total = 0
+            out = deque()
+
+            for chrom, ln in contigs.items():
+                out.append(f"{chrom}:1-{ln}")
+                running_bp_total += ln
+                if running_bp_total >= bp_per_interval:
+                    interval_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{int_file}.list")
+                    with open(interval_file, "a+") as f:
+                        for _ in range(len(out)):
+                            line = out.popleft()
+                            print(line, file=f)
+                    int_file += 1
+                    running_bp_total = 0
+            if out:
+                interval_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{int_file}.list")
+                with open(interval_file, "a+") as f:
+                    for _ in range(len(out)):
+                        line = out.popleft()
+                        print(line, file=f)
