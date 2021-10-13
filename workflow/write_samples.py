@@ -1,4 +1,3 @@
-import sys
 import gzip
 import shutil
 import argparse
@@ -26,15 +25,15 @@ def find_sample_fastqs(samples: list, fastq_dir: Path) -> dict:
 def copy_reference(ref: Path) -> str:
     exts = ['.fna', '.fa', '.fasta']
     for ext in exts:
-            if ext in ref.name:
-                ref_name = ref.name.split(ext)[0]
-    if Path('data', 'genome', ref_name + ".fna").exists():
+        if ext in ref.name:
+            ref_name = ref.name.split(ext)[0]
+    if Path('..', 'data', 'genome', ref_name + ".fna").exists():
         return ref_name
-    if not Path("data/genome").exists():
-        Path("data/genome").mkdir(parents=True)
+    if not Path("../data/genome").exists():
+        Path("../data/genome").mkdir(parents=True)
     if ref.suffix == ".gz":
         with gzip.open(ref, 'rb') as f_in:
-            with open(Path('data', 'genome', ref_name + ".fna"), 'wb') as f_out:
+            with open(Path('..', 'data', 'genome', ref_name + ".fna"), 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
     else:
         shutil.copyfile(ref, Path('data', 'genome', ref_name + ".fna"))
@@ -68,7 +67,9 @@ def main() -> None:
     sample_dict, cant_find = find_sample_fastqs(samples, fastq_dir)
     ref_name = copy_reference(ref)
     write_sample_sheet(sample_dict, ref_name, organism)
-    print("Couldnt' find fastqs for these files:")
-    for name in cant_find:
-        print(name)
+    if cant_find:
+        print("Couldnt' find fastqs for these files:")
+        for name in cant_find:
+            print(name)
+
 main()
