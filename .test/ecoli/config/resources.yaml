@@ -28,12 +28,12 @@ sort_bam:
     mem: 10000 
 # mark duplicates with picard's MarkDuplicates
 dedup: 
-    mem: 9000 
+    mem: 10000 
 # calculate BAM summaries with samtools and picard
 bam_sumstats: 
-    mem: 9000 
+    mem: 10000 
 merge_bams:
-    mem: 9000
+    mem: 10000
 
 ###
 # Intervals workflow

@@ -1,0 +1,23 @@
+{
+"apiVersion": "V1",
+"assemblies": [
+{
+  "files": [
+    {
+      "filePath": "assembly_data_report.jsonl",
+      "fileType": "DATA_REPORT"
+    }
+  ]
+},{
+  "accession": "GCA_003018455.1",
+  "files": [
+    {
+      "filePath": "GCA_003018455.1/GCA_003018455.1_ASM301845v1_genomic.fna",
+      "fileType": "GENOMIC_NUCLEOTIDE_FASTA"
+    },
+    {
+      "filePath": "GCA_003018455.1/sequence_report.jsonl",
+      "fileType": "SEQUENCE_REPORT"
+    }
+  ]
+}]}

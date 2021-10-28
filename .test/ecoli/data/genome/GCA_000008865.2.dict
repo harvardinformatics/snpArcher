@@ -1,0 +1,4 @@
+@HD	VN:1.6
+@SQ	SN:BA000007.3	LN:5498578	M5:21f8cf4ccb82d5f145d9b7e9c4032d19	UR:file:/Users/tim/Projects/popgen/shortRead_mapping_variantCalling/.test/ecoli/data/genome/GCA_000008865.2.fna
+@SQ	SN:AB011548.2	LN:3306	M5:d80a2a28f7f69570e02ebefb88a29e91	UR:file:/Users/tim/Projects/popgen/shortRead_mapping_variantCalling/.test/ecoli/data/genome/GCA_000008865.2.fna
+@SQ	SN:AB011549.2	LN:92721	M5:55bcb08e8581b309b456eadd0666eb82	UR:file:/Users/tim/Projects/popgen/shortRead_mapping_variantCalling/.test/ecoli/data/genome/GCA_000008865.2.fna
