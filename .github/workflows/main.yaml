@@ -17,8 +17,8 @@ jobs:
     - name: Test workflow (Local Fastq > VCF)
       uses: snakemake/snakemake-github-action@v1.22.0
       with:
-        directory: .test
+        directory: .test/ecoli/
         snakefile: workflow/Snakefile
-        args: "--configfile .test/config_local_fastqs/config.yaml --until snp_filters_qc --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        args: "--until snp_filters_qc --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
         
 
