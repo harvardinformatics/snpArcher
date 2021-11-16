@@ -64,7 +64,7 @@ rule index_ref:
         """
         bwa index {input.ref} 2> {log}
         samtools faidx {input.ref} --output {output.fai}
-        picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dictf} &>> {log}
+        picard CreateSequenceDictionary REFERENCE={input.ref} OUTPUT={output.dictf} >> {log} 2>&1
         """
 
 rule fastp:

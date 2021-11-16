@@ -3,7 +3,7 @@ import yaml
 import helperFun
 
 configfile: "config/config.yaml"
-res_config = yaml.load(open("config/resources.yaml"))
+res_config = yaml.safe_load(open("config/resources.yaml"))
 
 helperFun.make_temp_dir()
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
