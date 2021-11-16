@@ -2,7 +2,7 @@
 # Variables you need to change
 ##############################
 
-samples: "config/anenome_test.csv"            # name of the sample metadata CSV 
+samples: "config/anemone_test.csv"            # name of the sample metadata CSV 
 tmp_dir: "tmp/"   # directory path for a temp dir 
 split_by_n: False
 ##############################

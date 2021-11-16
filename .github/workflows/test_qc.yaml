@@ -18,6 +18,6 @@ jobs:
     - name: Test workflow (Fastq > VCF QC)
       uses: snakemake/snakemake-github-action@v1.22.0
       with:
-        directory: .test
+        directory: .test/anemone/
         snakefile: workflow/Snakefile
         args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
