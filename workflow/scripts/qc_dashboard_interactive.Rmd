@@ -10,7 +10,6 @@ editor_options:
 params:
   prefix: files.idepth
   nClusters: 3
-
 ---
 
 ```{r setup, include=FALSE}
@@ -21,7 +20,6 @@ suppressMessages(library(ape))
 suppressMessages(library(reshape2))
 
 prefix <- params$prefix
-#prefix <- "/Volumes/GoogleDrive/My\ Drive/SantaCruz/Projects/Variant_pipeline/data/anenome_qc/anemone_short_jaAntSola1.0.p_ctg"
 set.colors <- c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a')
 ```
 
@@ -39,7 +37,8 @@ valueBox(num.samples, icon = "fa-check-double")
 ### SNPs
 
 ```{r}
-nums.nps <- max(read.table(paste0(prefix, ".idepth"), header = T)$N_SITES)
+nums.nps <- nrow(read.table(paste0(prefix, ".bim"), header = T))
+
 valueBox(nums.nps, icon = "fa-dna")
 ```
 
@@ -89,6 +88,7 @@ df.depth <- df.depth %>%  mutate_if(is.numeric, round, digits = 2)
 
 df.pca <- left_join(df.pca, df.depth, by = c("IID" = "INDV"))
 
+set.seed(42)
 k <- kmeans(df.pca[,c("PC1","PC2")], input$clusters, nstart = 25, iter.max = 100)
 df.pca$cluster <- paste("cluster",k$cluster, sep = "_")
 
@@ -157,7 +157,7 @@ nj.dist$tip.label <- dist.id$V2
 
 mycol <- set.colors[factor(dist.id$cluster)]
 
-plot(nj.dist, tip.color = mycol)
+plot(nj.dist, tip.color = mycol, type = "fan")
 
 #p <- ggtree(nj.dist, layout = "fan")
 #p %<+% dist.id + geom_tiplab(pch = 16, aes(col = cluster)) +
@@ -195,8 +195,14 @@ if(length(l.inf)==0){
   df.rel.long <- melt(as.matrix(df.rel))
   names(df.rel.long) <- c("Sample1", "Sample2", "relatedness")
   
+  matrix.names <- row.names(mat.rel)
+  
   df.rel.long$Sample2 <- factor(x = df.rel.long$Sample2,
-                                 levels = dist.id$V2[sample.order], 
+                                 levels = matrix.names[sample.order], 
+                                 ordered = TRUE)
+  
+  df.rel.long$Sample1 <- factor(x = df.rel.long$Sample1,
+                                 levels = matrix.names[sample.order], 
                                  ordered = TRUE)
   
   pl.1 <- (ggplot(data = df.rel.long, aes(x=Sample1, y=Sample2, fill=relatedness)) + 
@@ -249,10 +255,32 @@ cat_snmf <- do.call("rbind",lapply(struct_files,
                                    pivot_longer(names_to = "popGroup", values_to = "prob", cols = -c(sampleID, k))
                                  x.long
                                }))
+#basic, but not pretty
+#sample.order <- cat_snmf %>% 
+#  group_by(sampleID) %>% 
+#  filter(prob == max(prob)) %>% 
+#  arrange(popGroup) %>% 
+#  ungroup() %>% 
+#  mutate(sample_order = 1:n()) %>% 
+#  select(sampleID, sample_order)
+
+##############################
+cat_snmf.wide <- cat_snmf %>% 
+  select(sampleID, k, popGroup, prob) %>% 
+  pivot_wider(names_from = "popGroup", values_from = "prob") %>% 
+  group_by(k) %>% 
+  arrange(k, pop1, pop2, pop3) %>% 
+  mutate(sample_order = 1:n()) %>% 
+  ungroup()
+
+sample.order <- cat_snmf.wide %>% select(sampleID, sample_order, k)
+
+cat_snmf <- left_join(cat_snmf, sample.order, by = c("sampleID", "k"))
+##############################
 
 p.k2 <- cat_snmf %>% 
   filter(k == 2 | k == 3) %>% 
-  ggplot(aes(x = factor(sampleID), y = prob, fill = factor(popGroup), text = sampleID)) +
+  ggplot(aes(x = fct_reorder(sampleID, sample_order), y = prob, fill = factor(popGroup), text = sampleID)) +
   geom_col(aes(fill = factor(popGroup)), size = 0.1) +
   facet_grid(rows = vars(k), switch = "x", scales = "free", space = "free") +
   theme_minimal() +
@@ -279,6 +307,36 @@ Row {data-width=1200}
 ### Map
 
 ```{r, fig.width = 10, height = 5}
+
+g <- list(
+  scope = 'north america',
+  showland = TRUE,
+  landcolor = toRGB("grey83"),
+  subunitcolor = toRGB("white"),
+  countrycolor = toRGB("white"),
+  showlakes = TRUE,
+  lakecolor = toRGB("white"),
+  showsubunits = TRUE,
+  showcountries = TRUE,
+  resolution = 50,
+  projection = list(
+    type = 'conic conformal',
+    rotation = list(lon = -100)
+  ),
+  lonaxis = list(
+    showgrid = TRUE,
+    gridwidth = 0.5,
+    range = c(-125, -111),
+    dtick = 5
+  ),
+  lataxis = list(
+    showgrid = TRUE,
+    gridwidth = 0.5,
+    range = c(31, 43),
+    dtick = 5
+  )
+)
+
 if(file.exists(paste0(prefix, ".coords.txt"))){
   df.coords <- read.table(paste0(prefix, ".coords.txt"))
   names(df.coords) <- c("sample.ID","long","lat")
@@ -288,14 +346,18 @@ if(file.exists(paste0(prefix, ".coords.txt"))){
   df.coords$color <- set.colors[factor(dist.id$cluster)]
   
   mycol <- set.colors[factor(df.coords$cluster)]
- plot_geo(df.coords, lat = ~lat, lon = ~long) %>% 
+  
+  df.coords$long.jit <- jitter(df.coords$long, 8)
+  df.coords$lat.jit <- jitter(df.coords$lat, 8)
+  
+ plot_geo(df.coords, lat = ~lat.jit, lon = ~long.jit) %>% 
+      layout(legend = list(orientation = 'h'), geo = g) %>% 
    add_markers(
       text = ~paste(IID, cluster, PC1, PC2, sep = "<br />"),
-      color = ~cluster, symbol = I("circle"), size = I(30), hoverinfo = "text", colors = set.colors[1:input$clusters]
+      color = ~cluster, symbol = I("circle"), size = I(30), 
+      hoverinfo = "text", colors = set.colors[1:input$clusters]
     ) %>% 
-   colorbar(title = "cluster") %>% 
-   layout(legend = list(orientation = 'h'))
-  
+   colorbar(title = "cluster")   
 }else{
   print("a map will appear here if you includes a .coords file ")
 }

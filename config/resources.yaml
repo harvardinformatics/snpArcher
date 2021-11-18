@@ -16,6 +16,9 @@ fastp:
 # index reference
 index_ref:
     mem: 10000
+# genmap map
+genmap:
+    threads: 10
 # bwa mapping
 bwa_map: 
     threads: 10 
