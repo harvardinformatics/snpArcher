@@ -21,6 +21,8 @@ rule genmap_map:
         outdir = config['output'] + "{Organism}/{refGenome}/" + "genmap"
     conda:
         "../envs/genmap.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap']['mem']
     threads:
         res_config['genmap']['threads']
     output:
