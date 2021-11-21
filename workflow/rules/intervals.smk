@@ -8,13 +8,13 @@ rule genmap_index:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['genmap']['mem']
     output:
-        temp(config['refGenomeDir'] + "{refGenome}.genmap.index")
+        temp(config['output'] + "{refGenome}/" + "{refGenome}.genmap.index")
     shell:
         "genmap index -F {input.ref} -I {output} &> {log}"
 
 rule genmap_map:
     input:
-        config['refGenomeDir'] + "{refGenome}.genmap.index"
+        config['output'] + "{refGenome}/" + "{refGenome}.genmap.index"
     log:
         "logs/{refGenome}/genmap_map.log"
     params:
