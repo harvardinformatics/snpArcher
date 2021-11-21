@@ -35,6 +35,8 @@ rule sort_genmap:
         config['output'] + "{refGenome}/" + "genmap/{refGenome}.genmap.bedgraph"
     output:
         config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg"
+    resources:
+        mem_mb = res_config['genmap_sort']['mem']
     shell:
         "sort -k1,1 -k2,2n {input} > {output}"
 
