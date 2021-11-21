@@ -87,6 +87,7 @@ rule fastp:
         "--out1 {output.r1} --out2 {output.r2} "
         "--thread {threads} "
         "--detect_adapter_for_pe "
+        "-j /dev/null -h /dev/null "
         "2> {output.summ} > {log}"
 
 rule bwa_map:
