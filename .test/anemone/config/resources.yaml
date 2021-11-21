@@ -19,6 +19,8 @@ index_ref:
 # genmap map
 genmap:
     threads: 10
+genmap_sort:
+    mem: 1000
 # bwa mapping
 bwa_map: 
     threads: 10 
