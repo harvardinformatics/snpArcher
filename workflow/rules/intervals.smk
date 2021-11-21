@@ -2,23 +2,23 @@ rule genmap_index:
     input:
         ref = config["refGenomeDir"] + "{refGenome}.fna",
     log:
-        "logs/{Organism}/{refGenome}/genmap_index/log"
+        "logs/{refGenome}/genmap_index.log"
     conda:
         "../envs/genmap.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['genmap']['mem']
     output:
-        temp(directory(config['output'] + "{Organism}/{refGenome}/" + "genmap/genmap.index"))
+        temp(config['refGenomeDir'] + "{refGenome}.genmap.index")
     shell:
         "genmap index -F {input.ref} -I {output} &> {log}"
 
 rule genmap_map:
     input:
-        config['output'] + "{Organism}/{refGenome}/" + "genmap/genmap.index"
+        config['refGenomeDir'] + "{refGenome}.genmap.index"
     log:
-        "logs/{Organism}/{refGenome}/genmap_map/log"
+        "logs/{refGenome}/genmap_map.log"
     params:
-        outdir = config['output'] + "{Organism}/{refGenome}/" + "genmap"
+        outdir = config['output'] + "{refGenome}/" + "genmap"
     conda:
         "../envs/genmap.yml"
     resources:
@@ -26,15 +26,15 @@ rule genmap_map:
     threads:
         res_config['genmap']['threads']
     output:
-        bg = temp(config['output'] + "{Organism}/{refGenome}/" + "genmap/genmap.bedgraph")
+        temp(config['output'] + "{refGenome}/" + "genmap/{refGenome}.genmap.bedgraph")
     shell:
         "genmap map -K 150 -E 0 -I {input} -O {params.outdir} -bg -T {threads} -v  > {log}"
 
 rule sort_genmap:
     input:
-        config['output'] + "{Organism}/{refGenome}/" + "genmap/genmap.bedgraph"
+        config['output'] + "{refGenome}/" + "genmap/{refGenome}.genmap.bedgraph"
     output:
-        config['output'] + "{Organism}/{refGenome}/" + "genmap/sorted_genmap.bg"
+        config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg"
     shell:
         "sort -k1,1 -k2,2n {input} > {output}"
 
@@ -50,7 +50,7 @@ rule picard_intervals:
     conda:
         '../envs/bam2vcf.yml'
     log:
-        "logs/{Organism}/{refGenome}/picard_intervals/log"
+        "logs/{refGenome}/{Organism}.picard_intervals.log"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['process_ref']['mem']
     shell:
