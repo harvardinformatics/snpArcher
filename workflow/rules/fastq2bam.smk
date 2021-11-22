@@ -4,8 +4,8 @@ ruleorder: index_ref > download_reference
 
 rule get_fastq_pe:
     output:
-        config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq",
-        config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq"
+        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq"),
+        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq")
     params:
         outdir = config["fastqDir"] + "{Organism}/{sample}/",
         tmpdir = config['tmp_dir']
@@ -25,8 +25,8 @@ rule gzip_fastq:
         config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq",
         config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq"
     output:
-        config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz",
-        config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz"
+        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz"),
+        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz")
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['gzip_fastq']['mem']
     shell:
