@@ -36,7 +36,7 @@ rule sort_genmap:
     output:
         config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg"
     resources:
-        mem_mb = res_config['genmap_sort']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap_sort']['mem']
     shell:
         "sort -k1,1 -k2,2n {input} > {output}"
 
