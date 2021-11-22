@@ -98,7 +98,8 @@ rule DB2vcf:
         ref = config["refGenomeDir"] + "{refGenome}.fna",
         doneFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}.done"
     output:
-        config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "L{list}.vcf",
+        vcf = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "L{list}.vcf"),
+        vcfidx = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "L{list}.vcf.idx")
     params:
         tmp_dir = config['tmp_dir']
     resources:
@@ -115,7 +116,7 @@ rule DB2vcf:
         "--java-options \"-Xmx{resources.reduced}m -Xms{resources.reduced}m\" "
         "-R {input.ref} "
         "-V gendb://{input.DB} "
-        "-O {output} "
+        "-O {output.vcf} "
         "--tmp-dir {params.tmp_dir} &> {log}"
 
 rule filterVcfs:
@@ -126,7 +127,8 @@ rule filterVcfs:
         vcf = config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "L{list}.vcf",
         ref = config["refGenomeDir"] + "{refGenome}.fna"
     output:
-        vcf = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf")
+        vcf = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf"),
+        vcfidx = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf.idx")
     conda:
         "../envs/bam2vcf.yml"
     resources:
