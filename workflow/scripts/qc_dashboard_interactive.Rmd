@@ -116,7 +116,7 @@ df.imiss <- read.table(imiss.path, header =T)
 
 df.depth.miss <- inner_join(df.depth, df.imiss, by = "INDV")
 df.depth.miss <- df.depth.miss %>% 
- mutate_if(is.numeric, round, digits = 2)
+ mutate_if(is.numeric, round, digits = 5)
 
 #replace df.pca with clusters() for shiny
 #r.missing <- reactive(
