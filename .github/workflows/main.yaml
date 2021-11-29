@@ -18,4 +18,9 @@ jobs:
         snakefile: workflow/Snakefile
         args: "--until snp_filters_qc --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
         
-
+    - name: Test workflow (Fastq > VCF QC)
+      uses: snakemake/snakemake-github-action@v1.22.0
+      with:
+        directory: .test/anemone/
+        snakefile: workflow/Snakefile
+        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
