@@ -129,21 +129,22 @@ rule merge_bams:
 
 rule dedup:
     input:
-        get_bams_for_dedup
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam",
+        bai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam.bai"
     output:
         dedupBam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
         dedupMet = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_dedupMetrics.txt"
     conda:
         "../envs/fastq2bam.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['dedup']['mem'],
-        threads = res_config['dedup']['threads']
+        mem_mb = lambda wildcards, attempt: attempt * res_config['dedup']['mem']
     log:
         "logs/{Organism}/dedup/{refGenome}_{sample}.txt"
     benchmark:
         "benchmarks/{Organism}/dedup/{refGenome}_{sample}.txt"
     shell:
-        "sambamba markdup -t {threads} {input} {output.dedupBam} 2> {log}"
+        "picard MarkDuplicates -Xmx{resources.mem_mb}M I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All &> {log}\n"
+        "picard BuildBamIndex I={output.dedupBam} &>> {log}"
 
 rule bam_sumstats:
     input:
@@ -152,17 +153,18 @@ rule bam_sumstats:
     output:
         cov = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_coverage.txt",
         alnSum = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_AlnSumMets.txt",
-    log:
-        "logs/{Organism}/{refGenome}/{sample}_bam_sumstats.txt"
-    benchmark:
-        "benchmarks/{Organism}/{refGenome}/{sample}_bam_sumstats.txt"
+        val = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_validate.txt"
     conda:
         "../envs/fastq2bam.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bam_sumstats']['mem']
     shell:
-        "samtools coverage --output {output.cov} {input.bam} 2> {log}"
-        "samtools flagstat -O tsv > {output.alnSum} 2>> {log}"
+        "samtools coverage --output {output.cov} {input.bam}\n"
+        "picard CollectAlignmentSummaryMetrics I={input.bam} R={input.ref} O={output.alnSum}\n"
+        # The following ValidateSamFile exits with non-zero status when a BAM file contains errors,
+        # causing snakemake to exit and remove these output files.  I cirumvent this by appending "|| true".
+        # I also ignore "INVALID_TAG_NM" because it isn't used by GATK but causes errors at this step
+        "picard ValidateSamFile I={input.bam} R={input.ref} O={output.val} IGNORE=INVALID_TAG_NM || true"
 
 rule collect_fastp_stats:
     input:
