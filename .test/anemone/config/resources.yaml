@@ -19,8 +19,9 @@ index_ref:
 # genmap map
 genmap:
     threads: 10
+    mem: 20000
 genmap_sort:
-    mem: 1000
+    mem: 4000
 # bwa mapping
 bwa_map: 
     threads: 10 
@@ -83,3 +84,5 @@ bedtools:
 # plink
 plink:
     threads: 5
+admixture:
+    mem: 4000
