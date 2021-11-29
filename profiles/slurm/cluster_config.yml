@@ -2,6 +2,7 @@ __default__:
     partition: "shared"
     time: 9000
     nodes: 1
+    mem: 1000
     output: "logs/slurm/slurm-%j.out"
 
 
@@ -9,7 +10,7 @@ __default__:
 # bam2vcf_gatk
 ###
 
-bam2gvcf: 
+bam2gvcf:
     partition: "serial_requeue"
 
 
@@ -17,5 +18,5 @@ bam2gvcf:
 # bam2vcf_fb
 ###
 
-bam2vcf: 
+bam2vcf:
     partition: "serial_requeue"

@@ -105,7 +105,8 @@ rule admixture:
     params:
         tmpbim = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}",
         outdir = config['output'] + "{Organism}/{refGenome}/" + config['qcDir']
-
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['admixture']['mem'] 
     conda:
         "../envs/qc.yml"
     shell:
