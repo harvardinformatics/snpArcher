@@ -18,6 +18,7 @@ index_ref:
     mem: 10000
 # genmap map
 genmap:
+    mem: 20000
     threads: 10
 genmap_sort:
     mem: 1000
@@ -29,7 +30,8 @@ bwa_map:
 sort_bam: 
     mem: 10000 
 # mark duplicates with picard's MarkDuplicates
-dedup: 
+dedup:
+    threads: 10
     mem: 9000 
 # calculate BAM summaries with samtools and picard
 bam_sumstats: 
@@ -83,3 +85,5 @@ bedtools:
 # plink
 plink:
     threads: 5
+admixture:
+    mem: 4000
