@@ -7,5 +7,7 @@
 #SBATCH -t 9000
 #SBATCH --mem=10000
 
-source activate snakemake
+CONDA_BASE=$(conda info --base)
+source $CONDA_BASE/etc/profile.d/conda.sh
+conda activate snakemake
 snakemake --snakefile workflow/Snakefile --profile ./profiles/slurm
