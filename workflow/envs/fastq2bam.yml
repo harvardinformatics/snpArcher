@@ -5,8 +5,8 @@ channels:
 dependencies:
   - fastp==0.20.1
   - bwa==0.7.17
-  - picard==2.22.8
-  - samtools==1.10
   - sra-tools==2.10.1
   - ncbi-datasets-cli==11.25.1
   - p7zip==16.02
+  - samtools>=1.12
+  - sambamba>=0.8
