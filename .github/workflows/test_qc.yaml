@@ -4,18 +4,14 @@ name: Test QC
 on: 
   push:
     paths:
-      - "workflow/rules/qc.smk"
-
+      - "workflow/rules/qc.smk"        
 jobs:
 
   Testing:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Checkout submodules
-      uses: textbook/git-checkout-submodule-action@2.0.0
-
-    - name: Test workflow (Fastq > VCF QC)
+    - name: Test workflow (Local Fastq > VCF)
       uses: snakemake/snakemake-github-action@v1.22.0
       with:
         directory: .test/anemone/
