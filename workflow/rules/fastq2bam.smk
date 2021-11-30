@@ -162,6 +162,8 @@ rule bam_sumstats:
         samtools flagstat -O tsv {input.bam} > {output.alnSum}
         """
 
+rule bedgraphs:
+
 rule collect_fastp_stats:
     input:
         lambda wildcards:
