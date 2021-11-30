@@ -5,6 +5,14 @@ import pandas as pd
 from collections import defaultdict, deque
 from snakemake.exceptions import WorkflowError
 ### INPUT FUNCTIONS ###
+
+def get_bams_for_dedup(wildcards):
+    runs = samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist()
+    if len(runs) == 1:
+        return expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam", run=runs)
+    else:
+        return config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam"
+
 def get_reads(wildcards):
     """Returns local read files if present. Defaults to SRR if no local reads in sample sheet."""
     row = samples.loc[samples['Run'] == wildcards.run]
@@ -40,12 +48,10 @@ def check_contig_names(fai, touch_file):
 def get_sumstats(wildcards):
     # Gets the correct sample given the organism and reference genome
     _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
-    fastpFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_fastp.out", sample=_samples)
-    dedupFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_dedupMetrics.txt", sample=_samples)
+    
     alnSumMetsFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_AlnSumMets.txt", sample=_samples)
     coverageFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_coverage.txt", sample=_samples)
-    validateFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_validate.txt", sample=_samples)
-    return {'fastpFiles': fastpFiles, 'dedupFiles': dedupFiles, 'alnSumMetsFiles': alnSumMetsFiles, 'coverageFiles': coverageFiles, 'validateFiles': validateFiles}
+    return {'alnSumMetsFiles': alnSumMetsFiles, 'coverageFiles': coverageFiles}
 
 def get_gather_vcfs(wildcards):
     """
