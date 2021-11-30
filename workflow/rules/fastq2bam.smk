@@ -144,7 +144,7 @@ rule dedup:
         "benchmarks/{Organism}/dedup/{refGenome}_{sample}.txt"
     shell:
         "picard MarkDuplicates -Xmx{resources.mem_mb}M I={input[0]} O={output.dedupBam} METRICS_FILE={output.dedupMet} REMOVE_DUPLICATES=false TAGGING_POLICY=All &> {log}\n"
-        "picard BuildBamIndex I={output.dedupBam} &>> {log}"
+        "picard BuildBamIndex I={output.dedupBam}"
 
 rule bam_sumstats:
     input:
