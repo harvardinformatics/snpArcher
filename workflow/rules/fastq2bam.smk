@@ -162,8 +162,22 @@ rule bam_sumstats:
         samtools flagstat -O tsv {input.bam} > {output.alnSum}
         """
 
-rule bedgraphs:
-
+#rule bedgraphs:
+#    input:
+#        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
+#        ref = config["refGenomeDir"] + "{refGenome}.fna"
+#    output:
+#        merge = temp(config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "merged.bam"),
+#        
+#    conda:
+#        "../envs/fastq2bam.yml"
+#    resources:
+#        mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
+#    shell:
+#        "samtools merge -o {output.merge} -   \n"
+#        "bedtools genomecov -ibam {input.bam} -bga 
+#        "samtools coverage --output {output.cov} {input.bam}\n"
+#
 rule collect_fastp_stats:
     input:
         lambda wildcards:
