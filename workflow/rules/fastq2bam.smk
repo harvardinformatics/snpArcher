@@ -138,6 +138,7 @@ rule dedup:
     resources:
         threads = res_config['dedup']['threads'],
         mem_mb = lambda wildcards, attempt: attempt * res_config['dedup']['mem']
+        reduced = lambda wildcards, attempt: attempt * (res_config['dedup']['mem'] - 1000) 
     log:
         "logs/{Organism}/dedup/{refGenome}_{sample}.txt"
     benchmark:
