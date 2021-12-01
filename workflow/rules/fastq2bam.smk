@@ -134,7 +134,7 @@ rule dedup:
         dedupBam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
         dedupBai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam.bai",
     conda:
-        "../envs/fastq2bam.yml"
+        "../envs/sambamba.yml"
     resources:
         threads = res_config['dedup']['threads'],
         mem_mb = lambda wildcards, attempt: attempt * res_config['dedup']['mem']
@@ -153,13 +153,13 @@ rule bam_sumstats:
         cov = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_coverage.txt",
         alnSum = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_AlnSumMets.txt",
     conda:
-        "../envs/sambamba.yml"
+        "../envs/fastq2bam.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bam_sumstats']['mem']
     shell:
         """
         samtools coverage --output {output.cov} {input.bam}
-        samtools flagstat -O tsv > {output.alnSum}
+        samtools flagstat -O tsv {input.bam} > {output.alnSum}
         """
 
 rule bam_stats:
