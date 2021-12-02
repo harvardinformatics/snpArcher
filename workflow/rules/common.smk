@@ -48,10 +48,10 @@ def check_contig_names(fai, touch_file):
 def get_sumstats(wildcards):
     # Gets the correct sample given the organism and reference genome
     _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
-    
+    fastpFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_fastp.out", sample=_samples)
     alnSumMetsFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_AlnSumMets.txt", sample=_samples)
     coverageFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_coverage.txt", sample=_samples)
-    return {'alnSumMetsFiles': alnSumMetsFiles, 'coverageFiles': coverageFiles}
+    return {'alnSumMetsFiles': alnSumMetsFiles, 'coverageFiles': coverageFiles, 'fastpFiles': fastpFiles}
 
 def get_gather_vcfs(wildcards):
     """
