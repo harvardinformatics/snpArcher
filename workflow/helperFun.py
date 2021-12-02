@@ -6,24 +6,6 @@ import re
 from collections import defaultdict
 from urllib.request import urlopen
 
-def collectDedupMetrics(dedupFiles):
-
-    PercentDuplicates = defaultdict(float)
-    for fn in dedupFiles:
-        sample = os.path.basename(fn)
-        sample = sample.replace("_dedupMetrics.txt", "")
-        f = open(fn, 'r')
-        lines = f.readlines()
-        for i in range(len(lines)):
-            if lines[i].startswith("LIBRARY"):
-                info = lines[i+1]
-                info = info.split("\t")
-                percDup = info[8]
-                #print(percDup)
-                PercentDuplicates[sample] = percDup
-        f.close()
-    return(PercentDuplicates)
-
 def collectFastpOutput(fastpFiles):
 
     FractionReadsPassFilter = defaultdict(float)
@@ -51,41 +33,24 @@ def collectFastpOutput(fastpFiles):
     return(FractionReadsPassFilter, NumFilteredReads)
 
 def collectAlnSumMets(alnSumMetsFiles):
-
-    PercentHQreads = defaultdict(float)
-    PercentHQbases = defaultdict(float)
-
+    aln_metrics = defaultdict(dict)
     for fn in alnSumMetsFiles:
         sample = os.path.basename(fn)
         sample = sample.replace("_AlnSumMets.txt", "")
-        f = open(fn, 'r')
-        for line in f:
-            if line.startswith("PAIR"):
-                line = line.split()
-                totalReads = int(line[1])
-                totalAlignedBases = int(line[7])
-                HQreads = int(line[8])
-                totalAlignedHQ20bases = int(line[10])
-                PercentHQreads[sample] = HQreads/totalReads
-                PercentHQbases[sample] = totalAlignedHQ20bases/totalAlignedBases
-        f.close()
-    return(PercentHQreads, PercentHQbases)
-
-def collectValidationStatus(validateFiles):
-
-    validateSams = defaultdict(float)
-
-    for fn in validateFiles:
-        sample = os.path.basename(fn)
-        sample = sample.replace("_validate.txt", "")
-        f = open(fn, 'r')
-        status = "FALSE"
-        for line in f:
-            if "No errors found" in line:
-                status = "TRUE"
-        f.close()
-        validateSams[sample] = status
-    return(validateSams)
+        with open(fn, "r") as f:
+            lines = f.readlines()
+            total_aligns = int(lines[0].split()[0])
+            num_dups = int(lines[4].split()[0])
+            num_mapped = int(lines[6].split()[0])
+            percent_mapped = float(lines[7].split()[0].strip("%"))
+            percent_proper_paired = float(lines[14].split()[0].strip("%"))
+            percent_dups = num_dups / total_aligns if total_aligns != 0 else 0
+            aln_metrics[sample]["Total alignments"] = total_aligns
+            aln_metrics[sample]["Percent Mapped"] = percent_mapped
+            aln_metrics[sample]["Percent Duplicates"] = percent_dups
+            aln_metrics[sample]["Percent Properly Paired"] = percent_proper_paired
+    
+    return(aln_metrics)
 
 def collectCoverageMetrics(coverageFiles):
 
@@ -115,20 +80,12 @@ def collectCoverageMetrics(coverageFiles):
         CoveredBases[sample] = covbases
     return(SeqDepths, CoveredBases)
 
-def printBamSumStats(FractionReadsPassFilter, NumFilteredReads, PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams, outputDir, wildcards):
-    out_path = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, "bam_sumstats.txt")
-    o = open(out_path, 'w')
-    print("sample", "FractionReadsPassFilter", "NumFilteredReads", "PercentDuplicates", "PercentHQ20alignedReads", "PercentHQ20bases", "MeanSeqDepth", "BasesCoveredMoreThanOnce", "validBAM", file=o, sep="\t")
-    for sample in PercentDuplicates:
-        print(sample,file=o, end="\t")
-        print(FractionReadsPassFilter[sample], file=o, end="\t")
-        print(NumFilteredReads[sample], file=o, end="\t")
-        print(PercentDuplicates[sample], file=o, end="\t")
-        print(PercentHQreads[sample], file=o, end="\t")
-        print(PercentHQbases[sample], file=o, end="\t")
-        print(SeqDepths[sample], file=o, end="\t")
-        print(CoveredBases[sample], file=o, end="\t")
-        print(validateSams[sample], file=o)
+def printBamSumStats(depths, covered_bases, aln_metrics, FractionReadsPassFilter, NumFilteredReads, out_file):
+    samples = depths.keys()
+    with open(out_file, "w") as f:
+        print("Sample\tTotal_alignments\tPercent_mapped\tPercent_duplicates\tPercent_properly_paired\tFraction_reads_pass_filter\tNum_filtered_reads", file=f)
+        for samp in samples:
+            print(samp, "\t", aln_metrics[samp]["Total alignments"], "\t", aln_metrics[samp]["Percent Mapped"], "\t", aln_metrics[samp]["Percent Duplicates"], "\t", aln_metrics[samp]["Percent Properly Paired"], "\t", FractionReadsPassFilter[samp], "\t", NumFilteredReads[samp], file=f)
 
 def getRefBaseName(ref):
     if ".fasta" in ref:

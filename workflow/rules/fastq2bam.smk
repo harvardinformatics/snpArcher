@@ -162,30 +162,22 @@ rule bam_sumstats:
         samtools flagstat -O tsv {input.bam} > {output.alnSum}
         """
 
-rule bam_stats:
+rule collect_fastp_stats:
+    input:
+        lambda wildcards:
+            expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{{sample}}/{run}.out", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
+    output:
+        config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_fastp.out"
+    shell:
+        "cat {input} > {output}"
+
+rule collect_sumstats:
     input:
         unpack(get_sumstats)
     output:
-        touch(config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.txt")
-
-# rule collect_fastp_stats:
-#     input:
-#         lambda wildcards:
-#             expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{{sample}}/{run}.out", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
-#     output:
-#         config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_fastp.out"
-#     shell:
-#         "cat {input} > {output}"
-
-# rule collect_sumstats:
-#     input:
-#         unpack(get_sumstats)
-#     output:
-#         config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.txt"
-#     run:
-#         FractionReadsPassFilter, NumFilteredReads = helperFun.collectFastpOutput(input.fastpFiles)
-#         PercentDuplicates = helperFun.collectDedupMetrics(input.dedupFiles)
-#         PercentHQreads, PercentHQbases = helperFun.collectAlnSumMets(input.alnSumMetsFiles)
-#         SeqDepths, CoveredBases = helperFun.collectCoverageMetrics(input.coverageFiles)
-
-#         helperFun.printBamSumStats(FractionReadsPassFilter, NumFilteredReads, PercentDuplicates, PercentHQreads, PercentHQbases, SeqDepths, CoveredBases, validateSams, config["output"], wildcards)
+        config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.tsv"
+    run:
+        FractionReadsPassFilter, NumFilteredReads = helperFun.collectFastpOutput(input.fastpFiles)
+        aln_metrics = helperFun.collectAlnSumMets(input.alnSumMetsFiles)
+        SeqDepths, CoveredBases = helperFun.collectCoverageMetrics(input.coverageFiles)
+        helperFun.printBamSumStats(SeqDepths, CoveredBases, aln_metrics, FractionReadsPassFilter, NumFilteredReads, output[0])
