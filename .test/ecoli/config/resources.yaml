@@ -30,7 +30,8 @@ bwa_map:
 sort_bam: 
     mem: 10000 
 # mark duplicates with picard's MarkDuplicates
-dedup: 
+dedup:
+    threads: 10
     mem: 9000 
 # calculate BAM summaries with samtools and picard
 bam_sumstats: 
