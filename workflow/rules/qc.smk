@@ -9,6 +9,7 @@ rule check_fai:
         faiResult = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_fai_tmp.txt"
     run:
         check_contig_names(input.fai, output.faiResult)
+
         
 rule snp_filters_qc:
     input:
