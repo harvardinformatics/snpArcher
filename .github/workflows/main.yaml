@@ -3,7 +3,9 @@ name: Tests
 on: 
   push:
     paths-ignore:
-      - "workflow/rules/qc.smk"
+      - "config/**"
+      - "**.md"
+      - "profiles/**"
 
 jobs:
 
@@ -16,4 +18,4 @@ jobs:
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
-        args: "--until snp_filters_qc --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
