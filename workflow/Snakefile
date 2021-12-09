@@ -7,12 +7,24 @@ res_config = yaml.safe_load(open("config/resources.yaml"))
 
 helperFun.make_temp_dir()
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
-org_ref = set(zip(samples.Organism.tolist(), samples.refGenome.tolist()))  # To get only unique combinations of organism and ref accession.
-ORGANISM, REFGENOME = map(list, zip(*org_ref))  # Split above back to indiviudal lists for expand. There probably is a better way?
+species_counts = samples.drop_duplicates(subset = ["BioSample", "refGenome", "Organism"]).value_counts(subset=['refGenome', 'Organism'])  #get BioSample for each refGenome/Organism combination
+REFGENOME,ORGANISM = map(list, zip(*species_counts.index))  # split index into ref genome and organism
+
+def get_output(refGenome, Organism):
+    indexes = zip(refGenome,Organism)
+    files = list()
+    for idx in indexes:
+        if species_counts[idx] > 1:
+            files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + "_qc.html")
+        else:
+            files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + ".imiss")
+            files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + ".idepth")
+            files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + "_snpqc.txt")
+    return files
 
 rule all:
     input:
-        expand(config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_qc.html", zip, Organism=ORGANISM, refGenome=REFGENOME),
+        get_output(REFGENOME,ORGANISM),
         expand(config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg", zip, Organism=ORGANISM, refGenome=REFGENOME),
         expand(config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.tsv", zip, Organism=ORGANISM, refGenome=REFGENOME)
 
