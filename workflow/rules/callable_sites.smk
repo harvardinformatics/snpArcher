@@ -21,8 +21,8 @@ rule bedgraphs:
         temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}.sorted.bg")
     conda:
         "../envs/callable.yml"
-#    resources:
-#        mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']
     shell:
         "bedtools genomecov -ibam {input.bam} -bga | sort -k1,1 -k2,2n - > {output}"
 
@@ -35,8 +35,8 @@ rule merge_bedgraph:
         "logs/{Organism}/covcalc/{refGenome}_{Organism}_merge.txt"
     conda:
         "../envs/callable.yml"
-#    resources:
-#        mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']
     shell:
         "bedtools unionbedg -header -empty -g {input.chrom} -i {input.bedgraphs} > {output.merge} 2> {log}"
 
@@ -48,21 +48,5 @@ rule gzip_bedgraph:
         idx = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gzi"
     conda:
         "../envs/callable.yml"
-#    resources:
-#        mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
     shell:
         "bgzip -i -I {output.idx} -c {input} > {output.bgz}"
-
-#rule write_beds:
-#    input:
-#        bed = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".merge.bigBed"
-#    output:
-#        clean = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".clean.bed",
-#        high = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".high.bed",
-#        low = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".low.bed"
-#    conda:
-#        "../envs/callable.yml"
-#    resources:
-#        mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
-#    shell:
-#        "Rscript "
