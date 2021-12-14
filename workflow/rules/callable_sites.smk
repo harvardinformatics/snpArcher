@@ -18,7 +18,8 @@ rule genome_prep:
 
 rule bedgraphs:
     input:
-        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix']
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
+        ref = config["refGenomeDir"] + "{refGenome}.fna"
     output:
         bedgraph = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".bg"),
         sorted = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".sorted.bg")
@@ -27,7 +28,7 @@ rule bedgraphs:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
     shell:
-        "bedtools genomecov -ibam {input.bam} -bga > {output.bedgraph}\n"
+        "bedtools genomecov -ibam {input.bam} -bga -g {input.ref} > {output.bedgraph}\n"
         "sort k1,1 -k2,2n {output.bedgraph} > {output.sorted}"
         
 rule merge:
