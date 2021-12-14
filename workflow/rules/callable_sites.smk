@@ -31,11 +31,11 @@ rule bedgraphs:
 
 rule merge:
     input:
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
+        ref = config['output'] + "{refGenome}/" + "{refGenome}" + ".sizes",
         lambda wildcards:
         expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "{sample}.bam", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
     output:
-        merge = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".merge.bg")
+        merge = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{Organism}" + ".merge.bg")
     conda:
         "../envs/callable.yml"
     resources:
@@ -45,10 +45,10 @@ rule merge:
 
  rule bigBeds:
     input:
-        merge = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".merge.bg",
-        chrom = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".sizes"
+        merge = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{Organism}" + ".merge.bg",
+        chrom = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{refGenome}" + ".sizes"
     output:
-        bigbed = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".merge.bigBed"
+        bigbed = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{Organism}" + ".merge.bigBed"
     conda:
         "../envs/callable.yml"
     resources:
