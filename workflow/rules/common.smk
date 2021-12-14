@@ -82,7 +82,7 @@ def write_db_mapfile(wildcards):
     sample_names = set(samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist())
     with open(dbMapFile, 'w') as f:
         for sample in sample_names:
-            gvcf_path = os.path.join(config['output'], wildcards.Organism, wildcards.refGenome, config['gvcfDir'], sample, f"L{wildcards.list}.raw.g.vcf.gz") 
+            gvcf_path = os.path.join(config['output'], wildcards.Organism, wildcards.refGenome, config['gvcfDir'], sample, f"L{wildcards.list}.raw.g.vcf.gz")
             print(sample, gvcf_path, sep="\t", file=f)
 
 def get_input_for_mapfile(wildcards):
@@ -90,12 +90,19 @@ def get_input_for_mapfile(wildcards):
     gvcfs = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}/" + "L{{list}}.raw.g.vcf.gz", sample=sample_names, **wildcards)
     gvcfs_idx = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}/" + "L{{list}}.raw.g.vcf.gz.tbi", sample=sample_names, **wildcards)
     doneFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}/" + "L{{list}}.done", sample=sample_names, **wildcards)
-    
+
     return {'gvcfs': gvcfs, 'gvcfs_idx': gvcfs_idx, 'doneFiles': doneFiles}
+
+def get_input_for_coverage(wildcards):
+    # Gets the correct sample given the organism and reference genome for the bedgraph merge step
+    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    bedgraphFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "{sample}.bam", sample=_sample)
+    chromFile = config['output'] + "{refGenome}/" + "{refGenome}" + ".sizes"
+    return {'bedgraphs': bedgraphFiles, 'chrom': chromFile}
 
 def make_intervals(outputDir, intDir, wildcards, dict_file, max_intervals):
     """Creates interval list files for parallelizing haplotypeCaller and friends. Writes one contig/chromosome per list file."""
-    
+
     with open(dict_file, "r") as f:  # Read dict file to get contig info
         contigs = defaultdict()
         for line in f:
@@ -104,18 +111,18 @@ def make_intervals(outputDir, intDir, wildcards, dict_file, max_intervals):
                 chrom = line[1].split("SN:")[1]
                 ln = int(line[2].split("LN:")[1])
                 contigs[chrom] = ln
-        
+
         interval_file = os.path.join(outputDir,wildcards.Organism,wildcards.refGenome,intDir, f"{wildcards.refGenome}_intervals_fb.bed")
         with open(interval_file, "w") as fh:
             for contig, ln in contigs.items():
                 print(f"{contig}\t1\t{ln}", file=fh)
-        
+
         if len(contigs.values()) <= max_intervals:
             for i, (contig, ln) in enumerate(contigs.items()):
                 interval_list_file = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, f"list{i}.list")
                 with open(interval_list_file, "w") as f:
                     print(f"{contig}:1-{ln}", file=f)
-                
+
         else:
             ln_sum = sum(contigs.values())
             bp_per_interval = ln_sum // int(max_intervals)
