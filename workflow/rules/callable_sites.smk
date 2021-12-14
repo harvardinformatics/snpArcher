@@ -60,14 +60,14 @@ rule merge:
 
 rule write_beds:
     input:
-        bed = 
+        bed = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".merge.bigBed"
     output:
-        clean = 
-        high = 
-        low = 
+        clean = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".clean.bed",
+        high = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".high.bed",
+        low = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".low.bed"
     conda:
-      "../envs/callable.yml"
+        "../envs/callable.yml"
     resources:
-      mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
     shell:
-      " "
+        "Rscript "
