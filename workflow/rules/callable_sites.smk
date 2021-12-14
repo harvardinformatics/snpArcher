@@ -33,6 +33,7 @@ rule bedgraphs:
         
 rule merge:
     input:
+        ref = config["refGenomeDir"] + "{refGenome}.fna", 
         lambda wildcards:
         expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "{sample}.bam", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
     output:
@@ -42,7 +43,7 @@ rule merge:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
     shell:
-        "bedtools merge -i {input} > {output.merge}\n"
+        "bedtools unionbedg -header -empty -g {input.ref} -names -i {input} > {output.merge}"
         
  rule bigBeds:
     input:
@@ -56,3 +57,17 @@ rule merge:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
     shell:
         "bedToBigBed {output.merge} {input.chrom} {output.bigbed}"
+
+rule write_beds:
+    input:
+        bed = 
+    output:
+        clean = 
+        high = 
+        low = 
+    conda:
+      "../envs/callable.yml"
+    resources:
+      mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
+    shell:
+      " "
