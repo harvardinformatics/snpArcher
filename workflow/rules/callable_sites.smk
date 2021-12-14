@@ -12,7 +12,7 @@ rule genome_prep:
       "../envs/callable.yml"
   shell:
       "faToTwoBit {input.ref} {output.twobit}\n"
-      "twoBitInfo {output.twobit} stdout | sort -k2rn > {output.sizes}"
+      "twoBitInfo {output.twobit} stdout | sort -k2rn > {output.chrom}"
 
 rule bedgraphs:
     input:
@@ -29,7 +29,7 @@ rule bedgraphs:
         "bedtools genomecov -ibam {input.bam} -bga -g {input.chrom} > {output.bedgraph}\n"
         "sort k1,1 -k2,2n {output.bedgraph} > {output.sorted}"
 
-rule merge:
+rule merge_bedgraph:
     input:
         get_input_for_coverage
     output:
@@ -52,7 +52,7 @@ rule bigBeds:
 #    resources:
 #        mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
     shell:
-        "bedToBigBed {output.merge} {input.chrom} {output.bigbed}"
+        "bedToBigBed {input.merge} {input.chrom} {output.bigbed}"
 
 #rule write_beds:
 #    input:
