@@ -38,7 +38,9 @@ bam_sumstats:
     mem: 9000
 merge_bams:
     mem: 9000
-
+bedtools:
+    mem: 4000
+    
 ###
 # Intervals workflow
 ###
