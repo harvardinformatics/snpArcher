@@ -43,7 +43,7 @@ rule merge:
     shell:
         "bedtools unionbedg -header -empty -g {input.ref} -names -i {input} > {output.merge}"
 
- rule bigBeds:
+rule bigBeds:
     input:
         merge = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{Organism}" + ".merge.bg",
         chrom = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{refGenome}" + ".sizes"
