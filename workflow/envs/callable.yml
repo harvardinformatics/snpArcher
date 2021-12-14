@@ -6,3 +6,4 @@ dependencies:
   - bedtools==2.30.0
   - ucsc-fatotwobit==377
   - ucsc-twobitinfo==377
+  - ucsc-bedtobigbed==377
