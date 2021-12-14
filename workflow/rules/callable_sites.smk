@@ -16,43 +16,42 @@ rule genome_prep:
 
 rule bedgraphs:
     input:
-        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
-        chrom = config['output'] + "{refGenome}/" + "{refGenome}" + ".sizes"
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix']
     output:
-        bedgraph = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".bg"),
-        sorted = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + ".sorted.bg")
+        temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}.sorted.bg")
     conda:
         "../envs/callable.yml"
 #    resources:
 #        mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
     shell:
-        "bedtools genomecov -ibam {input.bam} -bga -g {input.chrom} > {output.bedgraph}\n"
-        "sort k1,1 -k2,2n {output.bedgraph} > {output.sorted}"
+        "bedtools genomecov -ibam {input.bam} -bga | sort -k1,1 -k2,2n - > {output}"
 
 rule merge_bedgraph:
     input:
-        get_input_for_coverage
+        unpack(get_input_for_coverage)
     output:
-        merge = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{Organism}" + ".merge.bg")
+        merge = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{Organism}.merge.bg")
+    log:
+        "logs/{Organism}/covcalc/{refGenome}_{Organism}_merge.txt"
     conda:
         "../envs/callable.yml"
 #    resources:
 #        mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
     shell:
-        "bedtools unionbedg -header -empty -g {input.chrom} -names -i {input.bedgraphs} > {output.merge}"
+        "bedtools unionbedg -header -empty -g {input.chrom} -i {input.bedgraphs} > {output.merge} 2> {log}"
 
-rule bigBeds:
+rule gzip_bedgraph:
     input:
-        merge = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{Organism}" + ".merge.bg",
-        chrom = config['output'] + "{refGenome}/" + "{refGenome}" + ".sizes"
+        get_bedgraph_to_convert
     output:
-        bigbed = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{Organism}" + ".merge.bigBed"
+        bgz = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz",
+        idx = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gzi"
     conda:
         "../envs/callable.yml"
 #    resources:
 #        mem_mb = lambda wildcards, attempt: attempt * res_config['bedgraphs']['mem']
     shell:
-        "bedToBigBed {input.merge} {input.chrom} {output.bigbed}"
+        "bgzip -i -I {output.idx} -c {input} > {output.bgz}"
 
 #rule write_beds:
 #    input:
