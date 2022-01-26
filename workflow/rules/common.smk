@@ -6,6 +6,11 @@ from collections import defaultdict, deque
 from snakemake.exceptions import WorkflowError
 ### INPUT FUNCTIONS ###
 
+def get_ena_url(wildcards):
+    base_url = "http://ftp.sra.ebi.ac.uk/vol1/err/"
+    prefix = wildcards.run[:6]
+    return base_url + prefix + "/" + wildcards.run
+
 def get_bams_for_dedup(wildcards):
     runs = samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist()
     if len(runs) == 1:

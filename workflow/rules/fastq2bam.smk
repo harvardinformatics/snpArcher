@@ -1,14 +1,7 @@
-localrules: collect_sumstats, download_reference, prep_ena_download
+localrules: collect_sumstats, download_reference
 ruleorder: index_ref > download_reference
-ruleorder: prep_ena_download > get_fastq_pe
 
 ### RULES ###
-
-rule prep_ena_download
-    output:
-        outdir = directory("data/ena_downloader")
-    shell:
-        "wget -P {outdir} https://github.com/enasequence/ena-ftp-downloader/releases/download/v1.2.2/ena-file-downloader-v1.2.2.jar"
 
 rule get_fastq_pe:
     output:
@@ -17,26 +10,26 @@ rule get_fastq_pe:
     params:
         outdir = config["fastqDir"] + "{Organism}/{sample}/",
         tmpdir = config['tmp_dir'],
-        ena_jar = "data/ena_downloader/ena-file-downloader-v1.2.2.jar"
+        ena_url = get_ena_url
     conda:
         "../envs/fastq2bam.yml"
     threads:
         res_config['get_fastq_pe']['threads']
     log:
-        "logs/{Organism}/fasterq_dump/{sample}/{run}.txt"
+        "logs/{Organism}/get_fastq/{sample}/{run}.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']
     shell:
         """
         set +e
-        fasterq-dump {wildcards.run} -O {params.outdir} -t {params.tmpdir} -e {threads} &> {log}
+        prefetch {wildcards.run}
         exitcode=$?
         if [ $exitcode -ne 0 ]
         then
-            java -jar {ena_jar} --acessions={wildcards.run} --format=READS_FASTQ --location={params.outdir} --protocol=FTP
-        else
-            exit 0
+            wget -O {wildcards.run} {params.ena_url}
         fi
+        fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} &> {log}
+        rm -rf {wildcards.run}
         """
 
 rule gzip_fastq:
