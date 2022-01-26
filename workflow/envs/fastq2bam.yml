@@ -9,3 +9,5 @@ dependencies:
   - sra-tools==2.10.1
   - ncbi-datasets-cli==11.25.1
   - p7zip==16.02
+  - openjdk>=8.0
+  - javafx-sdk>=12.0
