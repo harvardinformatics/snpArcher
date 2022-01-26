@@ -23,13 +23,20 @@ rule get_fastq_pe:
         """
         set +e
         prefetch {wildcards.run}
-        exitcode=$?
-        if [ $exitcode -ne 0 ]
+        prefetchExit=$?
+        if [ $prefetchExit -ne 0 ]
         then
             wget -O {wildcards.run} {params.ena_url}
         fi
-        fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} &> {log}
-        rm -rf {wildcards.run}
+        fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir} &> {log}
+        fastqExit=$?
+        if [ $fastqExit -eq 0 ]
+        then
+            rm -rf {wildcards.run}
+            exit 0
+        else
+            exit 1
+        fi
         """
 
 rule gzip_fastq:
