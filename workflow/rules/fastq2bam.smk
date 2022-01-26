@@ -5,12 +5,14 @@ ruleorder: index_ref > download_reference
 
 rule get_fastq_pe:
     output:
-        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq"),
-        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq")
+        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz"),
+        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz")
     params:
         outdir = config["fastqDir"] + "{Organism}/{sample}/",
         tmpdir = config['tmp_dir'],
-        ena_url = get_ena_url
+        ena_url = get_ena_url,
+        ena_sra = "http://ftp.sra.ebi.ac.uk/vol1/err/",
+        ena_fastq = "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/"
     conda:
         "../envs/fastq2bam.yml"
     threads:
@@ -26,30 +28,32 @@ rule get_fastq_pe:
         prefetchExit=$?
         if [ $prefetchExit -ne 0 ]
         then
-            wget -O {wildcards.run} {params.ena_url}
+            wget -O {wildcards.run} {params.era_sra}{params.ena_url}
         fi
         fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir} &> {log}
         fastqExit=$?
         if [ $fastqExit -eq 0 ]
         then
             rm -rf {wildcards.run}
+            gzip {params.outdir}{wildcards.run}*.fastq
             exit 0
         else
-            exit 1
+            wget -O {params.outdir} {params.era_fastq}{params.ena_url}_1.fastq.gz
+            wget -O {params.outdir} {params.era_fastq}{params.ena_url}_2.fastq.gz
         fi
         """
 
-rule gzip_fastq:
-    input:
-        config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq",
-        config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq"
-    output:
-        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz"),
-        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz")
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['gzip_fastq']['mem']
-    shell:
-        "gzip {input}"
+#rule gzip_fastq:
+#    input:
+#        config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq",
+#        config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq"
+#    output:
+#        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz"),
+#        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz")
+#    resources:
+#        mem_mb = lambda wildcards, attempt: attempt * res_config['gzip_fastq']['mem']
+#    shell:
+#        "gzip {input}"
 
 rule download_reference:
     output:
