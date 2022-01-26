@@ -9,7 +9,7 @@ from snakemake.exceptions import WorkflowError
 def get_ena_url(wildcards):
     base_url = "http://ftp.sra.ebi.ac.uk/vol1/err/"
     prefix = wildcards.run[:6]
-    lastdigit = wilcards.run[-1]
+    lastdigit = wildcards.run[-1]
     if len(wildcards.run) > 9:
         return base_url + prefix + "/" + "00" + lastdigit + "/" + wildcards.run
     else:
