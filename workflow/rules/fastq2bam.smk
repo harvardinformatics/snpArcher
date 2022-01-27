@@ -35,7 +35,7 @@ rule get_fastq_pe:
         if [ $fastqExit -eq 0 ]
         then
             rm -rf {wildcards.run}
-            gzip {params.outdir}{wildcards.run}*.fastq
+            pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
             exit 0
         else
             wget -O {params.outdir} {params.ena_fastq}{params.ena_url}_1.fastq.gz
