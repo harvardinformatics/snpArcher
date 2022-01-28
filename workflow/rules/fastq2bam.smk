@@ -38,8 +38,8 @@ rule get_fastq_pe:
             pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
             exit 0
         else
-            wget -O {params.outdir} {params.ena_fastq}{params.ena_url}_1.fastq.gz
-            wget -O {params.outdir} {params.ena_fastq}{params.ena_url}_2.fastq.gz
+            wget -P {params.outdir} {params.ena_fastq}{params.ena_url}_1.fastq.gz
+            wget -P {params.outdir} {params.ena_fastq}{params.ena_url}_2.fastq.gz
         fi
         """
 
