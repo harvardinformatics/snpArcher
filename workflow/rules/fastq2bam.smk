@@ -12,7 +12,7 @@ rule get_fastq_pe:
         tmpdir = config['tmp_dir'],
         ena_url = get_ena_url,
         ena_sra = "http://ftp.sra.ebi.ac.uk/vol1/err/",
-        ena_fastq = "ftp://ftp.sra.ebi.ac.uk/vol1/fastq/"
+        ena_fastq = "http://ftp.sra.ebi.ac.uk/vol1/fastq/"
     conda:
         "../envs/fastq2bam.yml"
     threads:
