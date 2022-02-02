@@ -9,10 +9,15 @@ from snakemake.exceptions import WorkflowError
 def get_ena_url(wildcards):
     prefix = wildcards.run[:6]
     lastdigit = wildcards.run[-1]
+    code = wildcards.run[:3]
+    baseloc = "http://ftp.sra.ebi.ac.uk/vol1/"
     if len(wildcards.run) > 9:
-        return prefix + "/" + "00" + lastdigit + "/" + wildcards.run
+        url = prefix + "/" + "00" + lastdigit + "/" + wildcards.run
     else:
-        return prefix + "/" + wildcards.run
+        url = prefix + "/" + wildcards.run
+    sra_url = baseloc + code + "/" + url
+    fastq_url = baseloc + "fastq/" + url
+    return {"sra_url": sra_url, "fastq_url": fastq_url}
 
 def get_bams_for_dedup(wildcards):
     runs = samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist()
