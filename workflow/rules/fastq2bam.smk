@@ -10,7 +10,8 @@ rule get_fastq_pe:
     params:
         outdir = config["fastqDir"] + "{Organism}/{sample}/",
         tmpdir = config['tmp_dir'],
-        **get_ena_url
+        sra_url = lambda wildcards: get_ena_url(wildcards)["sra_url"],
+        fastq_url = lambda wildcards: get_ena_url(wildcards)["fastq_url"]    
     conda:
         "../envs/fastq2bam.yml"
     threads:
