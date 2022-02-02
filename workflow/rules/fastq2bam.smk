@@ -10,9 +10,7 @@ rule get_fastq_pe:
     params:
         outdir = config["fastqDir"] + "{Organism}/{sample}/",
         tmpdir = config['tmp_dir'],
-        ena_url = get_ena_url,
-        ena_sra = "http://ftp.sra.ebi.ac.uk/vol1/err/",
-        ena_fastq = "http://ftp.sra.ebi.ac.uk/vol1/fastq/"
+        unpack(get_ena_url)
     conda:
         "../envs/fastq2bam.yml"
     threads:
@@ -30,7 +28,7 @@ rule get_fastq_pe:
         prefetchExit=$?
         if [[ $prefetchExit -ne 0 ]]
         then
-            wget -O {wildcards.run} {params.ena_sra}{params.ena_url}
+            wget -O {wildcards.run} {params.sra_url}
         fi
         ##if this succeeded, we'll have the correct file in our working directory
         if [[ -s {wildcards.run} ]]
@@ -38,8 +36,8 @@ rule get_fastq_pe:
             fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir}
             pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
         else
-            wget -P {params.outdir} {params.ena_fastq}{params.ena_url}/{wildcards.run}_1.fastq.gz
-            wget -P {params.outdir} {params.ena_fastq}{params.ena_url}/{wildcards.run}_2.fastq.gz
+            wget -P {params.outdir} {params.fastq_url}/{wildcards.run}_1.fastq.gz
+            wget -P {params.outdir} {params.fastq_url}/{wildcards.run}_2.fastq.gz
         fi
         rm -rf {wildcards.run}
         """
