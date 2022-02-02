@@ -26,7 +26,7 @@ rule get_fastq_pe:
         set +e
         prefetch {wildcards.run}
         prefetchExit=$?
-        if [[] $prefetchExit -ne 0 ]]
+        if [[ $prefetchExit -ne 0 ]]
         then
             wget -O {wildcards.run} {params.ena_sra}{params.ena_url}
             wgetExit=$?
