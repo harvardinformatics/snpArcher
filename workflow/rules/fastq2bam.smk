@@ -36,12 +36,12 @@ rule get_fastq_pe:
         if [[ -s {wildcards.run} ]]
         then
             fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir}
-            rm -rf {wildcards.run}
             pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
         else
             wget -P {params.outdir} {params.ena_fastq}{params.ena_url}/{wildcards.run}_1.fastq.gz
             wget -P {params.outdir} {params.ena_fastq}{params.ena_url}/{wildcards.run}_2.fastq.gz
         fi
+        rm -rf {wildcards.run}
         """
 
 #rule gzip_fastq:
