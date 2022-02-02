@@ -24,15 +24,16 @@ rule get_fastq_pe:
     shell:
         """
         set +e
+
+        ##attempt to get SRA file from NCIB (prefetch) or ENA (wget)
         prefetch {wildcards.run}
         prefetchExit=$?
-        wgetExit=prefetchExit
         if [[ $prefetchExit -ne 0 ]]
         then
             wget -O {wildcards.run} {params.ena_sra}{params.ena_url}
-            wgetExit=$?
         fi
-        if [[ $wgetExit == 0 || $prefetchExit == 0 ]]
+        ##if this succeeded, we'll have the correct file in our working directory
+        if [[ -s {wildcards.run} ]]
         then
             fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir}
             rm -rf {wildcards.run}
