@@ -26,17 +26,16 @@ rule get_fastq_pe:
         set +e
         prefetch {wildcards.run}
         prefetchExit=$?
-        if [ $prefetchExit -ne 0 ]
+        if [[] $prefetchExit -ne 0 ]]
         then
             wget -O {wildcards.run} {params.ena_sra}{params.ena_url}
+            wgetExit=$?
         fi
-        fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir} &> {log}
-        fastqExit=$?
-        if [ $fastqExit -eq 0 ]
+        if [[ $wgetExit == 0 || $prefetchExit == 0 ]]
         then
+            fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir}
             rm -rf {wildcards.run}
             pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
-            exit 0
         else
             wget -P {params.outdir} {params.ena_fastq}{params.ena_url}_1.fastq.gz
             wget -P {params.outdir} {params.ena_fastq}{params.ena_url}_2.fastq.gz
