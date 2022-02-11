@@ -30,8 +30,12 @@ rule all:
         expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz", zip, Organism=ORGANISM, refGenome=REFGENOME)
 
 include: "rules/common.smk"
-include: "rules/fastq2bam.smk"
 include: "rules/intervals.smk"
-include: "rules/bam2vcf_gatk.smk"
 include: "rules/qc.smk"
 include: "rules/callable_sites.smk"
+include: "rules/sumstats.smk"
+if config['sentieon']:
+    include: "rules/sentieon.smk"
+else:
+    include: "rules/bam2vcf_gatk.smk"
+    include: "rules/fastq2bam.smk"
