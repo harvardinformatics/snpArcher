@@ -19,6 +19,41 @@ def get_ena_url(wildcards):
     fastq_url = baseloc + "fastq/" + url
     return {"sra_url": sra_url, "fastq_url": fastq_url}
 
+def get_gvcf_cmd(wildcards):
+    sample_names = samples.BioSample.tolist()
+    vcfs = expand(os.path.join(workflow.default_remote_prefix, config['output'], "{Organism}/{refGenome}/", config['gvcfDir'], "{sample}.g.vcf.gz"), **wildcards, sample=sample_names)
+    out = " ".join(["-v " + vcf for vcf in vcfs])
+    return out
+def get_tbis_for_list(wildcards):
+    sample_names = samples.BioSample.tolist()
+    return expand(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.raw.g.vcf.gz.tbi", **wildcards, sample=sample_names)
+
+def get_gvcfs_for_list(wildcards):
+    sample_names = samples.BioSample.tolist()
+    return expand(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.raw.g.vcf.gz", **wildcards, sample=sample_names)
+
+def get_gvcfs(wildcards):
+    sample_names = samples.BioSample.tolist()
+    return expand(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz", **wildcards, sample=sample_names)
+
+def get_tbis(wildcards):
+    sample_names = samples.BioSample.tolist()
+    return expand(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz.tbi", **wildcards, sample=sample_names)
+
+def get_bams_for_dedup(wildcards):
+    runs = samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist()
+    
+    if len(runs) == 1:
+        return expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam", run=runs)
+    else:
+        return config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam"
+def get_bai_for_dedup(wildcards):
+    runs = samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist()
+    if len(runs) == 1:
+        return expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam.bai", run=runs)
+    else:
+        return config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam.bai"
+
 def get_bams_for_dedup(wildcards):
     runs = samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist()
     if len(runs) == 1:
@@ -41,7 +76,14 @@ def get_reads(wildcards):
         r2 = config["fastqDir"] + f"{wildcards.Organism}/{wildcards.sample}/{wildcards.run}_2.fastq.gz"
         return {"r1": r1, "r2": r2}
 
-def get_read_group(wildcards):
+def get_read_group_sentieon(wildcards):
+    """Denote sample name and library_id in read group."""
+    return r"'@RG\tID:{lib}\tSM:{sample}\tPL:ILLUMINA'".format(
+        sample=wildcards.sample,
+        lib=wildcards.sample
+    )
+
+def get_read_group_bwa(wildcards):
     """Denote sample name and library_id in read group."""
     return r"-R '@RG\tID:{lib}\tSM:{sample}\tPL:ILLUMINA'".format(
         sample=wildcards.sample,

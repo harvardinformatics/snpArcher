@@ -1,3 +1,40 @@
+ruleorder: index_ref > download_reference
+localrules: download_reference, index_ref
+
+rule download_reference:
+    output:
+        outdir = directory(config["refGenomeDir"] + "{refGenome}"),
+        ref = config["refGenomeDir"] + "{refGenome}.fna"
+    params:
+        dataset = config["refGenomeDir"] + "{refGenome}_dataset.zip"
+    log:
+        "logs/dl_reference/{refGenome}.log"
+    conda:
+        "../envs/fastq2bam.yml"
+    shell:
+        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} &> {log}"
+        "&& 7z x {params.dataset} -aoa -o{output.outdir}"
+        "&& cat {output.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
+
+rule index_ref:
+    input:
+        ref = config["refGenomeDir"] + "{refGenome}.fna"
+    output:
+        indexes = expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"]),
+        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
+        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict"
+    conda:
+        "../envs/fastq2bam.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['index_ref']['mem']
+    log:
+        "logs/index_ref/{refGenome}.log"
+    shell:
+        """
+        bwa index {input.ref} 2> {log}
+        samtools faidx {input.ref} --output {output.fai}
+        samtools dict {input.ref} -o {output.dictf} >> {log} 2>&1
+        """
 rule genmap_index:
     input:
         ref = config["refGenomeDir"] + "{refGenome}.fna",
