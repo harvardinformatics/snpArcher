@@ -37,3 +37,4 @@ tmp/
 .test/ecoli/logs/
 .test/ecoli/results/
 .test/ecoli/data/
+*.lic
