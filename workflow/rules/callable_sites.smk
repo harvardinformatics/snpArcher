@@ -28,7 +28,8 @@ rule bedgraphs:
 
 rule merge_bedgraph:
     input:
-        unpack(get_input_for_coverage)
+        bedgraphs = get_bedgraphs,
+        chrom = config['output'] + "{refGenome}/" + "{refGenome}" + ".sizes"
     output:
         merge = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{Organism}.merge.bg")
     log:

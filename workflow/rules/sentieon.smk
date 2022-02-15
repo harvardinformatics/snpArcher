@@ -1,6 +1,6 @@
 rule fastp:
     input:
-        unpack(get_reads)
+        unpack(get_remote_reads)
     output:
         r1 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz"),
         r2 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz"),
