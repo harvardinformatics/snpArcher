@@ -20,16 +20,16 @@ def get_ena_url(wildcards):
     return {"sra_url": sra_url, "fastq_url": fastq_url}
 
 def get_gvcf_cmd(wildcards):
-    sample_names = samples.BioSample.tolist()
+    sample_names = samples.BioSample.unique().tolist()
     vcfs = expand(os.path.join(workflow.default_remote_prefix, config['output'], "{Organism}/{refGenome}/", config['gvcfDir'], "{sample}.g.vcf.gz"), **wildcards, sample=sample_names)
     out = " ".join(["-v " + vcf for vcf in vcfs])
     return out
 def get_tbis_for_list(wildcards):
-    sample_names = samples.BioSample.tolist()
+    sample_names = samples.BioSample.unique().tolist()
     return expand(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.raw.g.vcf.gz.tbi", **wildcards, sample=sample_names)
 
 def get_gvcfs_for_list(wildcards):
-    sample_names = samples.BioSample.tolist()
+    sample_names = samples.BioSample.unique().tolist()
     return expand(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.raw.g.vcf.gz", **wildcards, sample=sample_names)
 
 def get_gvcfs(wildcards):
