@@ -42,8 +42,8 @@ def collectAlnSumMets(alnSumMetsFiles):
             total_aligns = int(lines[0].split()[0])
             num_dups = int(lines[4].split()[0])
             num_mapped = int(lines[6].split()[0])
-            percent_mapped = float(lines[7].split()[0].strip("%"))
-            percent_proper_paired = float(lines[14].split()[0].strip("%"))
+            percent_mapped = float(lines[7].split()[0].strip("%")) if lines[7].split()[0].strip("%").isdecimal() else 'NaN'
+            percent_proper_paired = float(lines[14].split()[0].strip("%")) if lines[14].split()[0].strip("%").isdecimal() else 'NaN'
             percent_dups = num_dups / total_aligns if total_aligns != 0 else 0
             aln_metrics[sample]["Total alignments"] = total_aligns
             aln_metrics[sample]["Percent Mapped"] = percent_mapped

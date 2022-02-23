@@ -1,6 +1,7 @@
 import pandas as pd
 import yaml
 import helperFun
+from snakemake.remote.GS import RemoteProvider as GSRemoteProvider
 
 configfile: "config/config.yaml"
 res_config = yaml.safe_load(open("config/resources.yaml"))
@@ -9,6 +10,9 @@ helperFun.make_temp_dir()
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
 species_counts = samples.drop_duplicates(subset = ["BioSample", "refGenome", "Organism"]).value_counts(subset=['refGenome', 'Organism'])  #get BioSample for each refGenome/Organism combination
 REFGENOME,ORGANISM = map(list, zip(*species_counts.index))  # split index into ref genome and organism
+
+GS = GSRemoteProvider()
+GS_READS_PREFIX = "ccgp-raw-reads"
 
 def get_output(refGenome, Organism):
     indexes = zip(refGenome,Organism)
@@ -28,6 +32,7 @@ rule all:
         expand(config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg", zip, Organism=ORGANISM, refGenome=REFGENOME),
         expand(config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.tsv", zip, Organism=ORGANISM, refGenome=REFGENOME),
         expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz", zip, Organism=ORGANISM, refGenome=REFGENOME)
+        
 
 include: "rules/common.smk"
 include: "rules/intervals.smk"
