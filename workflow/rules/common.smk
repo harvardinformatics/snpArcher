@@ -76,6 +76,15 @@ def get_reads(wildcards):
         r2 = config["fastqDir"] + f"{wildcards.Organism}/{wildcards.sample}/{wildcards.run}_2.fastq.gz"
         return {"r1": r1, "r2": r2}
 
+def get_remote_reads(wildcards):
+    """Use this for reads on a different remote bucket than the default."""
+    row = samples.loc[samples['Run'] == wildcards.run]
+    r1 = GS.remote(os.path.join(GS_READS_PREFIX, row.fq1.item()))
+    r2 = GS.remote(os.path.join(GS_READS_PREFIX, row.fq2.item()))
+    return {"r1": r1, "r2": r2}
+
+
+
 def get_read_group_sentieon(wildcards):
     """Denote sample name and library_id in read group."""
     return r"'@RG\tID:{lib}\tSM:{sample}\tPL:ILLUMINA'".format(
@@ -107,6 +116,24 @@ def get_sumstats(wildcards):
     alnSumMetsFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_AlnSumMets.txt", sample=_samples)
     coverageFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_coverage.txt", sample=_samples)
     return {'alnSumMetsFiles': alnSumMetsFiles, 'coverageFiles': coverageFiles, 'fastpFiles': fastpFiles}
+
+def get_aln_sum_metrics(wildcards):
+    """Snakemake seems to struggle with unpack() + expand() and default_remote_prefix. So we have to do this one by one.
+       See snakemake/snakemake #1396 for details."""
+    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    return expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_AlnSumMets.txt", sample=_samples)
+
+def get_fastpFiles(wildcards):
+    """Snakemake seems to struggle with unpack() + expand() and default_remote_prefix. So we have to do this one by one.
+       See snakemake/snakemake #1396 for details."""
+    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    return expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_fastp.out", sample=_samples)
+
+def get_coverageFiles(wildcards):
+    """Snakemake seems to struggle with unpack() + expand() and default_remote_prefix. So we have to do this one by one.
+       See snakemake/snakemake #1396 for details."""
+    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    return expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_coverage.txt", sample=_samples)
 
 def get_gather_vcfs(wildcards):
     """
@@ -145,8 +172,8 @@ def get_input_for_mapfile(wildcards):
     gvcfs = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}/" + "L{{list}}.raw.g.vcf.gz", sample=sample_names, **wildcards)
     gvcfs_idx = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}/" + "L{{list}}.raw.g.vcf.gz.tbi", sample=sample_names, **wildcards)
     doneFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}/" + "L{{list}}.done", sample=sample_names, **wildcards)
-
-    return {'gvcfs': gvcfs, 'gvcfs_idx': gvcfs_idx, 'doneFiles': doneFiles}
+    # only gvcfs are needed for the mapfile
+    return gvcfs
 
 def get_bedgraph_to_convert(wildcards):
     _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
@@ -161,6 +188,12 @@ def get_input_for_coverage(wildcards):
     bedgraphFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{sample}" + ".sorted.bg", sample=_samples)
     chromFile = config['output'] + "{refGenome}/" + "{refGenome}" + ".sizes"
     return {'bedgraphs': bedgraphFiles, 'chrom': chromFile}
+
+def get_bedgraphs(wildcards):
+    """Snakemake seems to struggle with unpack() and default_remote_prefix. So we have to do this one by one."""
+    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
+    bedgraphFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{sample}" + ".sorted.bg", sample=_samples)
+    return bedgraphFiles
 
 def make_intervals(outputDir, intDir, wildcards, dict_file, max_intervals):
     """Creates interval list files for parallelizing haplotypeCaller and friends. Writes one contig/chromosome per list file."""

@@ -1,6 +1,6 @@
 rule fastp:
     input:
-        unpack(get_reads)
+        unpack(get_remote_reads)
     output:
         r1 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz"),
         r2 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz"),
@@ -36,6 +36,8 @@ rule map:
     conda:
         "../envs/sentieon.yml"
     threads: res_config['bwa_map']['threads']
+    log:
+        "logs/{Organism}/{refGenome}/bwa/{sample}_{run}.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bwa_map']['mem'],
         machine_type = "n2d-standard-32"
@@ -45,8 +47,8 @@ rule map:
         """
         export MALLOC_CONF=lg_dirty_mult:-1
         export SENTIEON_LICENSE={input.lic}
-        sentieon bwa mem -M -R {params.rg} -t {threads} -K 10000000 {input.ref} {input.r1} {input.r2} | sentieon util sort --bam_compression 1 -r {input.ref} -o {output.bam} -t {threads} --sam2bam -i -
-        samtools index {output.bam} {output.bai}
+        sentieon bwa mem -M -R {params.rg} -t {threads} -K 10000000 {input.ref} {input.r1} {input.r2} 2>{log} | sentieon util sort --bam_compression 1 -r {input.ref} -o {output.bam} -t {threads} --sam2bam -i - 2>>{log}
+        samtools index {output.bam} {output.bai} 2>>{log}
         """
 
 rule merge_bams:

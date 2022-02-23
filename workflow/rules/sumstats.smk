@@ -27,7 +27,9 @@ rule collect_fastp_stats:
 
 rule collect_sumstats:
     input:
-        unpack(get_sumstats)
+        alnSumMetsFiles = get_aln_sum_metrics,
+        fastpFiles = get_fastpFiles,
+        coverageFiles = get_coverageFiles
     output:
         config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.tsv"
     run:
