@@ -32,7 +32,7 @@ The workflow requires a comma seperated metadata sheet to run. The fields of the
 | fq1 | Optional. Path to read 1 for sample |
 | fq2 | Optional. Path to read 2 for sample | 
 
-It is important to note that samples are proccessed together based on their `Organism` and `RefGenome` metadata. Thus if you want all of your samples genotyped together, they **must all share the same** `Organism` **and** `RefGenome` **value.** 
+It is important to note that samples are proccessed together based on their `Organism` and `RefGenome` metadata. Thus if you want all of your samples genotyped together, all samples **must all share the same** `Organism` **name and also must share the same** `RefGenome` **value.** 
 
 If your reads are stored in somewhere seperate of the workflow (e.g.: a scratch disk) then you can specify the path to your reads using the `fq1` and `fq2` fields. 
 
