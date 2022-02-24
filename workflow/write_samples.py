@@ -1,8 +1,10 @@
+#!/bin/python3
 import gzip
 import shutil
 import argparse
 from pathlib import Path
 from typing import TextIO
+import sys
 # User provides list of sample names, 1 per line
 # User provides path to where fastq files are. Assume paired end and that file name has sample name in it
 # User provides path to reference genome. Need to copy this to proper path
@@ -30,18 +32,23 @@ def copy_reference(ref: Path) -> str:
     if Path('..', 'data', 'genome', ref_name + ".fna").exists():
         return ref_name
     if not Path("../data/genome").exists():
-        Path("../data/genome").mkdir(parents=True)
+        try:
+            Path("../data/genome").mkdir(parents=True)
+        except PermissionError as e:
+            print(e)
+            sys.exit("Must run script from workflow directory.")
     if ref.suffix == ".gz":
         with gzip.open(ref, 'rb') as f_in:
             with open(Path('..', 'data', 'genome', ref_name + ".fna"), 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
     else:
-        shutil.copyfile(ref, Path('data', 'genome', ref_name + ".fna"))
+        shutil.copyfile(ref, Path('..', 'data', 'genome', ref_name + ".fna"))
     return ref_name
 
 def write_sample_sheet(sample_dict: dict, ref_name: str, organism: str, ) -> None:
     """Writes the sample sheet"""
-    with open(Path("../config", "samples.csv"), "w") as out:
+    org = organism.replace(" ", "_")
+    with open(Path("../sample_sheets", f"{org}_samples.csv"), "w") as out:
         out.write("BioSample,LibraryName,refGenome,Run,Organism,BioProject,fq1,fq2\n")
         for i, (k, v) in enumerate(sample_dict.items()):
             out.write(f"{k},lib_{k},{ref_name},{i},{organism},NaN,{v[0]},{v[1]}\n")
