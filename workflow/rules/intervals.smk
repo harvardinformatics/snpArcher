@@ -4,7 +4,8 @@ localrules: download_reference, index_ref
 rule download_reference:
     output:
         outdir = directory(config["refGenomeDir"] + "{refGenome}"),
-        ref = config["refGenomeDir"] + "{refGenome}.fna"
+        ref = config["refGenomeDir"] + "{refGenome}.fna",
+        dataset = config["refGenomeDir"] + "{refGenome}_dataset.zip"
     params:
         dataset = config["refGenomeDir"] + "{refGenome}_dataset.zip"
     log:
@@ -12,7 +13,7 @@ rule download_reference:
     conda:
         "../envs/fastq2bam.yml"
     shell:
-        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} &> {log}"
+        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {output.dataset} {wildcards.refGenome} &> {log}"
         "&& 7z x {params.dataset} -aoa -o{output.outdir}"
         "&& cat {output.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
 
