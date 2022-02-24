@@ -69,7 +69,8 @@ To run this out of the box, we reccomend setting split_by_n to True and sentieon
 The sample sheet with all of the samples to be run in the workflow should be placed in the `samples:` row. 
 
 ## Run example data
-
+To run the test data, activate your snakemake conda environment and execute the following command:
+`snakemake -d .test/ecoli --use-conda --cores <# of cores to use>`
 ## Options 
 
 e.g. switch between sentieon on scatter-gather, local vs google cloud
