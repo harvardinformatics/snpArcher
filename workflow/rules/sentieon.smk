@@ -32,8 +32,8 @@ rule map:
         indices = ancient(expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["fai", "sa", "pac", "bwt", "ann", "amb"])),
         lic = ancient(config['sentieon_lic'])
     output: 
-        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}/{run}.bam",
-        bai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}/{run}.bam.bai",
+        bam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}/{run}.bam"),
+        bai = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}/{run}.bam.bai"),
     params:
         rg = get_read_group_sentieon,
     conda:
@@ -74,8 +74,8 @@ rule dedup:
         bai = get_bai_for_dedup,
         lic = ancient(config['sentieon_lic'])
     output:
-        dedupBam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam",
-        dedupBai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam.bai",
+        dedupBam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam"),
+        dedupBai = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam.bai"),
     conda:
         "../envs/sentieon.yml"
     threads: 
@@ -101,8 +101,8 @@ rule gvcf:
         bai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam.bai",
         lic = ancient(config['sentieon_lic'])
     output:
-        gvcf = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz",
-        gvcf_idx = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz.tbi" ,
+        gvcf = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz"),
+        gvcf_idx = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz.tbi"),
     threads: 31
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bam2gvcf']['mem'],
@@ -128,8 +128,8 @@ rule combine_gvcf:
         gvcfs = get_gvcfs,
         tbis = get_tbis
     output:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz",
-        tbi = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz.tbi",
+        vcf = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz"),
+        tbi = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz.tbi"),
     params:
         gvcf = get_gvcf_cmd
     threads: 31
