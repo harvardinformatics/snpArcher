@@ -2,11 +2,13 @@
 # Variables you need to change
 ##############################
 
-samples: "config/samples.csv"            # name of the sample metadata CSV 
+samples: "sample_sheets/a_belli_workflow.csv"            # name of the sample metadata CSV 
 tmp_dir: "tmp/"   # directory path for a temp dir 
 split_by_n: True    #set to False to split by chromosome/scaffold; set to True to split on runs of Ns within chromosomes/scaffolds.
 sentieon: True  #set to True if you want to use sentieon, False if you want GATK
 sentieon_lic: "UCSC_Enbody_eval.lic" #set to path of sentieon license
+remote_reads: False # set if you want reads to be on google cloud storage remote
+remote_reads_prefix: "" # set to google bucket name where reads live
 ##############################
 # Variables you *might* need to change
 ##############################
@@ -44,7 +46,7 @@ nClusters: 3
 # These variables control the output of the fastq2bam workflow. You don't need to change these, but if you do please have a forward slash follow name!
 ##############################
 
-output: "results/"
+output: "ccgp-workflow-results/results/"
 fastqDir: "data/fastq/"                           # this is where raw fastqs are downloaded
 refGenomeDir: "data/genome/"                      # where reference genomes go
 fastq2bamDir: "fastq2bam/"

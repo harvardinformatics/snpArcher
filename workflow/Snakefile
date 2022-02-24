@@ -11,8 +11,9 @@ samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_',
 species_counts = samples.drop_duplicates(subset = ["BioSample", "refGenome", "Organism"]).value_counts(subset=['refGenome', 'Organism'])  #get BioSample for each refGenome/Organism combination
 REFGENOME,ORGANISM = map(list, zip(*species_counts.index))  # split index into ref genome and organism
 
-GS = GSRemoteProvider()
-GS_READS_PREFIX = "ccgp-raw-reads"
+if config['remote_reads']:
+    GS = GSRemoteProvider()
+    GS_READS_PREFIX = config['remote_reads_prefix']
 
 def get_output(refGenome, Organism):
     indexes = zip(refGenome,Organism)
@@ -32,7 +33,7 @@ rule all:
         expand(config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg", zip, Organism=ORGANISM, refGenome=REFGENOME),
         expand(config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.tsv", zip, Organism=ORGANISM, refGenome=REFGENOME),
         expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz", zip, Organism=ORGANISM, refGenome=REFGENOME)
-        
+        # expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz", Organism=ORGANISM, refGenome=REFGENOME)
 
 include: "rules/common.smk"
 include: "rules/intervals.smk"
