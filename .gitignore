@@ -39,3 +39,4 @@ tmp/
 .test/ecoli/data/
 *.lic
 config/*
+config/config.yaml
