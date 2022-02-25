@@ -14,7 +14,7 @@ rule download_reference:
         "../envs/fastq2bam.yml"
     shell:
         "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {output.dataset} {wildcards.refGenome} &> {log}"
-        "&& 7z x {params.dataset} -aoa -o{output.outdir}"
+        "&& 7z x {output.dataset} -aoa -o{output.outdir}"
         "&& cat {output.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
 
 rule index_ref:
