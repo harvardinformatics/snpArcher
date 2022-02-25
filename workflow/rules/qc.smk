@@ -32,7 +32,7 @@ rule vcftools_individuals:
     conda:
         "../envs/qc.yml"
     params:
-        prefix=config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}"
+        prefix= os.path.join(workflow.default_remote_prefix, (config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}"))
     shell:
         """
         vcftools --gzvcf {input.vcf} --FILTER-summary --out {params.prefix}
