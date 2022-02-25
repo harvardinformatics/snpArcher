@@ -36,7 +36,7 @@ It is important to note that samples are proccessed together based on their `Org
 
 If your reads are stored in somewhere seperate of the workflow (e.g.: a scratch disk) then you can specify the path to your reads using the `fq1` and `fq2` fields. 
 
-A python script `workflow/write_samples.py` is included to help write the sample sheet for you. This script has three arguments:
+A python script `workflow/write_samples.py` is included to help write the sample sheet for you. This script has four required arguments:
 |Argument| Description|
 | ------ | ---------- | 
 | `-s / --sample_list` | Path to a sample list. One sample per line |
