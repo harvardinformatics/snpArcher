@@ -33,7 +33,7 @@ rule all:
         expand(config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg", zip, Organism=ORGANISM, refGenome=REFGENOME),
         expand(config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.tsv", zip, Organism=ORGANISM, refGenome=REFGENOME),
         expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz", zip, Organism=ORGANISM, refGenome=REFGENOME)
-        # expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz", Organism=ORGANISM, refGenome=REFGENOME)
+        
 
 include: "rules/common.smk"
 include: "rules/intervals.smk"
