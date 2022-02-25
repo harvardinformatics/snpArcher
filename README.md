@@ -66,13 +66,18 @@ remote_reads_prefix: "" # name of bucket where reads live if above True.
 
 To run this out of the box, we reccomend setting split_by_n to True and sentieon to False. 
 
-The sample sheet with all of the samples to be run in the workflow should be placed in the `samples:` row. 
+The sample sheet with all of the samples to be run in the workflow should be placed in the `samples:` row.
+
+### Run the workflow
+Execute the Snakemake workflow by running the command:
+```snakemake --use-conda --cores <# of cores to use>```
 
 ## Run example data
-
+To run the test data, activate your snakemake conda environment and execute the following command:
+`snakemake -d .test/ecoli --use-conda --cores <# of cores to use>`
 ## Options 
 
-e.g. switch between sentieon on scatter-gather, local vs google cloud
+e.g. switch between sentieon on scatter-gather, local vs google cloud, should include bits about slurm here probably.
 
 ## Output
 
