@@ -38,3 +38,4 @@ tmp/
 .test/ecoli/results/
 .test/ecoli/data/
 *.lic
+config/*
