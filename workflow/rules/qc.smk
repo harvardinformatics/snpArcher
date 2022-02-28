@@ -77,7 +77,7 @@ rule plink:
         vcf = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.pruned.vcf.gz",
         faiResult = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_fai_tmp.txt"        
     params:
-        prefix=config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}",
+        prefix = os.path.join(workflow.default_remote_prefix, (config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}")),
         threads = res_config['plink']['threads']
     output: 
         bed = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.bed",
@@ -105,7 +105,7 @@ rule admixture:
         admix = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.3.Q"
     params:
         tmpbim = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}",
-        outdir = config['output'] + "{Organism}/{refGenome}/" + config['qcDir']
+        outdir = os.path.join(workflow.default_remote_prefix, (config['output'] + "{Organism}/{refGenome}/" + config['qcDir']))
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['admixture']['mem'] 
     conda:
@@ -133,7 +133,7 @@ rule qc_plots:
         snpqc = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_snpqc.txt",
         faiResult = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_fai_tmp.txt" 
     params:
-        prefix = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}",
+        prefix = os.path.join(workflow.default_remote_prefix, (config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}")),
         nClusters = config['nClusters']
     output: 
         qcpdf = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_qc.html"
