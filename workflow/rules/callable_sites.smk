@@ -17,7 +17,10 @@ rule compute_covstats:
                     fields = line.split()
                     if (len(fields) < 4):
                         continue
-                    cov_fields = map(int, fields[3:])
+                    try:
+                        cov_fields = map(int, fields[3:])
+                    except:
+                        continue
                     covsum = sum(cov_fields)
                     mean = covsum / len(fields[3:])
                     print(fields[0], fields[1], fields[2], covsum, mean, file=covbed)
