@@ -15,6 +15,7 @@ rule compute_covstats:
             with gzip.open(output.cov, 'wb') as covbed:
                 for line in f:
                     fields = line.split()
-                    sum = sum(int(fields[3,]))
-                    mean = sum / length(fields[3,])
-                    print(fields[0], fields[1], fields[2], sum, mean, file=covbed)
+                    cov_fields = map(int, fields[3:])
+                    covsum = sum(cov_fields)
+                    mean = covsum / len(fields[3:])
+                    print(fields[0], fields[1], fields[2], covsum, mean, file=covbed)
