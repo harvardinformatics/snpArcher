@@ -15,6 +15,8 @@ rule compute_covstats:
             with gzip.open(output.cov, 'wb') as covbed:
                 for line in f:
                     fields = line.split()
+                    if (len(fields) < 4):
+                        continue
                     cov_fields = map(int, fields[3:])
                     covsum = sum(cov_fields)
                     mean = covsum / len(fields[3:])
