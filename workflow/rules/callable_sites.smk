@@ -76,5 +76,7 @@ rule callable_bed:
         callable_sites = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + "callable_sites.bed"
     envs:
         "../envs/callable.yml"
+    params:
+        merge = 100
     shell:
-        bedtools intersect -a {input.callable_cov} -b {input.callable_map} | bedtools merge -i - > {output.callable_sites}
+        bedtools intersect -a {input.callable_cov} -b {input.callable_map} | bedtools merge -d {params.merge} -i - > {output.callable_sites}
