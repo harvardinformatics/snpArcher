@@ -1,5 +1,3 @@
-localrules: compute_covstats
-
 import gzip
 import json
 
@@ -79,4 +77,4 @@ rule callable_bed:
     envs:
         "../envs/callable.yml"
     shell:
-        bedtools intersect -a {input.callable_cov} -b {input.callable_map} > {output.callable_sites}
+        bedtools intersect -a {input.callable_cov} -b {input.callable_map} | bedtools merge -i - > {output.callable_sites}
