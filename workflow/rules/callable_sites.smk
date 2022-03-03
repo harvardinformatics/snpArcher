@@ -12,7 +12,7 @@ rule compute_covstats:
     run:
         import gzip
         with gzip.open(input.bgz) as f:
-            with gzip.open(output.cov, 'wb') as covbed:
+            with gzip.open(output.cov, 'w') as covbed:
                 for line in f:
                     fields = line.split()
                     if (len(fields) < 4):
