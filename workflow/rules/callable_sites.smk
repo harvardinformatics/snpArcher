@@ -11,7 +11,7 @@ rule compute_covstats:
         cov = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.bg.gz"
     run:
         import gzip
-        with gzip.open(input.bgz) as f:
+        with gzip.open(input.bgz, 'rt') as f:
             with gzip.open(output.cov, 'wt') as covbed:
                 for line in f:
                     fields = line.split()
