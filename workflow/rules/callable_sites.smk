@@ -1,52 +1,20 @@
-localrules: genome_prep
 
 ## RULES ##
 
-rule genome_prep:
-  input:
-      ref = config["refGenomeDir"] + "{refGenome}.fna"
-  output:
-      twobit = config['output'] + "{refGenome}/" + "{refGenome}" + ".2bit",
-      chrom = config['output'] + "{refGenome}/" + "{refGenome}" + ".sizes"
-  conda:
-      "../envs/callable.yml"
-  shell:
-      "faToTwoBit {input.ref} {output.twobit}\n"
-      "twoBitInfo {output.twobit} stdout | sort -k2rn > {output.chrom}"
+## plan is to make a callable sites that filters on both mappability and coverage
 
-rule bedgraphs:
-    input:
-        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix']
-    output:
-        temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}.sorted.bg")
-    conda:
-        "../envs/callable.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']
-    shell:
-        "bedtools genomecov -ibam {input.bam} -bga | sort -k1,1 -k2,2n - > {output}"
 
-rule merge_bedgraph:
+rule compute_covstats:
     input:
-        unpack(get_input_for_coverage)
+        bgz = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz"
     output:
-        merge = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{Organism}.merge.bg")
-    log:
-        "logs/{Organism}/covcalc/{refGenome}_{Organism}_merge.txt"
-    conda:
-        "../envs/callable.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']
-    shell:
-        "bedtools unionbedg -header -empty -g {input.chrom} -i {input.bedgraphs} > {output.merge} 2> {log}"
-
-rule gzip_bedgraph:
-    input:
-        get_bedgraph_to_convert
-    output:
-        bgz = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz",
-        idx = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gzi"
-    conda:
-        "../envs/callable.yml"
-    shell:
-        "bgzip -i -I {output.idx} -c {input} > {output.bgz}"
+        cov = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + "covstats.bg.gz"
+    run:
+        import gzip
+        with gzip.open(input.bgz) as f:
+            with gzip.open(output.cov, 'wb') as covbed:
+                for line in f:
+                    fields = line.split()
+                    sum = sum(int(fields[3,]))
+                    mean = sum / length(fields[3,])
+                    print(fields[0], fields[1], fields[2], sum, mean, file=covbed)
