@@ -27,8 +27,8 @@ rule all:
         get_output(REFGENOME,ORGANISM),
         expand(config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg", zip, Organism=ORGANISM, refGenome=REFGENOME),
         expand(config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.tsv", zip, Organism=ORGANISM, refGenome=REFGENOME),
-        expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz", zip, Organism=ORGANISM, refGenome=REFGENOME),
-        expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.bg.gz", zip, Organism=ORGANISM, refGenome=REFGENOME)
+        expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.bg.gz", zip, Organism=ORGANISM, refGenome=REFGENOME),
+        expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.callable_sites.bed", zip, Organism=ORGANISM, refGenome=REFGENOME)
 
 include: "rules/common.smk"
 include: "rules/fastq2bam.smk"

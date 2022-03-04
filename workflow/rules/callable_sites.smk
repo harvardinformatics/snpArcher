@@ -11,7 +11,7 @@ rule compute_covstats:
         bgz = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz"
     output:
         cov = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.bg.gz",
-        stats = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + "covstats.txt"
+        stats = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.txt"
     run:
         covtot = 0
         meantot = 0
@@ -41,10 +41,10 @@ rule filter_bed:
     input:
         cov = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.bg.gz",
         map = config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg",
-        stats = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + "covstats.txt"
+        stats = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.txt"
     output:
-        callable_cov = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + "callable_sites_cov.bed"),
-        callable_map = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + "callable_sites_map.bed")
+        callable_cov = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_cov.bed"),
+        callable_map = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_map.bed")
     params:
         mappability = 1,
         low_cov = 0.5,
@@ -70,13 +70,13 @@ rule filter_bed:
 
 rule callable_bed:
     input:
-        callable_cov = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + "callable_sites_cov.bed",
-        callable_map = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + "callable_sites_map.bed"
+        callable_cov = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_cov.bed",
+        callable_map = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_map.bed"
     output:
-        callable_sites = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + "callable_sites.bed"
+        callable_sites = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites.bed"
     conda:
         "../envs/callable.yml"
     params:
         merge = 100
     shell:
-        bedtools intersect -a {input.callable_cov} -b {input.callable_map} | bedtools merge -d {params.merge} -i - > {output.callable_sites}
+        "bedtools intersect -a {input.callable_cov} -b {input.callable_map} | bedtools merge -d {params.merge} -i - > {output.callable_sites}"
