@@ -1,4 +1,4 @@
-localrules: bam_sumstats, collect_fastp_stats, collect_sumstats
+localrules: collect_fastp_stats, collect_sumstats
 rule bam_sumstats:
     input:
         bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
