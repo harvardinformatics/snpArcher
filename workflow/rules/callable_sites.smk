@@ -56,13 +56,13 @@ rule filter_bed:
         min_cov = stats['mean_summed_cov'] * params.low_cov
         max_cov = stats['mean_summed_cov'] * params.high_cov
         with gzip.open(input.cov, 'rt') as cov:
-            with open(output.callable_cov) as cov_out:
+            with open(output.callable_cov, 'w') as cov_out:
                 for line in cov:
                     fields = line.split()
                     if fields[3] >= min_cov and fields[3] <= max_cov:
                         print(fields[0], fields[1], fields[2], sep="\t", file=cov_out)
         with open(input.map) as map:
-            with open(output.callable_map) as map_out:
+            with open(output.callable_map, 'w') as map_out:
                 for line in map:
                     fields=line.split()
                     if fields[3] >= mappability:
