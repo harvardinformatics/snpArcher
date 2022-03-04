@@ -1,0 +1,7 @@
+google-lifesciences: True
+google-lifesciences-region : 'us-central1'
+use-conda: True
+jobs: 20
+preemption-default: 3
+default-remote-prefix: 'ccgp-workflow-results'
+ignore-incomplete: True

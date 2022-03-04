@@ -24,14 +24,14 @@ genmap_sort:
     mem: 4000
   # bwa mapping
 bwa_map:
-    threads: 10
+    threads: 31
     mem: 15000
 # sort bam with picard's SortSam tool
 sort_bam:
     mem: 25000
 # mark duplicates with picard's MarkDuplicates
 dedup:
-    threads: 10
+    threads: 31
     mem: 9000
 # calculate BAM summaries with samtools and picard
 bam_sumstats:
