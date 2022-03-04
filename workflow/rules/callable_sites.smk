@@ -65,7 +65,7 @@ rule filter_bed:
             with open(output.callable_map, 'w') as map_out:
                 for line in map:
                     fields=line.split()
-                    if int(fields[3]) >= mappability:
+                    if int(fields[3]) >= params.mappability:
                         print(fields[0], fields[1], fields[2], sep="\t", file=map_out)
 
 rule callable_bed:
