@@ -74,7 +74,7 @@ rule callable_bed:
         callable_map = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + "callable_sites_map.bed"
     output:
         callable_sites = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + "callable_sites.bed"
-    envs:
+    conda:
         "../envs/callable.yml"
     params:
         merge = 100
