@@ -34,7 +34,7 @@ rule compute_covstats:
                     bptot = bptot + bp
                     print(fields[0], fields[1], fields[2], covsum, mean, file=covbed, sep="\t")
         stats = {"mean_summed_cov": covtot/bptot, "mean_ind_cov": meantot / bptot}
-        with open(output.stats) as st:
+        with open(output.stats, 'w') as st:
             print(json.dumps(stats), file=st)
 
 rule filter_bed:
