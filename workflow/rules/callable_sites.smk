@@ -59,13 +59,13 @@ rule filter_bed:
             with open(output.callable_cov, 'w') as cov_out:
                 for line in cov:
                     fields = line.split()
-                    if int(fields[3]) >= min_cov and int(fields[3]) <= max_cov:
+                    if float(fields[3]) >= min_cov and float(fields[3]) <= max_cov:
                         print(fields[0], fields[1], fields[2], sep="\t", file=cov_out)
         with open(input.map) as map:
             with open(output.callable_map, 'w') as map_out:
                 for line in map:
                     fields=line.split()
-                    if int(fields[3]) >= params.mappability:
+                    if float(fields[3]) >= params.mappability:
                         print(fields[0], fields[1], fields[2], sep="\t", file=map_out)
 
 rule callable_bed:
