@@ -104,7 +104,6 @@ rule gvcf:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bam2gvcf']['mem'],
         machine_type = "n2d-standard-32",
-        disk_mb = 2000000
     conda:
         "../envs/sentieon.yml"
     benchmark:
@@ -133,7 +132,8 @@ rule combine_gvcf:
     threads: 31
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bam2gvcf']['mem'],
-        machine_type = "n2d-standard-32"
+        machine_type = "n2d-standard-32",
+        disk_mb = 2000000
     conda:
         "../envs/sentieon.yml"
     log: "logs/{Organism}/{refGenome}/combine_gvcf.txt"
