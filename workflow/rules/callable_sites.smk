@@ -13,9 +13,9 @@ rule compute_covstats:
         cov = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.bg.gz",
         stats = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.txt"
     run:
-        covtot = 0
-        meantot = 0
-        bptot = 0
+        covtot = 0.0
+        meantot = 0.0
+        bptot = 0.0
         with gzip.open(input.bgz, 'rt') as f:
             with gzip.open(output.cov, 'wt') as covbed:
                 for line in f:
@@ -23,12 +23,12 @@ rule compute_covstats:
                     if (len(fields) < 4):
                         continue
                     try:
-                        cov_fields = map(int, fields[3:])
+                        cov_fields = map(float, fields[3:])
                     except:
                         continue
                     covsum = sum(cov_fields)
                     mean = covsum / len(fields[3:])
-                    bp = int(fields[2]) - int(fields[1])
+                    bp = float(fields[2]) - float(fields[1])
                     covtot = covtot + (covsum * bp)
                     meantot = meantot + (mean * bp)
                     bptot = bptot + bp
@@ -53,8 +53,8 @@ rule filter_bed:
         stats = {}
         with open(input.stats) as stats:
             stats = json.load(stats)
-        min_cov = stats['mean_summed_cov'] * params.low_cov
-        max_cov = stats['mean_summed_cov'] * params.high_cov
+        min_cov = float(stats['mean_summed_cov']) * params.low_cov
+        max_cov = float(stats['mean_summed_cov']) * params.high_cov
         with gzip.open(input.cov, 'rt') as cov:
             with open(output.callable_cov, 'w') as cov_out:
                 for line in cov:
@@ -65,7 +65,7 @@ rule filter_bed:
             with open(output.callable_map, 'w') as map_out:
                 for line in map:
                     fields=line.split()
-                    if float(fields[3]) >= params.mappability:
+                    if double(fields[3]) >= params.mappability:
                         print(fields[0], fields[1], fields[2], sep="\t", file=map_out)
 
 rule callable_bed:
