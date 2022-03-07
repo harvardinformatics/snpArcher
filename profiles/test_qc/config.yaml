@@ -1,0 +1,4 @@
+use-conda: True
+cores: 4
+directory: ".test/qc"
+allowed-rules: ["subsample_snps", "vcftools_individuals", "snp_filters_qc", "plink", "admixture", "qc_plots"]

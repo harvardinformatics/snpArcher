@@ -18,21 +18,31 @@ if config['remote_reads']:
 def get_output(refGenome, Organism):
     indexes = zip(refGenome,Organism)
     files = list()
-    for idx in indexes:
-        if species_counts[idx] > 2:
+    if not config['test_qc']:
+        for idx in indexes:
+            if species_counts[idx] > 2:
+                files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + "_qc.html")
+            else:
+                files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + ".imiss")
+                files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + ".idepth")
+                files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + "_snpqc.txt")
+        files.append(
+            expand(config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg", zip, Organism=ORGANISM, refGenome=REFGENOME),
+        )
+        files.append(
+            expand(config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.tsv", zip, Organism=ORGANISM, refGenome=REFGENOME),
+        )
+        files.append(
+            expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz", zip, Organism=ORGANISM, refGenome=REFGENOME)
+        )
+    else:
+        for idx in indexes:
             files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + "_qc.html")
-        else:
-            files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + ".imiss")
-            files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + ".idepth")
-            files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + "_snpqc.txt")
     return files
 
 rule all:
     input:
         get_output(REFGENOME,ORGANISM),
-        expand(config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg", zip, Organism=ORGANISM, refGenome=REFGENOME),
-        expand(config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.tsv", zip, Organism=ORGANISM, refGenome=REFGENOME),
-        # expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz", zip, Organism=ORGANISM, refGenome=REFGENOME)
         
 
 include: "rules/common.smk"
