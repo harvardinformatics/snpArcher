@@ -2,7 +2,7 @@
 # Variables you need to change
 ##############################
 
-samples: "config/test.csv"            # name of the sample metadata CSV 
+samples: "config/test_coords.csv"            # name of the sample metadata CSV 
 tmp_dir: "tmp/"   # directory path for a temp dir 
 split_by_n: False
 sentieon: False  #set to True if you want to use sentieon, False if you want GATK
