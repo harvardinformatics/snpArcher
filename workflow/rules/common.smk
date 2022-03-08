@@ -6,6 +6,14 @@ from collections import defaultdict, deque
 from snakemake.exceptions import WorkflowError
 ### INPUT FUNCTIONS ###
 
+def write_coords_file(wildcards):
+    out_df = samples[["BioSample", "long", "lat"]]
+    out_df.drop_duplicates("BioSample", inplace=True)
+    outpath = os.path.join(workflow.default_remote_prefix, config['output'], f"{wildcards.Organism}/{wildcards.refGenome}/", config['qcDir'], f"{wildcards.Organism}_{wildcards.refGenome}.coords.txt")
+    out_df.to_csv(outpath, index=False, sep="\t")
+def get_coords_if_available(wildcards):
+    if 'lat' in samples.columns and 'long' in samples.columns:
+        return config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.coords.txt" 
 def get_ena_url(wildcards):
     prefix = wildcards.run[:6]
     lastdigit = wildcards.run[-1]

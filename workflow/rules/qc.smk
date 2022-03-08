@@ -131,6 +131,13 @@ rule admixture:
         mv "{wildcards.Organism}_{wildcards.refGenome}".3.* {params.outdir}
         """
 
+rule generate_coords_file:
+    output: 
+        config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.coords.txt"
+    run:
+        write_coords_file(wildcards)
+
+
 rule qc_plots:
     """
     Call plotting script
@@ -150,7 +157,7 @@ rule qc_plots:
         bed = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.bed",
         bim = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.bim",
         fam = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.fam",
-        #coords = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.coords.txt" 
+        coords = get_coords_if_available
     params:
         prefix = os.path.join(workflow.default_remote_prefix, (config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}")),
         nClusters = config['nClusters']
