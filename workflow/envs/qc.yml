@@ -15,3 +15,4 @@ dependencies:
   - r-flexdashboard==0.5.2
   - r-ape==5.5
   - r-reshape2==1.4.4
+  - bioconductor-ggtree==3.2.0

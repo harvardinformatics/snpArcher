@@ -18,10 +18,14 @@ suppressMessages(library(tidyverse))
 suppressMessages(library(plotly))
 suppressMessages(library(ape))
 suppressMessages(library(reshape2))
+suppressMessages(library(ggtree))
+
 
 prefix <- params$prefix
-set.colors <- c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a')
+set.colors <- c('#a6cee3','#1f78b4','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a')
+
 ```
+
 
 Individuals
 ===================================== 
@@ -100,7 +104,7 @@ df.pca$cluster <- paste("cluster",k$cluster, sep = "_")
   theme(text = element_text(size = 14),
         legend.position = "none") +
   xlab(paste0("PC1", ": ", round(df.val[1,2],1),"% variance")) +
-  ylab(paste0("PC2", ": ", round(df.val[2,2],1),"% variance")) + 
+  ylab(paste0("PC2", ": ", round(df.val[2,2],1),"% variance")) +
   scale_fill_manual(values = set.colors)) %>% 
   ggplotly(tooltip=c("text","x","y")) 
 
@@ -143,7 +147,7 @@ Row
 
 ### Tree 
 
-```{r, fig.height=12, fig.width=10}
+```{r, fig.height=10, fig.width=12}
 
 dist.id <- read.table(paste0(prefix, ".dist.id"))["V2"]
 dist.id <- left_join(dist.id, df.pca[,c("IID","cluster")], by = c("V2" = "IID"))
@@ -157,12 +161,43 @@ nj.dist$tip.label <- dist.id$V2
 
 mycol <- set.colors[factor(dist.id$cluster)]
 
-plot(nj.dist, tip.color = mycol, type = "fan")
+#a messy ape plot
+#plot(nj.dist, tip.color = mycol, type = "unrooted", use.edge.length	= F)
 
-#p <- ggtree(nj.dist, layout = "fan")
-#p %<+% dist.id + geom_tiplab(pch = 16, aes(col = cluster)) +
-#  theme(legend.position = "none") +
-#  scale_color_manual(values = set.colors)
+# ggtree
+p.ggtree <- ggtree(nj.dist, layout="daylight", branch.length = "none")
+
+## with ggtree labeling scheme
+# p.ggtreelabs <- p.ggtree %<+% dist.id + 
+#   geom_tiplab(pch = 5, aes(col = cluster)) +
+#   theme(legend.position = "none") +
+#   scale_color_manual(values = set.colors) 
+
+## this tree doesnt work well because the edges get cut off
+## due to different axes units in the tree vs text
+## ggplot2::xlim(-500, 500) + ylim(-500, 500) sort of helps
+# p.ggtreelabs
+
+metat <- p.ggtree$data %>%
+  dplyr::inner_join(dist.id, c('label' = 'V2'))
+
+#hacky solution to add text labels
+#using the ggtree label geoms is not supported by plotly
+p.ggtree.custom <- p.ggtree +
+  geom_text(data = metat,
+             aes(x = x,
+                 y = y,
+                 colour = cluster,
+                 label = label), size = 3) +
+  theme(legend.position = "none") +
+  scale_color_manual(values = set.colors) 
+
+p.ggtree.custom
+
+# This interactive code really should work but when rendered with plotly, in the pipeline, the tree is blank
+# this isnt an issue with local install so it may be a ggtree version issue
+
+#ggplotly(p.ggtree.custom, tooltip=c("label", "cluster"))
 
 ```
 
@@ -210,6 +245,7 @@ if(length(l.inf)==0){
     theme(
       axis.text.x = element_text(angle = 90),
       axis.title = element_blank(),
+      axis.text = element_text(size = 5),
       legend.position = "top"
     ) +
      scale_fill_gradient2(low = "blue", high = "red", mid = "white",
@@ -244,7 +280,7 @@ samps <- paste0(prefix, ".fam")
 x <- read.table(k2, header = F)
 
 struct_files <- c(k2,k3)
-cat_snmf <- do.call("rbind",lapply(struct_files,
+cat_admx <- do.call("rbind",lapply(struct_files,
                                FUN=function(files){
                                  x <- read.table(files, header = F)
                                  names(x) <- gsub("V", "pop", names(x)) #rename ancestral pops
@@ -255,30 +291,21 @@ cat_snmf <- do.call("rbind",lapply(struct_files,
                                    pivot_longer(names_to = "popGroup", values_to = "prob", cols = -c(sampleID, k))
                                  x.long
                                }))
-#basic, but not pretty
-#sample.order <- cat_snmf %>% 
-#  group_by(sampleID) %>% 
-#  filter(prob == max(prob)) %>% 
-#  arrange(popGroup) %>% 
-#  ungroup() %>% 
-#  mutate(sample_order = 1:n()) %>% 
-#  select(sampleID, sample_order)
 
-##############################
-cat_snmf.wide <- cat_snmf %>% 
+cat_admx.wide <- cat_admx %>% 
+  filter(k == 2) %>% 
   select(sampleID, k, popGroup, prob) %>% 
   pivot_wider(names_from = "popGroup", values_from = "prob") %>% 
-  group_by(k) %>% 
-  arrange(k, pop1, pop2, pop3) %>% 
+  arrange(pop1, pop2) %>% 
   mutate(sample_order = 1:n()) %>% 
   ungroup()
+sample.order <- cat_admx.wide %>% select(sampleID, sample_order)
+cat_admx <- left_join(cat_admx, sample.order, by = c("sampleID"))
 
-sample.order <- cat_snmf.wide %>% select(sampleID, sample_order, k)
 
-cat_snmf <- left_join(cat_snmf, sample.order, by = c("sampleID", "k"))
 ##############################
 
-p.k2 <- cat_snmf %>% 
+p.k23 <- cat_admx %>% 
   filter(k == 2 | k == 3) %>% 
   ggplot(aes(x = fct_reorder(sampleID, sample_order), y = prob, fill = factor(popGroup), text = sampleID)) +
   geom_col(aes(fill = factor(popGroup)), size = 0.1) +
@@ -297,16 +324,16 @@ p.k2 <- cat_snmf %>%
   scale_fill_manual(name = "grp",values = set.colors, guide = F) +xlab(NULL)  + theme(legend.position = "none")
 
 #make admix interactive
-pl.admix <- ggplotly(p.k2, tooltip=c("text", "y"))
+pl.admix <- ggplotly(p.k23, tooltip=c("text", "y"))
 pl.admix
 ```
 
-Row {data-width=1200}
+Row {data-width=1200, data-height=1600}
 -----------------------------------------------------------------------
 
 ### Map
 
-```{r, fig.width = 10, height = 5}
+```{r, fig.width = 10, height = 10}
 
 g <- list(
   scope = 'north america',
@@ -347,15 +374,15 @@ if(file.exists(paste0(prefix, ".coords.txt"))){
   
   mycol <- set.colors[factor(df.coords$cluster)]
   
-  df.coords$long.jit <- jitter(df.coords$long, 8)
-  df.coords$lat.jit <- jitter(df.coords$lat, 8)
+  df.coords$long.jit <- jitter(as.numeric(df.coords$long), 8)
+  df.coords$lat.jit <- jitter(as.numeric(df.coords$lat), 8)
   
  plot_geo(df.coords, lat = ~lat.jit, lon = ~long.jit) %>% 
       layout(legend = list(orientation = 'h'), geo = g) %>% 
    add_markers(
       text = ~paste(IID, cluster, PC1, PC2, sep = "<br />"),
-      color = ~cluster, symbol = I("circle"), size = I(30), 
-      hoverinfo = "text", colors = set.colors[1:input$clusters]
+      color = ~cluster, symbol = I("circle"), size = I(60), 
+      hoverinfo = "text", colors = set.colors[1:input$clusters],
     ) %>% 
    colorbar(title = "cluster")   
 }else{
