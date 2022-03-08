@@ -153,9 +153,9 @@ rule filterVcfs:
         "--invalidate-previous-filters true &> {log}"
 
 rule sort_gatherVcfs:
-    input: 
+    input:
         get_gather_vcfs
-    output: 
+    output:
         vcfFinal = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
     params:
         gather_vcfs_CLI
