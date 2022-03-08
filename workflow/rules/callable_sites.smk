@@ -1,10 +1,100 @@
 import gzip
 import json
 
+localrules: genome_prep
+
 ## RULES ##
 
-## plan is to make a callable sites that filters on both mappability and coverage
+rule genmap_index:
+    input:
+        ref = config["refGenomeDir"] + "{refGenome}.fna",
+    log:
+        "logs/{refGenome}/genmap_index.log"
+    conda:
+        "../envs/callable.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap']['mem']
+    output:
+        temp(directory(config['output'] + "{refGenome}/" + "genmap.index"))
+    shell:
+        "genmap index -F {input.ref} -I {output} &> {log}"
 
+rule genmap_map:
+    input:
+        config['output'] + "{refGenome}/" + "genmap.index"
+    log:
+        "logs/{refGenome}/genmap_map.log"
+    params:
+        outdir = config['output'] + "{refGenome}/" + "genmap"
+    conda:
+        "../envs/callable.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap']['mem']
+    threads:
+        res_config['genmap']['threads']
+    output:
+        temp(config['output'] + "{refGenome}/" + "genmap/{refGenome}.genmap.bedgraph")
+    shell:
+        "genmap map -K 150 -E 0 -I {input} -O {params.outdir} -bg -T {threads} -v  > {log}"
+
+rule sort_genmap:
+    input:
+        config['output'] + "{refGenome}/" + "genmap/{refGenome}.genmap.bedgraph"
+    output:
+        config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap_sort']['mem']
+    shell:
+        "sort -k1,1 -k2,2n {input} > {output}"
+
+rule genome_prep:
+  input:
+      ref = config["refGenomeDir"] + "{refGenome}.fna"
+  output:
+      twobit = config['output'] + "{refGenome}/" + "{refGenome}" + ".2bit",
+      chrom = config['output'] + "{refGenome}/" + "{refGenome}" + ".sizes"
+  conda:
+      "../envs/callable.yml"
+  shell:
+      "faToTwoBit {input.ref} {output.twobit}\n"
+      "twoBitInfo {output.twobit} stdout | sort -k2rn > {output.chrom}"
+
+rule bedgraphs:
+    input:
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix']
+    output:
+        temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}.sorted.bg")
+    conda:
+        "../envs/callable.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']
+    shell:
+        "bedtools genomecov -ibam {input.bam} -bga | sort -k1,1 -k2,2n - > {output}"
+
+rule merge_bedgraph:
+    input:
+        unpack(get_input_for_coverage)
+    output:
+        merge = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{Organism}.merge.bg")
+    log:
+        "logs/{Organism}/covcalc/{refGenome}_{Organism}_merge.txt"
+    conda:
+        "../envs/callable.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']
+    shell:
+        "bedtools unionbedg -header -empty -g {input.chrom} -i {input.bedgraphs} > {output.merge} 2> {log}"
+
+rule gzip_bedgraph:
+    input:
+        get_bedgraph_to_convert
+    output:
+        bgz = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz",
+        idx = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gzi"
+    conda:
+        "../envs/callable.yml"
+    shell:
+        "bgzip -i -I {output.idx} -c {input} > {output.bgz}"
 
 rule compute_covstats:
     input:
