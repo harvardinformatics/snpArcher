@@ -88,7 +88,7 @@ def gather_vcfs_CLI(wildcards):
     """
     vcfs = get_gather_vcfs(wildcards)
     out = " ".join(["-I " + vcf for vcf in vcfs])
-    out = out + " -Djava.io.tmpdir=" + config['tmp_dir']
+    out = out + " --tmp-dir " + config['tmp_dir']
     return out
 
 def write_db_mapfile(wildcards):
