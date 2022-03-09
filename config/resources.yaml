@@ -70,28 +70,22 @@ bedtools:
 
 # gatk HaplotypeCaller
 bam2gvcf:
-    mem: 30000
+    mem: 9000
 # gatk GenomicsDBImport
 gvcf2DB:
-    mem: 30000
+    mem: 32000
 # gatk GenotypeGVCFs
 DB2vcf:
-    mem: 30000
+    mem: 32000
 # gatk filterVcfs
 filterVcfs:
-    mem: 30000
+    mem: 4000
 # gatk GatherVcfs
 gatherVcfs:
-    mem: 30000
-# picard SortVcf
-sortVcf:
-    mem: 30000
+    mem: 9000
 # vcftools program
 vcftools:
-    mem: 30000
-# bedtools program
-bedtools:
-    mem: 30000
+    mem: 8000
 # plink
 plink:
     threads: 5
