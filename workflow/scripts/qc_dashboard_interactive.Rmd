@@ -304,7 +304,7 @@ g <- list(
 )
 
 if(file.exists(paste0(prefix, ".coords.txt"))){
-  if(!is.null(input$GMKey)){
+  if(input$GMKey!=999){
     df.coords <- read.table(paste0(prefix, ".coords.txt"))
     names(df.coords) <- c("sample.ID","long","lat")
     
