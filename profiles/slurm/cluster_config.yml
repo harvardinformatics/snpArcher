@@ -12,11 +12,3 @@ __default__:
 
 bam2gvcf:
     partition: "serial_requeue"
-
-
-###
-# bam2vcf_fb
-###
-
-bam2vcf:
-    partition: "serial_requeue"

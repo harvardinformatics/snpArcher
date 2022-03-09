@@ -1,45 +1,3 @@
-rule genmap_index:
-    input:
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
-    log:
-        "logs/{refGenome}/genmap_index.log"
-    conda:
-        "../envs/genmap.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap']['mem']
-    output:
-        temp(directory(config['output'] + "{refGenome}/" + "genmap.index"))
-    shell:
-        "genmap index -F {input.ref} -I {output} &> {log}"
-
-rule genmap_map:
-    input:
-        config['output'] + "{refGenome}/" + "genmap.index"
-    log:
-        "logs/{refGenome}/genmap_map.log"
-    params:
-        outdir = config['output'] + "{refGenome}/" + "genmap"
-    conda:
-        "../envs/genmap.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap']['mem']
-    threads:
-        res_config['genmap']['threads']
-    output:
-        temp(config['output'] + "{refGenome}/" + "genmap/{refGenome}.genmap.bedgraph")
-    shell:
-        "genmap map -K 150 -E 0 -I {input} -O {params.outdir} -bg -T {threads} -v  > {log}"
-
-rule sort_genmap:
-    input:
-        config['output'] + "{refGenome}/" + "genmap/{refGenome}.genmap.bedgraph"
-    output:
-        config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap_sort']['mem']
-    shell:
-        "sort -k1,1 -k2,2n {input} > {output}"
-
 rule picard_intervals:
     input:
         ref = config["refGenomeDir"] + "{refGenome}.fna",
@@ -65,15 +23,16 @@ checkpoint create_intervals:
         ref = config["refGenomeDir"] + "{refGenome}.fna",
         intervals = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list"
     params:
-        maxIntervalLen = int(config['maxIntervalLen']),
-        maxBpPerList = int(config['maxBpPerList']),
+        maxIntervalLen = lambda wildcards, resources: resources.attempt * int(config['maxIntervalLen']),
+        maxBpPerList = lambda wildcards, resources: resources.attempt * int(config['maxBpPerList']),
         maxIntervalsPerList = int(config['maxIntervalsPerList']),
         minNmer = int(config['minNmer']),
         max_intervals = config['maxNumIntervals']
     output:
         config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem'],
+        attempt = lambda wildcards, attempt: attempt
     run:
         if config['split_by_n']:
             LISTS = helperFun.createListsGetIndices(params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
