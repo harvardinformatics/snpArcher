@@ -19,7 +19,7 @@ rule bam2gvcf:
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
         # subtract that memory here
         mem_mb = lambda wildcards, attempt: attempt * res_config['bam2gvcf']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (res_config['bam2gvcf']['mem'] - 3000)  # this is the maximum amount given to java
+        reduced = lambda wildcards, attempt: attempt * (res_config['bam2gvcf']['mem'] - 1000)  # this is the maximum amount given to java
     log:
         "logs/{Organism}/bam2gvcf/{refGenome}_{sample}_{list}.txt"
     benchmark:
@@ -70,7 +70,7 @@ rule gvcf2DB:
         tmp_dir = config['tmp_dir']
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['gvcf2DB']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (res_config['gvcf2DB']['mem'] - 3000)  # this is the maximum amount given to java
+        reduced = lambda wildcards, attempt: int(attempt * res_config['gvcf2DB']['mem'] * 0.80) # this is the maximum amount given to java
     log:
         "logs/{Organism}/gvcf2DB/{refGenome}_{list}.txt"
     benchmark:
@@ -83,6 +83,8 @@ rule gvcf2DB:
         "export TILEDB_DISABLE_FILE_LOCKING=1 \n"
         "gatk GenomicsDBImport "
         "--java-options \"-Xmx{resources.reduced}m -Xms{resources.reduced}m\" "
+        "--genomicsdb-shared-posixfs-optimizations true "
+        "--batch-size 25 "
         "--genomicsdb-workspace-path {output.DB} "
         "-L {input.l} "
         "--tmp-dir {params.tmp_dir} "
@@ -101,7 +103,8 @@ rule DB2vcf:
         vcf = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "L{list}.vcf"),
         vcfidx = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "L{list}.vcf.idx")
     params:
-        tmp_dir = config['tmp_dir']
+        tmp_dir = config['tmp_dir'],
+        het = config['het_prior']
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['DB2vcf']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (res_config['DB2vcf']['mem'] - 3000)  # this is the maximum amount given to java
@@ -115,6 +118,8 @@ rule DB2vcf:
         "gatk GenotypeGVCFs "
         "--java-options \"-Xmx{resources.reduced}m -Xms{resources.reduced}m\" "
         "-R {input.ref} "
+        "--heterozygosity {params.het} "
+        "--genomicsdb-shared-posixfs-optimizations true "
         "-V gendb://{input.DB} "
         "-O {output.vcf} "
         "--tmp-dir {params.tmp_dir} &> {log}"
@@ -153,9 +158,9 @@ rule filterVcfs:
         "--invalidate-previous-filters true &> {log}"
 
 rule sort_gatherVcfs:
-    input: 
+    input:
         get_gather_vcfs
-    output: 
+    output:
         vcfFinal = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
     params:
         gather_vcfs_CLI

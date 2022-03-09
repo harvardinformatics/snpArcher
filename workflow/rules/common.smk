@@ -4,6 +4,7 @@ import os
 import pandas as pd
 from collections import defaultdict, deque
 from snakemake.exceptions import WorkflowError
+
 ### INPUT FUNCTIONS ###
 
 def get_ena_url(wildcards):
@@ -49,7 +50,6 @@ def get_read_group(wildcards):
     )
 
 def check_contig_names(fai, touch_file):
-
     dffai = pd.read_table(fai, sep='\t', header = None)
     fai_result=pd.to_numeric(dffai[0], errors='coerce').notnull().all()
     if fai_result==True:
@@ -88,6 +88,7 @@ def gather_vcfs_CLI(wildcards):
     """
     vcfs = get_gather_vcfs(wildcards)
     out = " ".join(["-I " + vcf for vcf in vcfs])
+    out = out + " --TMP_DIR " + config['tmp_dir']
     return out
 
 def write_db_mapfile(wildcards):
