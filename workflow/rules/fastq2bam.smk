@@ -11,7 +11,7 @@ rule get_fastq_pe:
         outdir = config["fastqDir"] + "{Organism}/{sample}/",
         tmpdir = config['tmp_dir'],
         sra_url = lambda wildcards: get_ena_url(wildcards)["sra_url"],
-        fastq_url = lambda wildcards: get_ena_url(wildcards)["fastq_url"]    
+        fastq_url = lambda wildcards: get_ena_url(wildcards)["fastq_url"]
     conda:
         "../envs/fastq2bam.yml"
     threads:
@@ -42,18 +42,6 @@ rule get_fastq_pe:
         fi
         rm -rf {wildcards.run}
         """
-
-#rule gzip_fastq:
-#    input:
-#        config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq",
-#        config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq"
-#    output:
-#        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz"),
-#        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz")
-#    resources:
-#        mem_mb = lambda wildcards, attempt: attempt * res_config['gzip_fastq']['mem']
-#    shell:
-#        "gzip {input}"
 
 rule download_reference:
     output:

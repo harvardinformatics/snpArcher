@@ -66,6 +66,8 @@ rule bedgraphs:
         temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}.sorted.bg")
     conda:
         "../envs/callable.yml"
+    benchmark:
+        "benchmarks/{Organism}/bedgraphs/{refGenome}_{Organism}_{sample}.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']
     shell:
@@ -76,14 +78,14 @@ rule merge_bedgraph:
         unpack(get_input_for_coverage)
     output:
         merge = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{Organism}.merge.bg")
-    log:
-        "logs/{Organism}/covcalc/{refGenome}_{Organism}_merge.txt"
+    benchmark:
+        "benchmarks/{Organism}/merge_begraph/{refGenome}_{Organism}.txt"
     conda:
         "../envs/callable.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']
     shell:
-        "bedtools unionbedg -header -empty -g {input.chrom} -i {input.bedgraphs} > {output.merge} 2> {log}"
+        "bedtools unionbedg -header -empty -g {input.chrom} -i {input.bedgraphs} > {output.merge}"
 
 rule gzip_bedgraph:
     input:
