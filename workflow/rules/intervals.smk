@@ -23,8 +23,8 @@ checkpoint create_intervals:
         ref = config["refGenomeDir"] + "{refGenome}.fna",
         intervals = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list"
     params:
-        maxIntervalLen = lambda wildcards, attempt: int(config['maxIntervalLen']) * attempt,
-        maxBpPerList = lambda wildcards, attempt: int(config['maxBpPerList']) * attempt,
+        maxIntervalLen = lambda wildcards, attempt: attempt * int(config['maxIntervalLen']),
+        maxBpPerList = lambda wildcards, attempt: attempt * int(config['maxBpPerList']),
         maxIntervalsPerList = int(config['maxIntervalsPerList']),
         minNmer = int(config['minNmer']),
         max_intervals = config['maxNumIntervals']
