@@ -148,7 +148,7 @@ rule filter_bed:
             stats = json.load(stats)
         min_cov = float(stats[params.cov_type]) * params.low_cov
         max_cov = float(stats[params.cov_type]) * params.high_cov
-        record_num = 3 if cov_type == "mean_summed_cov" else 4
+        record_num = 3 if params.cov_type == "mean_summed_cov" else 4
         with gzip.open(input.cov, 'rt') as cov:
             with open(output.callable_cov, 'w') as cov_out:
                 for line in cov:
