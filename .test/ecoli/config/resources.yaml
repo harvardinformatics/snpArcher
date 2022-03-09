@@ -89,9 +89,6 @@ sortVcf:
 # vcftools program
 vcftools:
     mem: 10000
-# bedtools program
-bedtools:
-    mem: 10000
 # plink
 plink:
     threads: 5
