@@ -34,13 +34,15 @@ minD: 1
 #minP: 2
 #minD: 4
 
+het_prior: 0.005    #prior probabilty of heterozygous site; changes likelihood of a site being called non-ref, but not genotype likelihoods
+
 ########################################
 ## callable sites bed file thresholds ##
 ########################################
 
 mappability_min: 1    #regions of the genome with mappability less than this will be removed from callable sites bed file
 low_cov_thresh: 0.5   #regions of the genome with coverage below low_cov_thresh * mean coverage will be filtered
-low_cov_thresh: 2    #regions of the genome with coverage above low_cov_thresh * mean coverage will be filtered
+high_cov_thresh: 2    #regions of the genome with coverage above low_cov_thresh * mean coverage will be filtered
 
 #select one of the following, comment the other
 cov_type: "mean_summed_cov"   #use the total coverage to filter
