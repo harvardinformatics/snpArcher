@@ -41,7 +41,6 @@ bam_sumstats:
     mem: 9000
 
 
-
 ###
 # Intervals workflow
 ###
@@ -49,7 +48,7 @@ bam_sumstats:
 # preprocess genome, create intervals
 # picard's create CreateSequenceDictionary, samtools faidx
 process_ref:
-    mem: 15000
+    mem: 10000
 # custom python algo to create intervals
 create_intervals:
     mem: 5000
@@ -59,7 +58,7 @@ create_intervals:
 # genmap map
 genmap:
     threads: 10
-    mem: 20000
+    mem: 10000
 genmap_sort:
     mem: 4000
 bedtools:
@@ -71,28 +70,28 @@ bedtools:
 
 # gatk HaplotypeCaller
 bam2gvcf:
-    mem: 30000
+    mem: 10000
 # gatk GenomicsDBImport
 gvcf2DB:
-    mem: 30000
+    mem: 10000
 # gatk GenotypeGVCFs
 DB2vcf:
-    mem: 30000
+    mem: 10000
 # gatk filterVcfs
 filterVcfs:
-    mem: 30000
+    mem: 10000
 # gatk GatherVcfs
 gatherVcfs:
-    mem: 30000
+    mem: 10000
 # picard SortVcf
 sortVcf:
-    mem: 30000
+    mem: 10000
 # vcftools program
 vcftools:
-    mem: 30000
+    mem: 10000
 # bedtools program
 bedtools:
-    mem: 30000
+    mem: 10000
 # plink
 plink:
     threads: 5

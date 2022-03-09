@@ -2,8 +2,7 @@
 # Variables you need to change
 ##############################
 
-
-samples: "config/ecoli_samples.csv"            # name of the sample metadata CSV 
+samples: "config/ecoli_samples.csv"                         # name of the sample metadata CSV
 tmp_dir: "tmp/"                                       # directory path for a temp dir
 cluster_config: "profiles/slurm/cluster_config.yml"   # cluster configuration to use
 
@@ -34,6 +33,24 @@ minD: 1
 # high coverage options (> 10x)
 #minP: 2
 #minD: 4
+
+########################################
+## callable sites bed file thresholds ##
+########################################
+
+mappability_min: 1    #regions of the genome with mappability less than this will be removed from callable sites bed file
+low_cov_thresh: 0.5   #regions of the genome with coverage below low_cov_thresh * mean coverage will be filtered
+low_cov_thresh: 2    #regions of the genome with coverage above low_cov_thresh * mean coverage will be filtered
+
+#select one of the following, comment the other
+cov_type: "mean_summed_cov"   #use the total coverage to filter
+#cov_type: "mean_ind_cov"     #use the mean individual coverage to filter
+
+#this ignores small regions of abberatant coverage/mappability as often these are just below the threshold
+#to do strict filtering, set to 0
+
+callable_merge: 100   #merge callable regions separated by this or fewer bp into a single region
+
 
 ## QC options ##
 nClusters: 3
