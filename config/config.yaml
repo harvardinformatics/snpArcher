@@ -39,7 +39,7 @@ minD: 1
 
 ## QC options ##
 nClusters: 3
-GoogleAPIKey:
+GoogleAPIKey: NULL
 
 ##############################
 # Variables you DO NOT need to change
