@@ -117,9 +117,9 @@ rule bwa_map:
     conda:
         "../envs/fastq2bam.yml"
     threads:
-        lambda wildcards: params.bwa_threads + params.sort_threads
+        lambda wildcards: res_config['sort_bam']['threads'] + res_config['bwa_map']['threads']
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * (res_config['bwa_map']['mem'] + (params.sort_mem * params.sort_threads))
+        mem_mb = lambda wildcards, attempt: attempt * (res_config['bwa_map']['mem'] + (res_config['sort_bam']['mem_per_thread'] * res_config['sort_bam']['threads']))
     log:
         "logs/{Organism}/bwa/{refGenome}_{sample}_{run}.txt"
     benchmark:
