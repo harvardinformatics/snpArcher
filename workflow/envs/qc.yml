@@ -16,3 +16,4 @@ dependencies:
   - r-ape==5.5
   - r-reshape2==1.4.4
   - bioconductor-ggtree==3.2.0
+  - r-ggmap=3.0.0

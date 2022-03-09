@@ -160,7 +160,8 @@ rule qc_plots:
         coords = get_coords_if_available
     params:
         prefix = os.path.join(workflow.default_remote_prefix, (config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}")),
-        nClusters = config['nClusters']
+        nClusters = config['nClusters'],
+        GMKey = config['GoogleAPIKey']
     output: 
         qcpdf = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_qc.html"
     resources:

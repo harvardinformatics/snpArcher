@@ -10,6 +10,7 @@ editor_options:
 params:
   prefix: files.idepth
   nClusters: 3
+  GMKey: NULL
 ---
 
 ```{r setup, include=FALSE}
@@ -19,10 +20,12 @@ suppressMessages(library(plotly))
 suppressMessages(library(ape))
 suppressMessages(library(reshape2))
 suppressMessages(library(ggtree))
+suppressMessages(library(ggmap))
+
 
 
 prefix <- params$prefix
-set.colors <- c('#a6cee3','#1f78b4','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a')
+set.colors <- c('#1f78b4','#33a02c','#6a3d9a','#a6cee3','#b2df8a','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6')
 
 ```
 
@@ -71,6 +74,7 @@ Row
 
 input <- list()
 input$clusters <- params$nClusters
+input$GMKey <- params$GMKey
 
 ```
 
@@ -147,7 +151,7 @@ Row
 
 ### Tree 
 
-```{r, fig.height=10, fig.width=12}
+```{r, fig.height=12, fig.width=12}
 
 dist.id <- read.table(paste0(prefix, ".dist.id"))["V2"]
 dist.id <- left_join(dist.id, df.pca[,c("IID","cluster")], by = c("V2" = "IID"))
@@ -194,7 +198,7 @@ p.ggtree.custom <- p.ggtree +
 
 p.ggtree.custom
 
-# This interactive code really should work but when rendered with plotly, in the pipeline, the tree is blank
+# This interactive code really should work but when rendered with plotly, but in the pipeline, the tree is blank
 # this isnt an issue with local install so it may be a ggtree version issue
 
 #ggplotly(p.ggtree.custom, tooltip=c("label", "cluster"))
@@ -261,6 +265,104 @@ if(length(l.inf)==0){
 
 ```
 
+Row {data-width=900, data-height=900}
+-----------------------------------------------------------------------
+
+### Map
+
+```{r, fig.width = 10, fig.height = 10}
+
+# this code is highly specific to the CCGP as it generates a California map
+
+g <- list(
+  scope = 'north america',
+  showland = TRUE,
+  landcolor = toRGB("grey83"),
+  subunitcolor = toRGB("white"),
+  countrycolor = toRGB("white"),
+  showlakes = TRUE,
+  lakecolor = toRGB("white"),
+  showsubunits = TRUE,
+  showcountries = TRUE,
+  resolution = 50,
+  projection = list(
+    type = 'conic conformal',
+    rotation = list(lon = -100)
+  ),
+  lonaxis = list(
+    showgrid = TRUE,
+    gridwidth = 0.5,
+    range = c(-125, -111),
+    dtick = 5
+  ),
+  lataxis = list(
+    showgrid = TRUE,
+    gridwidth = 0.5,
+    range = c(31, 43),
+    dtick = 5
+  )
+)
+
+if(file.exists(paste0(prefix, ".coords.txt"))){
+  if(!is.null(input$GMKey)){
+    df.coords <- read.table(paste0(prefix, ".coords.txt"))
+    names(df.coords) <- c("sample.ID","long","lat")
+    
+    df.coords <- left_join(df.pca, df.coords, by = c("IID" = "sample.ID"))
+      
+    df.coords$color <- set.colors[factor(dist.id$cluster)]
+    
+    mycol <- set.colors[factor(df.coords$cluster)]
+    
+    #jitter points
+    df.coords$Longitude <- jitter(as.numeric(df.coords$long), 8)
+    df.coords$Latitude <- jitter(as.numeric(df.coords$lat), 8)
+
+    register_google(key = input$GMKey)
+
+    us <- c(left = -125, bottom = 25.75, right = -67, top = 49)
+
+    cal.map <- get_googlemap("California", zoom = 6, maptype = "terrain", scale = 4, size = c(640, 640))
+
+    terrain.map <- cal.map %>% 
+      ggmap() + 
+        geom_point(data = df.coords, aes(x = Longitude, y = Latitude,
+                                        color = cluster, size = 2.5, label = IID)) +
+        theme_bw() + 
+        labs(x = NULL, y = NULL) +
+      scale_color_manual(values = set.colors) +
+      theme(legend.position = "none")
+
+    ggplotly(terrain.map, tooltip=c("IID","Longitude", "Latitude"))
+  
+  }else{
+    df.coords <- read.table(paste0(prefix, ".coords.txt"))
+    names(df.coords) <- c("sample.ID","long","lat")
+    
+    df.coords <- left_join(df.pca, df.coords, by = c("IID" = "sample.ID"))
+      
+    df.coords$color <- set.colors[factor(dist.id$cluster)]
+    
+    mycol <- set.colors[factor(df.coords$cluster)]
+    
+    df.coords$long.jit <- jitter(as.numeric(df.coords$long), 8)
+    df.coords$lat.jit <- jitter(as.numeric(df.coords$lat), 8)
+    
+    plot_geo(df.coords, lat = ~lat.jit, lon = ~long.jit) %>% 
+      layout(legend = list(orientation = 'h'), geo = g) %>% 
+      add_markers(
+        text = ~paste(IID, cluster, PC1, PC2, sep = "<br />"),
+        color = ~cluster, symbol = I("circle"), size = I(60), 
+        hoverinfo = "text", colors = set.colors[1:input$clusters],
+      ) %>% 
+     colorbar(title = "cluster")   
+  }
+ 
+}else{
+  print("a map will appear here if you includes a .coords file ")
+}
+
+```
 
 Row
 -----------------------------------------------------------------------
@@ -321,72 +423,11 @@ p.k23 <- cat_admx %>%
     strip.text.x = element_text(angle = 90, size = 6),
     legend.position = "none"
   ) +
-  scale_fill_manual(name = "grp",values = set.colors, guide = F) +xlab(NULL)  + theme(legend.position = "none")
+  #scale_fill_manual(name = "grp",values = c("#1b9e77","#d95f02","#7570b3"), guide = F) +xlab(NULL)  + theme(legend.position = "none")
+  scale_fill_manual(name = "grp",values = c("#fb8072","#80b1d3","#8dd3c7"), guide = F) +xlab(NULL)  + theme(legend.position = "none")
+
 
 #make admix interactive
 pl.admix <- ggplotly(p.k23, tooltip=c("text", "y"))
 pl.admix
 ```
-
-Row {data-width=1200, data-height=1600}
------------------------------------------------------------------------
-
-### Map
-
-```{r, fig.width = 10, height = 10}
-
-g <- list(
-  scope = 'north america',
-  showland = TRUE,
-  landcolor = toRGB("grey83"),
-  subunitcolor = toRGB("white"),
-  countrycolor = toRGB("white"),
-  showlakes = TRUE,
-  lakecolor = toRGB("white"),
-  showsubunits = TRUE,
-  showcountries = TRUE,
-  resolution = 50,
-  projection = list(
-    type = 'conic conformal',
-    rotation = list(lon = -100)
-  ),
-  lonaxis = list(
-    showgrid = TRUE,
-    gridwidth = 0.5,
-    range = c(-125, -111),
-    dtick = 5
-  ),
-  lataxis = list(
-    showgrid = TRUE,
-    gridwidth = 0.5,
-    range = c(31, 43),
-    dtick = 5
-  )
-)
-
-if(file.exists(paste0(prefix, ".coords.txt"))){
-  df.coords <- read.table(paste0(prefix, ".coords.txt"))
-  names(df.coords) <- c("sample.ID","long","lat")
-  
-  df.coords <- left_join(df.pca, df.coords, by = c("IID" = "sample.ID"))
-    
-  df.coords$color <- set.colors[factor(dist.id$cluster)]
-  
-  mycol <- set.colors[factor(df.coords$cluster)]
-  
-  df.coords$long.jit <- jitter(as.numeric(df.coords$long), 8)
-  df.coords$lat.jit <- jitter(as.numeric(df.coords$lat), 8)
-  
- plot_geo(df.coords, lat = ~lat.jit, lon = ~long.jit) %>% 
-      layout(legend = list(orientation = 'h'), geo = g) %>% 
-   add_markers(
-      text = ~paste(IID, cluster, PC1, PC2, sep = "<br />"),
-      color = ~cluster, symbol = I("circle"), size = I(60), 
-      hoverinfo = "text", colors = set.colors[1:input$clusters],
-    ) %>% 
-   colorbar(title = "cluster")   
-}else{
-  print("a map will appear here if you includes a .coords file ")
-}
-```
-
