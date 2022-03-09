@@ -34,6 +34,8 @@ minD: 1
 #minP: 2
 #minD: 4
 
+het_prior: 0.005    #prior probabilty of heterozygous site; changes likelihood of a site being called non-ref, but not genotype likelihoods
+
 ########################################
 ## callable sites bed file thresholds ##
 ########################################
