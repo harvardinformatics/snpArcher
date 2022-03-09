@@ -49,6 +49,7 @@ platform: "ILLUMINA"
 output: "results/"                      # all output is stored here
 fastqDir: "data/fastq/"                 # this is where raw fastqs are downloaded
 refGenomeDir: "data/genome/"            # where reference genomes go
+bam_suffix: "_final.bam"                # name for final bam files
 
 # These variables control the output of the steps of the workflow (please have forward slash follow name!)
 fastqFilterDir: "00_fastqFiltered/"     # new directory created for filtered fastq reads

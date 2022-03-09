@@ -111,13 +111,13 @@ rule bwa_map:
         bam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}/{run}.bam")
     params:
         RG = get_read_group,
-        bwa_threads = res_config['bwa_map']['threads']),
+        bwa_threads = res_config['bwa_map']['threads'],
         sort_threads = res_config['sort_bam']['threads'],
         sort_mem = res_config['sort_bam']['mem_per_thread']
     conda:
         "../envs/fastq2bam.yml"
     threads:
-        params.bwa_threads + params.sort_threads
+        lambda wildcards: params.bwa_threads + params.sort_threads
     resources:
         mem_mb = lambda wildcards, attempt: attempt * (res_config['bwa_map']['mem'] + (params.sort_mem * params.sort_threads))
     log:
@@ -125,7 +125,7 @@ rule bwa_map:
     benchmark:
         "benchmarks/{Organism}/bwa/{refGenome}_{sample}_{run}.txt"
     shell:
-        "bwa mem -M -t {params.bwa_threads} {params} {input.ref} {input.r1} {input.r2} 2> {log} | samtools sort --threads {params.sort_threads} -m {params.sort_mem}M -u - > {output.bam}"
+        "bwa mem -M -t {params.bwa_threads} {params.RG} {input.ref} {input.r1} {input.r2} 2> {log} | samtools sort --threads {params.sort_threads} -m {params.sort_mem}M -u - > {output.bam}"
 
 rule merge_bams:
     input:
@@ -137,7 +137,7 @@ rule merge_bams:
     conda:
         "../envs/fastq2bam.yml"
     threads:
-        res_config['merge_bam']['threads'])
+        res_config['merge_bams']['threads']
     params:
         comp_threads = lambda wildcards, threads: threads - 1
     resources:
