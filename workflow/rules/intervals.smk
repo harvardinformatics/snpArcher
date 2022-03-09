@@ -23,15 +23,16 @@ checkpoint create_intervals:
         ref = config["refGenomeDir"] + "{refGenome}.fna",
         intervals = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list"
     params:
-        maxIntervalLen = lambda wildcards, attempt: attempt * int(config['maxIntervalLen']),
-        maxBpPerList = lambda wildcards, attempt: attempt * int(config['maxBpPerList']),
+        maxIntervalLen = lambda wildcards, resources: resources.attempt * int(config['maxIntervalLen']),
+        maxBpPerList = lambda wildcards, resources: resources.attempt * int(config['maxBpPerList']),
         maxIntervalsPerList = int(config['maxIntervalsPerList']),
         minNmer = int(config['minNmer']),
         max_intervals = config['maxNumIntervals']
     output:
         config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem'],
+        attempt = lambda wildcards, attempt: attempt
     run:
         if config['split_by_n']:
             LISTS = helperFun.createListsGetIndices(params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
