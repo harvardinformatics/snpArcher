@@ -41,7 +41,6 @@ bam_sumstats:
     mem: 9000
 
 
-
 ###
 # Intervals workflow
 ###

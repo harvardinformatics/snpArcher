@@ -138,20 +138,22 @@ rule filter_bed:
         callable_cov = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_cov.bed"),
         callable_map = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_map.bed")
     params:
-        mappability = 1,
-        low_cov = 0.5,
-        high_cov = 2
+        mappability = config['mappability_min'],
+        low_cov = config['low_cov_thresh'],
+        high_cov = config['high_cov_thresh'],
+        cov_type = config['cov_type']
     run:
         stats = {}
         with open(input.stats) as stats:
             stats = json.load(stats)
-        min_cov = float(stats['mean_summed_cov']) * params.low_cov
-        max_cov = float(stats['mean_summed_cov']) * params.high_cov
+        min_cov = float(stats[params.cov_type]) * params.low_cov
+        max_cov = float(stats[params.cov_type]) * params.high_cov
+        record_num = 3 if cov_type eq "mean_summed_cov" else 4
         with gzip.open(input.cov, 'rt') as cov:
             with open(output.callable_cov, 'w') as cov_out:
                 for line in cov:
                     fields = line.split()
-                    if float(fields[3]) >= min_cov and float(fields[3]) <= max_cov:
+                    if float(fields[record_num]) >= min_cov and float(fields[record_num]) <= max_cov:
                         print(fields[0], fields[1], fields[2], sep="\t", file=cov_out)
         with open(input.map) as map:
             with open(output.callable_map, 'w') as map_out:
@@ -169,6 +171,6 @@ rule callable_bed:
     conda:
         "../envs/callable.yml"
     params:
-        merge = 100
+        merge = config['callable_merge']
     shell:
         "bedtools intersect -a {input.callable_cov} -b {input.callable_map} | bedtools merge -d {params.merge} -i - > {output.callable_sites}"
