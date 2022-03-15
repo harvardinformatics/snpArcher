@@ -27,7 +27,8 @@ checkpoint create_intervals:
         maxBpPerList = lambda wildcards, resources: resources.attempt * int(config['maxBpPerList']),
         maxIntervalsPerList = int(config['maxIntervalsPerList']),
         minNmer = int(config['minNmer']),
-        max_intervals = config['maxNumIntervals']
+        max_intervals = config['maxNumIntervals'],
+        missingBpTolerance = config['missingBpTolerance']
     output:
         config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
     resources:
@@ -35,6 +36,6 @@ checkpoint create_intervals:
         attempt = lambda wildcards, attempt: attempt
     run:
         if config['split_by_n']:
-            LISTS = helperFun.createListsGetIndices(params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
+            LISTS = helperFun.createListsGetIndices(params.missingBpTolerance, params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
         else:
             LISTS = make_intervals(config["output"], config["intDir"], wildcards, input.dictf, params.max_intervals)
