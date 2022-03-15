@@ -173,4 +173,4 @@ rule callable_bed:
     params:
         merge = config['callable_merge']
     shell:
-        "bedtools intersect -a {input.callable_cov} -b {input.callable_map} | bedtools merge -d {params.merge} -i - > {output.callable_sites}"
+        "bedtools intersect -a {input.callable_cov} -b {input.callable_map} | bedtools sort -i - | bedtools merge -d {params.merge} -i - > {output.callable_sites}"
