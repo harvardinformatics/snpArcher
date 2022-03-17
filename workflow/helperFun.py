@@ -96,7 +96,7 @@ def printBamSumStats(
     samples = depths.keys()
     with open(out_file, "w") as f:
         print(
-            "Sample\tTotal_Reads\tPercent_mapped\tPercent_duplicates\tPercent_properly_paired\tFraction_reads_pass_filter\tNum_filtered_reads",
+            "Sample\tTotal_Reads\tPercent_mapped\tNum_duplicates\tPercent_properly_paired\tFraction_reads_pass_filter\tNum_filtered_reads",
             file=f,
         )
         for samp in samples:
@@ -107,7 +107,7 @@ def printBamSumStats(
                 "\t",
                 aln_metrics[samp]["Percent Mapped"],
                 "\t",
-                aln_metrics[samp]["Percent Duplicates"],
+                aln_metrics[samp]["Num Duplicates"],
                 "\t",
                 aln_metrics[samp]["Percent Properly Paired"],
                 "\t",
