@@ -13,7 +13,8 @@ def write_coords_file(wildcards):
     out_df.to_csv(outpath, index=False, sep="\t")
 def get_coords_if_available(wildcards):
     if 'lat' in samples.columns and 'long' in samples.columns:
-        return config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.coords.txt" 
+        return config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.coords.txt"
+     
 def get_ena_url(wildcards):
     prefix = wildcards.run[:6]
     lastdigit = wildcards.run[-1]

@@ -37,7 +37,8 @@ rule merge_bedgraph:
     conda:
         "../envs/callable.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem'],
+        disk_mb = 2000000
     shell:
         "bedtools unionbedg -header -empty -g {input.chrom} -i {input.bedgraphs} > {output.merge} 2> {log}"
 
