@@ -6,6 +6,7 @@ import re
 from collections import defaultdict
 from urllib.request import urlopen
 
+
 def collectFastpOutput(fastpFiles):
 
     FractionReadsPassFilter = defaultdict(float)
@@ -16,7 +17,7 @@ def collectFastpOutput(fastpFiles):
         sample = sample.replace("_fastp.out", "")
         unfiltered = 0
         filtered = 0
-        f = open(fn, 'r')
+        f = open(fn, "r")
         for line in f:
             if "before filtering" in line:
                 line = next(f)
@@ -27,10 +28,11 @@ def collectFastpOutput(fastpFiles):
                 line = line.split()
                 filtered = int(line[3])
         f.close()
-        FractionReadsPassFilter[sample] = float(filtered/unfiltered)
+        FractionReadsPassFilter[sample] = float(filtered / unfiltered)
         NumFilteredReads[sample] = filtered
 
-    return(FractionReadsPassFilter, NumFilteredReads)
+    return (FractionReadsPassFilter, NumFilteredReads)
+
 
 def collectAlnSumMets(alnSumMetsFiles):
     aln_metrics = defaultdict(dict)
@@ -42,15 +44,17 @@ def collectAlnSumMets(alnSumMetsFiles):
             total_aligns = int(lines[0].split()[0])
             num_dups = int(lines[4].split()[0])
             num_mapped = int(lines[6].split()[0])
-            percent_mapped = float(lines[7].split()[0].strip("%")) if lines[7].split()[0].strip("%").isdecimal() else 'NaN'
-            percent_proper_paired = float(lines[14].split()[0].strip("%")) if lines[14].split()[0].strip("%").isdecimal() else 'NaN'
+            percent_mapped = lines[7].split()[0].strip("%")
+            percent_proper_paired = lines[14].split()[0].strip("%")
+
             percent_dups = num_dups / total_aligns if total_aligns != 0 else 0
             aln_metrics[sample]["Total alignments"] = total_aligns
             aln_metrics[sample]["Percent Mapped"] = percent_mapped
-            aln_metrics[sample]["Percent Duplicates"] = percent_dups
+            aln_metrics[sample]["Num Duplicates"] = num_dups
             aln_metrics[sample]["Percent Properly Paired"] = percent_proper_paired
-    
-    return(aln_metrics)
+
+    return aln_metrics
+
 
 def collectCoverageMetrics(coverageFiles):
 
@@ -63,29 +67,56 @@ def collectCoverageMetrics(coverageFiles):
         sample = sample.replace("_coverage.txt", "")
         numSites = []
         covbases = 0
-        depths = [] # samtools coverage function prints depth per scaffold
-        f = open(fn, 'r')
+        depths = []  # samtools coverage function prints depth per scaffold
+        f = open(fn, "r")
         for line in f:
             if not line.startswith("#rname"):
                 line = line.split()
-                numSites.append( int(line[2]) - int(line[1]) + 1 )
-                depths.append( float(line[6]) )
-                covbases +=  float(line[4])
+                numSites.append(int(line[2]) - int(line[1]) + 1)
+                depths.append(float(line[6]))
+                covbases += float(line[4])
         f.close()
         total = sum(numSites)
         depthsMean = 0
         for i in range(len(depths)):
-            depthsMean += depths[i]*numSites[i]/(total)
+            depthsMean += depths[i] * numSites[i] / (total)
         SeqDepths[sample] = depthsMean
         CoveredBases[sample] = covbases
-    return(SeqDepths, CoveredBases)
+    return (SeqDepths, CoveredBases)
 
-def printBamSumStats(depths, covered_bases, aln_metrics, FractionReadsPassFilter, NumFilteredReads, out_file):
+
+def printBamSumStats(
+    depths,
+    covered_bases,
+    aln_metrics,
+    FractionReadsPassFilter,
+    NumFilteredReads,
+    out_file,
+):
     samples = depths.keys()
     with open(out_file, "w") as f:
-        print("Sample\tTotal_alignments\tPercent_mapped\tPercent_duplicates\tPercent_properly_paired\tFraction_reads_pass_filter\tNum_filtered_reads", file=f)
+        print(
+            "Sample\tTotal_Reads\tPercent_mapped\tPercent_duplicates\tPercent_properly_paired\tFraction_reads_pass_filter\tNum_filtered_reads",
+            file=f,
+        )
         for samp in samples:
-            print(samp, "\t", aln_metrics[samp]["Total alignments"], "\t", aln_metrics[samp]["Percent Mapped"], "\t", aln_metrics[samp]["Percent Duplicates"], "\t", aln_metrics[samp]["Percent Properly Paired"], "\t", FractionReadsPassFilter[samp], "\t", NumFilteredReads[samp], file=f)
+            print(
+                samp,
+                "\t",
+                aln_metrics[samp]["Total alignments"],
+                "\t",
+                aln_metrics[samp]["Percent Mapped"],
+                "\t",
+                aln_metrics[samp]["Percent Duplicates"],
+                "\t",
+                aln_metrics[samp]["Percent Properly Paired"],
+                "\t",
+                FractionReadsPassFilter[samp],
+                "\t",
+                NumFilteredReads[samp],
+                file=f,
+            )
+
 
 def getRefBaseName(ref):
     if ".fasta" in ref:
@@ -95,59 +126,83 @@ def getRefBaseName(ref):
     elif ".fna" in ref:
         refBaseName = ref.replace(".fna", "")
     else:
-        sys.exit("Your reference genome did not end in \".fasta\" or \".fa\". Please fix this before continuing.")
-    return(refBaseName)
+        sys.exit(
+            'Your reference genome did not end in ".fasta" or ".fa". Please fix this before continuing.'
+        )
+    return refBaseName
+
 
 def getFastqSampleNames(fastqDir, fastq_suffix1):
     SAMPLES = glob.glob(fastqDir + "*" + fastq_suffix1)
     for i in range(len(SAMPLES)):
         SAMPLES[i] = os.path.basename(SAMPLES[i])
         SAMPLES[i] = SAMPLES[i].replace(fastq_suffix1, "")
-    #print(SAMPLES)
-    return(SAMPLES)
+    # print(SAMPLES)
+    return SAMPLES
+
 
 def getBamSampleNames(BamDir, bam_suffix):
     SAMPLES = glob.glob(BamDir + "*" + bam_suffix)
     for i in range(len(SAMPLES)):
         SAMPLES[i] = os.path.basename(SAMPLES[i])
         SAMPLES[i] = SAMPLES[i].replace(bam_suffix, "")
-    return(SAMPLES)
+    return SAMPLES
+
 
 def createSeqDictGetScaffOrder(dict_file):
-    #print(f"{ref=}, {refBaseName=}")
-    #seqDict = refBaseName + ".dict"
-    #index = ref + ".fai"
+    # print(f"{ref=}, {refBaseName=}")
+    # seqDict = refBaseName + ".dict"
+    # index = ref + ".fai"
     seqDictScaffs = []
-    f = open(dict_file, 'r')
+    f = open(dict_file, "r")
     for line in f:
         if line.startswith("@SQ"):
             line = line.split("\t")
             scaff = line[1].replace("SN:", "")
             seqDictScaffs.append(scaff)
-    return(seqDictScaffs)
+    return seqDictScaffs
 
-def createListsGetIndices(maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, outputDir, intDir, wildcards, dict_file, intervals_file):
+
+def createListsGetIndices(
+    maxIntervalLen,
+    maxBpPerList,
+    maxIntervalsPerList,
+    minNmer,
+    outputDir,
+    intDir,
+    wildcards,
+    dict_file,
+    intervals_file,
+):
 
     # Get the order in which scaffolds are listed in genome .dict file,  need to correspond to order in list files! So use .dict order for printing interval files
     seqDictScaffs = createSeqDictGetScaffOrder(dict_file)
 
     # raw data
-    picardIntervals = defaultdict(list) # this contains the raw data to iterate back through later
+    picardIntervals = defaultdict(
+        list
+    )  # this contains the raw data to iterate back through later
     ACGTmers = defaultdict(list)
     scaffLens = defaultdict(int)
     # info about Nmers
-    NmerLens = defaultdict(int) # this just keeps track of all the unique types of Nmer lengths
-    maxIntervalLenByNmer = defaultdict(int) # this stores the largest observed interval per Nmer
-    NsHist = defaultdict(list) # this can be used to contruct a histogram of all the different Nmers
+    NmerLens = defaultdict(
+        int
+    )  # this just keeps track of all the unique types of Nmer lengths
+    maxIntervalLenByNmer = defaultdict(
+        int
+    )  # this stores the largest observed interval per Nmer
+    NsHist = defaultdict(
+        list
+    )  # this can be used to contruct a histogram of all the different Nmers
     # new intervals based on splitting by Nmer
     newIntervals = defaultdict(lambda: defaultdict(list))
     totalACGTmerLength = 0
 
-    #get actual basename. refBaseName is defined earlier and its usage requires the full path
-    #refFileName = refBaseName.rsplit("/")[-1]
+    # get actual basename. refBaseName is defined earlier and its usage requires the full path
+    # refFileName = refBaseName.rsplit("/")[-1]
 
     # read in picard output
-    f = open(intervals_file, 'r')
+    f = open(intervals_file, "r")
     for line in f:
         line = line.strip()
         line = line.split()
@@ -163,12 +218,12 @@ def createListsGetIndices(maxIntervalLen, maxBpPerList, maxIntervalsPerList, min
             end = int(line[2])
             length = end - start + 1
             merType = line[4]
-            picardIntervals[scaff].append( (start, end, merType) )
+            picardIntervals[scaff].append((start, end, merType))
             if merType == "Nmer":
                 NsHist[scaff].append(length)
                 NmerLens[length] = 1
             elif merType == "ACGTmer":
-                ACGTmers[scaff].append( (start, end) )
+                ACGTmers[scaff].append((start, end))
                 totalACGTmerLength += length
 
     # if picard could not find any Nmers in your assembly (possible if only looking at small region) give NmerLens a key of 1 so loop below executes
@@ -187,7 +242,10 @@ def createListsGetIndices(maxIntervalLen, maxBpPerList, maxIntervalsPerList, min
                 scaff = item[0]
                 scaffLen = item[1]
                 # go through each interval on the scaffold
-                currInterval = [0, 0] # use 0 to initialize, since picard does not use 0-based coords
+                currInterval = [
+                    0,
+                    0,
+                ]  # use 0 to initialize, since picard does not use 0-based coords
                 for i in range(len(picardIntervals[scaff])):
                     start = picardIntervals[scaff][i][0]
                     end = picardIntervals[scaff][i][1]
@@ -207,11 +265,11 @@ def createListsGetIndices(maxIntervalLen, maxBpPerList, maxIntervalsPerList, min
                             continue
                         else:
                             # store currInterval bc we encounterd an Nmer of sufficient length
-                            newIntervals[Nmer][scaff].append( currInterval )
+                            newIntervals[Nmer][scaff].append(currInterval)
                             currInterval = [0, 0]
                 if currInterval[0] != 0:
                     # if the interval was extended all the way to the end of the scaffold, store it here
-                    newIntervals[Nmer][scaff].append( currInterval )
+                    newIntervals[Nmer][scaff].append(currInterval)
 
     # for each Nmer splitting, see what the maximum interval length is
     for Nmer in sorted(newIntervals.keys()):
@@ -220,7 +278,7 @@ def createListsGetIndices(maxIntervalLen, maxBpPerList, maxIntervalsPerList, min
         for item in sorted(scaffLens.items(), key=lambda x: x[1], reverse=True):
             scaff = item[0]
             scaffLen = item[1]
-            #print(scaff, scaffLen, len(newIntervals[Nmer][scaff]))
+            # print(scaff, scaffLen, len(newIntervals[Nmer][scaff]))
             for itv in newIntervals[Nmer][scaff]:
                 itvLen = itv[1] - itv[0] + 1
                 if itvLen > Nmer_maxIntervalLen:
@@ -229,11 +287,15 @@ def createListsGetIndices(maxIntervalLen, maxBpPerList, maxIntervalsPerList, min
             # below is a sanity check, to see if using this Nmer to split intervals accounts for all observed ACGTmers
             # go through new intervals, ask if they cover each of the previous ACGTmers in original picard file
             for i in ACGTmers[scaff]:
-                length = i[1] - i[0] # you usually add +1 to intervals, but this doesn't happen within the overlaps function
+                length = (
+                    i[1] - i[0]
+                )  # you usually add +1 to intervals, but this doesn't happen within the overlaps function
                 for j in newIntervals[Nmer][scaff]:
-                    o = overlaps(i,j)
+                    o = overlaps(i, j)
                     if o > 0:
-                        totalACGTmerLength_overlaps += o+1 # add 1 to compare to lengths taken above
+                        totalACGTmerLength_overlaps += (
+                            o + 1
+                        )  # add 1 to compare to lengths taken above
 
         maxIntervalLenByNmer[Nmer] = Nmer_maxIntervalLen
         if totalACGTmerLength_overlaps < totalACGTmerLength:
@@ -246,10 +308,22 @@ def createListsGetIndices(maxIntervalLen, maxBpPerList, maxIntervalsPerList, min
         if maxIntervalLenByNmer[Nmer] < maxIntervalLen:
             lessThan.append(Nmer)
 
-    outfile = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, wildcards.refGenome + "_interval_algo.out")
-    out = open(outfile,'w')
-    print("Here are the actual maximum interval lengths we observed, for each minimum Nmer size used to split up the genome.", file=out)
-    print("To proceed, specify a maxIntervalLen that is equal to or slightly greater than the ones observed here.", file=out)
+    outfile = os.path.join(
+        outputDir,
+        wildcards.Organism,
+        wildcards.refGenome,
+        intDir,
+        wildcards.refGenome + "_interval_algo.out",
+    )
+    out = open(outfile, "w")
+    print(
+        "Here are the actual maximum interval lengths we observed, for each minimum Nmer size used to split up the genome.",
+        file=out,
+    )
+    print(
+        "To proceed, specify a maxIntervalLen that is equal to or slightly greater than the ones observed here.",
+        file=out,
+    )
     print("Nmer MaxObservedInterval NumIntervals", file=out)
     for Nmer in maxIntervalLenByNmer:
         numInt = 0
@@ -261,16 +335,24 @@ def createListsGetIndices(maxIntervalLen, maxBpPerList, maxIntervalsPerList, min
     if lessThan:
         print(f"best Nmer is {lessThan[-1]}")
     else:
-        print(f"We could not find suitable Nmer to split up genome given the specified maxIntervalLen (which is currently too small).")
-        print("Here are the actual maximum interval lengths we observed, for each minimum Nmer size used to split up the genome.")
-        print("To proceed, specify a maxIntervalLen that is equal to or slightly greater than the ones observed here.")
+        print(
+            f"We could not find suitable Nmer to split up genome given the specified maxIntervalLen (which is currently too small)."
+        )
+        print(
+            "Here are the actual maximum interval lengths we observed, for each minimum Nmer size used to split up the genome."
+        )
+        print(
+            "To proceed, specify a maxIntervalLen that is equal to or slightly greater than the ones observed here."
+        )
         print("Nmer MaxObservedInterval NumIntervals")
         for Nmer in maxIntervalLenByNmer:
             numInt = 0
             for scaff in newIntervals[Nmer]:
                 numInt += len(newIntervals[Nmer][scaff])
             print(Nmer, maxIntervalLenByNmer[Nmer], numInt)
-        sys.exit("\n\n\n*****PLEASE SEE out FILE FOR A MESSAGE ON HOW TO PROCEED! :)*****\n\n\n")
+        sys.exit(
+            "\n\n\n*****PLEASE SEE out FILE FOR A MESSAGE ON HOW TO PROCEED! :)*****\n\n\n"
+        )
 
     # take optimal interval_list and use to generate GATK list files
     optimalNmer = lessThan[-1]
@@ -279,49 +361,70 @@ def createListsGetIndices(maxIntervalLen, maxBpPerList, maxIntervalsPerList, min
     current_intervals = []
     listFile_index = 0
     # go through scaffolds in same order as they appear in the sequence dictionary, printing lists as we go
-    outfile = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir, wildcards.refGenome + "_intervals_fb.bed")
-    bed = open(outfile, 'w')
+    outfile = os.path.join(
+        outputDir,
+        wildcards.Organism,
+        wildcards.refGenome,
+        intDir,
+        wildcards.refGenome + "_intervals_fb.bed",
+    )
+    bed = open(outfile, "w")
     for scaff in seqDictScaffs:
         for intv in newIntervals[optimalNmer][scaff]:
             start = intv[0]
             stop = intv[1]
-            intervalLen = (stop - start + 1)
+            intervalLen = stop - start + 1
             print(scaff, start, stop, sep="\t", file=bed)
             # does adding the next interval put us over the maximum values for our two thresholds?
-            if (runningSumBp + intervalLen) >= maxBpPerList or (runningSum_intervals + 1) >= maxIntervalsPerList:
+            if (runningSumBp + intervalLen) >= maxBpPerList or (
+                runningSum_intervals + 1
+            ) >= maxIntervalsPerList:
                 if len(current_intervals) == 0:
-                    printIntervalsToListFile(intDir, listFile_index, [ (scaff, start, stop) ], wildcards, outputDir)
+                    printIntervalsToListFile(
+                        intDir,
+                        listFile_index,
+                        [(scaff, start, stop)],
+                        wildcards,
+                        outputDir,
+                    )
                     runningSumBp = 0
                     runningSum_intervals = 0
                 else:
-                    printIntervalsToListFile(intDir, listFile_index, current_intervals, wildcards, outputDir)
-                    current_intervals = [ (scaff, start, stop) ]
+                    printIntervalsToListFile(
+                        intDir, listFile_index, current_intervals, wildcards, outputDir
+                    )
+                    current_intervals = [(scaff, start, stop)]
                     runningSumBp = intervalLen
                     runningSum_intervals = 1
                 listFile_index += 1
             else:
-                current_intervals.append( (scaff, start, stop) )
+                current_intervals.append((scaff, start, stop))
                 runningSum_intervals += 1
                 runningSumBp += intervalLen
     # if part-way through the loop above ran out of intervals to print, print whatever remains
     if current_intervals:
-        printIntervalsToListFile(intDir, listFile_index, current_intervals, wildcards, outputDir)
-        #out = open(f"{intDir}list{listFile_index}.list", 'w')
-        #for i in current_intervals:
+        printIntervalsToListFile(
+            intDir, listFile_index, current_intervals, wildcards, outputDir
+        )
+        # out = open(f"{intDir}list{listFile_index}.list", 'w')
+        # for i in current_intervals:
         #    print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
-        #out.close()
+        # out.close()
     bed.close()
 
     # get list file indices
-    gatk_list_dir = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir)
+    gatk_list_dir = os.path.join(
+        outputDir, wildcards.Organism, wildcards.refGenome, intDir
+    )
     LISTS = glob.glob(gatk_list_dir + "/*.list")
     print(LISTS)
     for i in range(len(LISTS)):
         LISTS[i] = os.path.basename(LISTS[i])
-        LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
-    LISTS=sorted(LISTS)
+        LISTS[i] = re.search("\d+", LISTS[i]).group()  # get numerical index of list
+    LISTS = sorted(LISTS)
     print(LISTS)
-    return(LISTS)
+    return LISTS
+
 
 def overlaps(a, b):
     """
@@ -333,14 +436,19 @@ def overlaps(a, b):
     """
     return min(a[1], b[1]) - max(a[0], b[0])
 
-def printIntervalsToListFile(intDir, listFile_index, current_intervals, wildcards, outputDir):
-    gatk_list_dir = os.path.join(outputDir, wildcards.Organism, wildcards.refGenome, intDir)
+
+def printIntervalsToListFile(
+    intDir, listFile_index, current_intervals, wildcards, outputDir
+):
+    gatk_list_dir = os.path.join(
+        outputDir, wildcards.Organism, wildcards.refGenome, intDir
+    )
 
     if not os.path.isdir(gatk_list_dir):
         os.mkdir(gatk_list_dir)
 
     outfile = os.path.join(gatk_list_dir, f"list{listFile_index}.list")
-    out = open(outfile, 'w')
+    out = open(outfile, "w")
 
     for i in current_intervals:
         print(f"{i[0]}:{i[1]}-{i[2]}", file=out)
@@ -349,28 +457,31 @@ def printIntervalsToListFile(intDir, listFile_index, current_intervals, wildcard
 
 def loadIntervalsForFB(f):
     intervals_fb = []
-    fh = open(f, 'r')
+    fh = open(f, "r")
     for line in fh:
         line = line.split()
         interval = line[0] + ":" + line[1] + "-" + line[2]
         intervals_fb.append(interval)
 
-    return(intervals_fb)
+    return intervals_fb
+
 
 def getVcfs_gatk(LISTS, vcfDir):
     vcfs = []
     for i in range(len(LISTS)):
-       vcfs.append(f"-I {vcfDir}L{i}_filter.vcf")
+        vcfs.append(f"-I {vcfDir}L{i}_filter.vcf")
     out = " ".join(vcfs)
-    return(out)
+    return out
+
 
 def getListIndices(intDir):
     LISTS = glob.glob(intDir + "gatkLists/*.list")
     for i in range(len(LISTS)):
         LISTS[i] = os.path.basename(LISTS[i])
-        LISTS[i] = re.search('\d+', LISTS[i]).group() # get numerical index of list
-    LISTS=sorted(LISTS)
-    return(LISTS)
+        LISTS[i] = re.search("\d+", LISTS[i]).group()  # get numerical index of list
+    LISTS = sorted(LISTS)
+    return LISTS
+
 
 def make_temp_dir():
     if not os.path.exists("./tmp"):
