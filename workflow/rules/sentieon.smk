@@ -86,7 +86,7 @@ rule dedup:
         """
         export SENTIEON_LICENSE={input.lic}
         sentieon driver -t {threads} -i {input.bam} --algo LocusCollector --fun score_info score.txt
-        sentieon driver -t {threads} -i {input.bam} --algo Dedup --rmdup --score_info score.txt --metrics dedup_metrics.txt  --bam_compression 1 {output.dedupBam}
+        sentieon driver -t {threads} -i {input.bam} --algo Dedup --score_info score.txt --metrics dedup_metrics.txt  --bam_compression 1 {output.dedupBam}
         """
 
 rule gvcf:

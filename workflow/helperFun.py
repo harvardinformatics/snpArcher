@@ -10,28 +10,32 @@ from urllib.request import urlopen
 def collectFastpOutput(fastpFiles):
 
     FractionReadsPassFilter = defaultdict(float)
-    NumFilteredReads = defaultdict(int)
+    NumReadsPassFilter = defaultdict(int)
 
     for fn in fastpFiles:
         sample = os.path.basename(fn)
         sample = sample.replace("_fastp.out", "")
         unfiltered = 0
-        filtered = 0
+        pass_filter = 0
         f = open(fn, "r")
         for line in f:
             if "before filtering" in line:
+
                 line = next(f)
                 line = line.split()
                 unfiltered += int(line[2])
+
             if "Filtering result" in line:
+
                 line = next(f)
                 line = line.split()
-                filtered = int(line[3])
-        f.close()
-        FractionReadsPassFilter[sample] = float(filtered / unfiltered)
-        NumFilteredReads[sample] = filtered
+                pass_filter += int(line[3])
 
-    return (FractionReadsPassFilter, NumFilteredReads)
+        f.close()
+        FractionReadsPassFilter[sample] = float(pass_filter / unfiltered)
+        NumReadsPassFilter[sample] = pass_filter
+
+    return (FractionReadsPassFilter, NumReadsPassFilter)
 
 
 def collectAlnSumMets(alnSumMetsFiles):
@@ -90,13 +94,13 @@ def printBamSumStats(
     covered_bases,
     aln_metrics,
     FractionReadsPassFilter,
-    NumFilteredReads,
+    NumReadsPassFilter,
     out_file,
 ):
     samples = depths.keys()
     with open(out_file, "w") as f:
         print(
-            "Sample\tTotal_Reads\tPercent_mapped\tNum_duplicates\tPercent_properly_paired\tFraction_reads_pass_filter\tNum_filtered_reads",
+            "Sample\tTotal_Reads\tPercent_mapped\tNum_duplicates\tPercent_properly_paired\tFraction_reads_pass_filter\tNumReadsPassingFilters",
             file=f,
         )
         for samp in samples:
@@ -113,7 +117,7 @@ def printBamSumStats(
                 "\t",
                 FractionReadsPassFilter[samp],
                 "\t",
-                NumFilteredReads[samp],
+                NumReadsPassFilter[samp],
                 file=f,
             )
 

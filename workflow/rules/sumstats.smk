@@ -31,9 +31,9 @@ rule collect_sumstats:
         fastpFiles = get_fastpFiles,
         coverageFiles = get_coverageFiles
     output:
-        config['output'] + "{Organism}/{refGenome}/" + "bam_sumstats.tsv"
+        config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_bam_sumstats.tsv"
     run:
-        FractionReadsPassFilter, NumFilteredReads = helperFun.collectFastpOutput(input.fastpFiles)
+        FractionReadsPassFilter, NumReadsPassFilter = helperFun.collectFastpOutput(input.fastpFiles)
         aln_metrics = helperFun.collectAlnSumMets(input.alnSumMetsFiles)
         SeqDepths, CoveredBases = helperFun.collectCoverageMetrics(input.coverageFiles)
-        helperFun.printBamSumStats(SeqDepths, CoveredBases, aln_metrics, FractionReadsPassFilter, NumFilteredReads, output[0])
+        helperFun.printBamSumStats(SeqDepths, CoveredBases, aln_metrics, FractionReadsPassFilter, NumReadsPassFilter, output[0])
