@@ -80,7 +80,7 @@ input$GMKey <- params$GMKey
 
 ### Genomic PCA
 
-```{r, fig.width = 5, fig.height = 5}
+```{r, fig.width = 10, fig.height = 8}
 # PCA plot --------------------------------------------------------------
 pca.path <- paste0(prefix, ".eigenvec")
 #this makes it reasonably robust to running with plink 1.9 or plink 2.0
@@ -114,6 +114,10 @@ df.pca$cluster <- paste("cluster",k$cluster, sep = "_")
 
 ```
 
+
+Row 
+-----------------------------------------------------------------------
+
 ### SNP Depth
 
 ```{r, fig.width = 5, fig.height = 5}
@@ -145,6 +149,36 @@ df.depth.miss <- df.depth.miss %>%
 #)
 
 ```
+
+### Mapping rate
+
+```{r, fig.width = 5, fig.height = 5}
+# bamstat plot --------------------------------------------------------------
+#bamstat is read in the PCA chunk
+bamstat.path <- paste0(prefix, "_bam_sumstats.txt")
+df.bamstat <- read.table(bamstat.path, header =T)
+
+df.depth.miss.bamstat <- inner_join(df.depth.miss, df.bamstat, by = c("INDV" = "Sample"))
+df.depth.miss.bamstat <- df.depth.miss.bamstat %>% 
+ mutate_if(is.numeric, round, digits = 5)
+
+#replace df.depth.miis with r.missing for shiny
+#renderPlotly(
+  #need to wrap ggplot in () to pipe to plotly
+  (ggplot(data = df.depth.miss.bamstat, aes(text = INDV)) +
+    geom_point(aes(x = Percent_mapped, y = MEAN_DEPTH, fill = cluster), 
+               size = 3, color = "black") +
+    theme_bw() +
+    theme(legend.position = "top") + 
+    scale_fill_manual(values = set.colors) + 
+    labs(x = "% Reads Mapped", y = "SNP Depth") +
+    xlim(0,100)) %>% 
+    ggplotly(tooltip=c("text","x","y")) 
+#)
+
+
+```
+
 
 Row 
 -----------------------------------------------------------------------
