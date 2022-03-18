@@ -61,7 +61,7 @@ rule compute_d4:
         bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix']
     output:
         config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}.mosdepth.global.dist.txt",
-        temp(config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}.per-base.bed.gz"),
+        temp(config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}.per-base.d4"),
         summary=config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}.mosdepth.summary.txt"
     conda:
         "../envs/callable.yml"
@@ -106,8 +106,6 @@ rule create_cov_bed:
         d4 = config['output'] + "{Organism}/{refGenome}/{refGenome}_{Organism}.d4"
     output:
         covbed = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_cov.bed")
-    conda:
-        "../envs/callable.yml"
     params:
         mappability = config['mappability_min'],
         cov_threshold = config['cov_threshold']
@@ -155,7 +153,7 @@ rule callable_bed:
         TEMP_map = config['tmp_dir'] + "{Organism}_{refGenome}_TEMP.map.bed"
     shell:
         "bedtools merge {input.callable_cov} > {params.TEMP_cov}"
-        "awk 'BEGIN{OFS="\t";FS="\t"} { if($4>={params.mappability}) print $1,$2,$3 }' {input.map} > {params.TEMP_map}"
+        """awk 'BEGIN{OFS="\\t";FS="\\t"} { if($4>={params.mappability}) print $1,$2,$3 }' {input.map} > {params.TEMP_map}"""
         "bedtools intersect -a {params.TEMP_cov} -b {params.TEMP_map} | bedtools sort -i - | bedtools merge -d {params.merge} -i - > {output.callable_sites}"
         "rm {params.TEMP_cov}"
         "rm {params.TEMP_map}"
