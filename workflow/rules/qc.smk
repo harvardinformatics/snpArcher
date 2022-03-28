@@ -41,7 +41,7 @@ rule subsample_snps:
     shell:
         """
         #first remove filtered sites and retain only biallelic variants
-        bcftools view -v snps -m2 -M2 -f .,PASS -e 'AF==1 | AF==0 | ALT="*" | TYPE~"indel" | ref="N"' {input.vcf} -O z -o {output.filtered}
+        bcftools view -t ^mtDNA -v snps -m2 -M2 -f .,PASS -e 'AF==1 | AF==0 | ALT="*" | TYPE~"indel" | ref="N"' {input.vcf} -O z -o {output.filtered}
         bcftools index {output.filtered}
         #figure out how many SNPs are left, then identify how big of SNP window size to get down to between 100 and 150k snps        
         ALLSITES=`bcftools query -f '%CHROM\t%POS\n' {output.filtered} | wc -l`
