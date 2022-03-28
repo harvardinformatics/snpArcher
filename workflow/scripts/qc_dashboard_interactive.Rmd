@@ -339,13 +339,13 @@ g <- list(
 
 if(file.exists(paste0(prefix, ".coords.txt"))){
   if(!is.null(input$GMKey)){
-    df.coords <- read.table(paste0(prefix, ".coords.txt"), na.strings = "")
+    df.coords <- read.table(paste0(prefix, ".coords.txt"), na.strings = c("", "nan"))
     names(df.coords) <- c("sample.ID","long","lat")
     
     df.coords <- left_join(df.pca, df.coords, by = c("IID" = "sample.ID"))
 
-    df.coords <- df.coords %>% filter(!na(long))
-    num.missing <- df.coords %>% filter(is.na(long)) 
+    df.coords <- df.coords %>% filter(!is.na(long))
+    num.missing <- df.coords %>% filter(is.na(long)) %>% nrow() 
 
     df.coords$color <- set.colors[factor(dist.id$cluster)]
     
@@ -400,8 +400,6 @@ if(file.exists(paste0(prefix, ".coords.txt"))){
 }
 
 ```
-
-`r num.missing` dropped that are missing coordinates 
 
 Row
 -----------------------------------------------------------------------
