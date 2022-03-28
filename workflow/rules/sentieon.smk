@@ -10,7 +10,8 @@ rule fastp:
     threads:
         res_config['fastp']['threads']
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['fastp']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * res_config['fastp']['mem'],
+        disk_mb = 512_000
     log:
         "logs/{Organism}/fastp/{refGenome}_{sample}_{run}.txt"
     shell:
@@ -40,15 +41,16 @@ rule map:
         "logs/{Organism}/{refGenome}/bwa/{sample}_{run}.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bwa_map']['mem'],
-        machine_type = "n2d-standard-32"
+        machine_type = "n2d-standard-32",
+        disk_mb = 512_000
     benchmark:
         "benchmarks/{Organism}/{refGenome}/bwa/{sample}/{run}.txt"
     shell:
         """
         export MALLOC_CONF=lg_dirty_mult:-1
         export SENTIEON_LICENSE={input.lic}
-        sentieon bwa mem -M -R {params.rg} -t {threads} -K 10000000 {input.ref} {input.r1} {input.r2} 2>{log} | sentieon util sort --bam_compression 1 -r {input.ref} -o {output.bam} -t {threads} --sam2bam -i - 2>>{log}
-        samtools index {output.bam} {output.bai} 2>>{log}
+        sentieon bwa mem -M -R {params.rg} -t {threads} -K 10000000 {input.ref} {input.r1} {input.r2} | sentieon util sort --bam_compression 1 -r {input.ref} -o {output.bam} -t {threads} --sam2bam -i -
+        samtools index {output.bam} {output.bai}
         """
 
 rule merge_bams:
@@ -79,7 +81,8 @@ rule dedup:
         res_config['dedup']['threads']
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['dedup']['mem'],
-        machine_type = "n2d-standard-32"
+        machine_type = "n2d-standard-32",
+        disk_mb = 512_000
     benchmark:
         "benchmarks/{Organism}/{refGenome}/dedup/{sample}.txt"
     shell:
@@ -104,6 +107,7 @@ rule gvcf:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bam2gvcf']['mem'],
         machine_type = "n2d-standard-32",
+        disk_mb = 512_000
     conda:
         "../envs/sentieon.yml"
     benchmark:
@@ -161,7 +165,8 @@ rule filterVcfs:
         "../envs/bam2vcf.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['filterVcfs']['mem'],   # this is the overall memory requested
-        machine_type = "n2d-standard-32"
+        machine_type = "n2d-standard-32",
+        disk_mb = 512_000
     log:
         "logs/{Organism}/{refGenome}/filterVcfs/log.txt"
     benchmark:
