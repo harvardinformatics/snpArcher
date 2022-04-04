@@ -9,6 +9,7 @@ from snakemake.exceptions import WorkflowError
 def write_coords_file(wildcards):
     out_df = samples[["BioSample", "long", "lat"]]
     out_df.drop_duplicates("BioSample", inplace=True)
+    out_df.dropna(subset=["long", "lat"], thresh=1, inplace=True)
     outpath = os.path.join(workflow.default_remote_prefix, config['output'], f"{wildcards.Organism}/{wildcards.refGenome}/", config['qcDir'], f"{wildcards.Organism}_{wildcards.refGenome}.coords.txt")
     out_df.to_csv(outpath, index=False, sep="\t")
 def get_coords_if_available(wildcards):
