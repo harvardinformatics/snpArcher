@@ -15,21 +15,25 @@ rule vcftools_individuals:
         vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
     output:
         depth = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.idepth",
-        miss = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.imiss"
+        miss = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.imiss",
+        samps = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.samps.txt"
     conda:
         "../envs/qc.yml"
     params:
         prefix= os.path.join(workflow.default_remote_prefix, (config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}"))
     shell:
         """
+        chmod +x workflow/scripts/samples_to_keep.py
         vcftools --gzvcf {input.vcf} --FILTER-summary --out {params.prefix}
         vcftools --gzvcf {input.vcf} --out {params.prefix} --depth
         vcftools --gzvcf {input.vcf} --out {params.prefix} --missing-indv
+        workflow/scripts/samples_to_keep.py {output.depth} > {output.samps}
         """
 
 rule subsample_snps:
     input:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
+        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
+        samps = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.samps.txt"
     output:
         filtered = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.filtered.vcf.gz",
         filtered_idx = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.filtered.vcf.gz.csi",
@@ -41,7 +45,7 @@ rule subsample_snps:
     shell:
         """
         #first remove filtered sites and retain only biallelic variants
-        bcftools view -t ^mtDNA -v snps -m2 -M2 -f .,PASS -e 'AF==1 | AF==0 | ALT="*" | TYPE~"indel" | ref="N"' {input.vcf} -O z -o {output.filtered}
+        bcftools view -S {input.samps} -t ^mtDNA -v snps -m2 -M2 -f .,PASS -e 'AF==1 | AF==0 | ALT="*" | TYPE~"indel" | ref="N"' {input.vcf} -O z -o {output.filtered}
         bcftools index {output.filtered}
         #figure out how many SNPs are left, then identify how big of SNP window size to get down to between 100 and 150k snps        
         ALLSITES=`bcftools query -f '%CHROM\t%POS\n' {output.filtered} | wc -l`
