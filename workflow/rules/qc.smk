@@ -13,7 +13,6 @@ rule check_fai:
 rule vcftools_individuals:
     input:
         vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
-        py = "workflow/scripts/samples_to_keep.py"
     output:
         depth = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.idepth",
         miss = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.imiss",
