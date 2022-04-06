@@ -42,6 +42,8 @@ rule get_fastq_pe:
         """
 
 rule download_reference:
+    input:
+        ref = get_ref
     output:
         outdir = directory(config["refGenomeDir"] + "{refGenome}"),
         ref = config["refGenomeDir"] + "{refGenome}.fna"
@@ -52,10 +54,18 @@ rule download_reference:
     conda:
         "../envs/fastq2bam.yml"
     shell:
-        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} &> {log}"
-        "&& 7z x {params.dataset} -aoa -o{output.outdir}"
-        "&& cat {output.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
-
+        """
+        
+        if [ -z "{input.ref}" ]  # check if this is empty
+        then
+            datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} &> {log} \
+            && 7z x {params.dataset} -aoa -o{output.outdir} \
+            && cat {output.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}
+        else
+            mkdir {output.outdir} # make this dir to make snakemake happy
+            cp {input.ref} {output.ref}
+        fi
+        """
 rule index_ref:
     input:
         ref = config["refGenomeDir"] + "{refGenome}.fna"
