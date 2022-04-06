@@ -1,7 +1,8 @@
 localrules: collect_fastp_stats, collect_sumstats
 rule bam_sumstats:
     input:
-        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam",
+        bai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam.bai",
         ref = config["refGenomeDir"] + "{refGenome}.fna"
     output:
         cov = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_coverage.txt",
@@ -15,6 +16,33 @@ rule bam_sumstats:
         samtools coverage --output {output.cov} {input.bam}
         samtools flagstat -O tsv {input.bam} > {output.alnSum}
         """
+rule sentieon_bam_stats:
+    input:
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam",
+        bai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam.bai",
+        indices = ancient(expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["fai", "sa", "pac", "bwt", "ann", "amb"])),
+        ref = config["refGenomeDir"] + "{refGenome}.fna",
+        lic = ancient(config['sentieon_lic'])
+    output:
+        insert_file = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_insert_metrics.txt",
+        qd = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_qd_metrics.txt",
+        gc = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_gc_metrics.txt",
+        gc_summary = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_gc_summary.txt",
+        mq = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}_mq_metrics.txt"
+    conda:
+        "../envs/sentieon.yml"
+    threads: 8
+    shell:
+        """
+        export SENTIEON_LICENSE={input.lic}
+        sentieon driver -r {input.ref} \
+        -t {threads} -i {input.bam} \
+        --algo MeanQualityByCycle {output.mq} \
+        --algo QualDistribution {output.qd} \
+        --algo GCBias --summary {output.gc_summary} {output.gc} \
+        --algo InsertSizeMetricAlgo {output.insert_file}
+        """
+
 
 rule collect_fastp_stats:
     input:
@@ -27,9 +55,7 @@ rule collect_fastp_stats:
 
 rule collect_sumstats:
     input:
-        alnSumMetsFiles = get_aln_sum_metrics,
-        fastpFiles = get_fastpFiles,
-        coverageFiles = get_coverageFiles
+        unpack(get_input_sumstats)
     output:
         config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_bam_sumstats.txt"
     run:
