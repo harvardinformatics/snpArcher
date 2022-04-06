@@ -158,17 +158,25 @@ def get_input_sumstats(wildcards):
     mq = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_mq_metrics.txt", sample=_samples)
     gc = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_gc_metrics.txt", sample=_samples)
     gc_summary = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_gc_summary.txt", sample=_samples)
-    out = {
-        "alnSumMetsFiles": aln,
-        "fastpFiles": fastp,
-        "coverageFiles": cov,
-        "insert_files": insert,
-        "qc_files": qd,
-        "mq_files": mq,
-        "gc_files": gc,
-        "gc_summary": gc_summary
-    }
-    return out
+    if config['sentieon']:
+        out = {
+            "alnSumMetsFiles": aln,
+            "fastpFiles": fastp,
+            "coverageFiles": cov,
+            "insert_files": insert,
+            "qc_files": qd,
+            "mq_files": mq,
+            "gc_files": gc,
+            "gc_summary": gc_summary
+        }
+        return out
+    else:
+        out = {
+            "alnSumMetsFiles": aln,
+            "fastpFiles": fastp,
+            "coverageFiles": cov,
+        }
+        return out
 def get_gather_vcfs(wildcards):
     """
     Gets filtered vcfs for gathering step. This function gets the interval list indicies from the corresponding
