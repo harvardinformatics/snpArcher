@@ -15,7 +15,11 @@ def write_coords_file(wildcards):
 def get_coords_if_available(wildcards):
     if 'lat' in samples.columns and 'long' in samples.columns:
         return config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.coords.txt"
+<<<<<<< HEAD
     
+=======
+    return None
+>>>>>>> 640f83812b02a5469c39fdb36c75091207a0e617
 def get_ena_url(wildcards):
     prefix = wildcards.run[:6]
     lastdigit = wildcards.run[-1]
