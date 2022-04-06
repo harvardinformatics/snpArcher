@@ -1,12 +1,24 @@
 import glob
 import re
 import os
+
 import pandas as pd
 from collections import defaultdict, deque
 from snakemake.exceptions import WorkflowError
 
 ### INPUT FUNCTIONS ###
-
+def get_ref(wildcards):
+    if 'refPath' in samples.columns:
+        _refs = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['refPath'].dropna().unique().tolist()
+        for ref in _refs:
+            print(ref)
+            if not os.path.exists(ref):
+                raise WorkflowError(f"Reference genome {ref} does not exist")
+            elif ref.rsplit(".", 1)[1] == '.gz':
+                raise WorkflowError(f"Reference genome {ref} does not exist")
+        return _refs
+    else:
+        return []
 def get_ena_url(wildcards):
     prefix = wildcards.run[:6]
     lastdigit = wildcards.run[-1]
