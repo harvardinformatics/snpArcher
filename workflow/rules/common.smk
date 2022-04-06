@@ -15,7 +15,7 @@ def write_coords_file(wildcards):
 def get_coords_if_available(wildcards):
     if 'lat' in samples.columns and 'long' in samples.columns:
         return config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.coords.txt"
-     
+    
 def get_ena_url(wildcards):
     prefix = wildcards.run[:6]
     lastdigit = wildcards.run[-1]
@@ -30,7 +30,7 @@ def get_ena_url(wildcards):
     return {"sra_url": sra_url, "fastq_url": fastq_url}
 
 def get_gvcf_cmd(wildcards):
-    sample_names = samples.BioSample.unique().tolist()
+    sample_names = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
     vcfs = expand(os.path.join(workflow.default_remote_prefix, config['output'], "{Organism}/{refGenome}/", config['gvcfDir'], "{sample}.g.vcf.gz"), **wildcards, sample=sample_names)
     out = " ".join(["-v " + vcf for vcf in vcfs])
     return out
@@ -148,6 +148,27 @@ def get_coverageFiles(wildcards):
     _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
     return expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_coverage.txt", sample=_samples)
 
+def get_input_sumstats(wildcards):
+    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    aln = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_AlnSumMets.txt", sample=_samples)
+    cov = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_coverage.txt", sample=_samples)
+    fastp = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_fastp.out", sample=_samples)
+    insert = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_insert_metrics.txt", sample=_samples)
+    qd = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_qd_metrics.txt", sample=_samples)
+    mq = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_mq_metrics.txt", sample=_samples)
+    gc = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_gc_metrics.txt", sample=_samples)
+    gc_summary = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_gc_summary.txt", sample=_samples)
+    out = {
+        "alnSumMetsFiles": aln,
+        "fastpFiles": fastp,
+        "coverageFiles": cov,
+        "insert_files": insert,
+        "qc_files": qd,
+        "mq_files": mq,
+        "gc_files": gc,
+        "gc_summary": gc_summary
+    }
+    return out
 def get_gather_vcfs(wildcards):
     """
     Gets filtered vcfs for gathering step. This function gets the interval list indicies from the corresponding
