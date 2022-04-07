@@ -110,8 +110,8 @@ rule create_cov_bed:
         cov_threshold = config['cov_threshold']
     conda:
         "../envs/callable.yml"
-    shell:
-        "python scripts/create_coverage_bed.py"
+    script:
+        "scripts/create_coverage_bed.py"
 
 rule callable_bed:
     input:
