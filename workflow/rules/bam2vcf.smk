@@ -166,13 +166,15 @@ rule sort_gatherVcfs:
         gather_vcfs_CLI
     conda:
         "../envs/bam2vcf.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['gatherVcfs']['mem']
     log:
         "logs/{Organism}/sortVcf/{refGenome}.txt"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['gatherVcfs']['mem'],   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: attempt * (res_config['gatherVcfs']['mem'] - 2000)  # this is the maximum amount given to java
     benchmark:
         "benchmarks/{Organism}/sortVcf/{refGenome}.txt"
     shell:
         "gatk SortVcf "
+        "--java-options \"-Xmx{resources.reduced}m -Xms{resources.reduced}m\" "
         "{params} "
         "-O {output.vcfFinal} &> {log}"
