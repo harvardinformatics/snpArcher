@@ -111,7 +111,7 @@ rule create_cov_bed:
     conda:
         "../envs/callable.yml"
     script:
-        "scripts/create_coverage_bed.py"
+        "../scripts/create_coverage_bed.py"
 
 rule callable_bed:
     input:
