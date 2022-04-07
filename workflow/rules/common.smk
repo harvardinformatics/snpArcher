@@ -15,7 +15,7 @@ def get_ref(wildcards):
             if not os.path.exists(ref):
                 raise WorkflowError(f"Reference genome {ref} does not exist")
             elif ref.rsplit(".", 1)[1] == '.gz':
-                raise WorkflowError(f"Reference genome {ref} does not exist")
+                raise WorkflowError(f"Reference genome {ref} must be unzipped first.")
         return _refs
     else:
         return []
