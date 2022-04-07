@@ -130,8 +130,10 @@ rule callable_bed:
         TEMP_cov = config['tmp_dir'] + "{Organism}_{refGenome}_TEMP.cov.bed",
         TEMP_map = config['tmp_dir'] + "{Organism}_{refGenome}_TEMP.map.bed"
     shell:
-        "bedtools merge {input.cov} > {params.TEMP_cov} "
-        """awk 'BEGIN{{OFS="\\t";FS="\\t"}} {{ if($4>={params.mappability}) print $1,$2,$3 }}' {input.map} > {params.TEMP_map} """
-        "bedtools intersect -a {params.TEMP_cov} -b {params.TEMP_map} | bedtools sort -i - | bedtools merge -d {params.merge} -i - > {output.callable_sites} "
-        "rm {params.TEMP_cov} "
-        "rm {params.TEMP_map} "
+        """
+        bedtools merge {input.cov} > {params.TEMP_cov}
+        awk 'BEGIN{{OFS="\\t";FS="\\t"}} {{ if($4>={params.mappability}) print $1,$2,$3 }}' {input.map} > {params.TEMP_map}
+        bedtools intersect -a {params.TEMP_cov} -b {params.TEMP_map} | bedtools sort -i - | bedtools merge -d {params.merge} -i - > {output.callable_sites}
+        rm {params.TEMP_cov}
+        rm {params.TEMP_map}
+        """
