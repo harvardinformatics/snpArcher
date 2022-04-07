@@ -42,20 +42,29 @@ rule get_fastq_pe:
         """
 
 rule download_reference:
+    input:
+        ref = get_ref
     output:
-        outdir = directory(config["refGenomeDir"] + "{refGenome}"),
         ref = config["refGenomeDir"] + "{refGenome}.fna"
     params:
-        dataset = config["refGenomeDir"] + "{refGenome}_dataset.zip"
+        dataset = config["refGenomeDir"] + "{refGenome}_dataset.zip",
+        outdir = config["refGenomeDir"] + "{refGenome}"
     log:
         "logs/dl_reference/{refGenome}.log"
     conda:
         "../envs/fastq2bam.yml"
     shell:
-        "datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} &> {log}"
-        "&& 7z x {params.dataset} -aoa -o{output.outdir}"
-        "&& cat {output.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}"
-
+        """
+        
+        if [ -z "{input.ref}" ]  # check if this is empty
+        then
+            datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} &> {log} \
+            && 7z x {params.dataset} -aoa -o{params.outdir} \
+            && cat {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}
+        else
+            cp {input.ref} {output.ref}
+        fi
+        """
 rule index_ref:
     input:
         ref = config["refGenomeDir"] + "{refGenome}.fna"
