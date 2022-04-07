@@ -107,33 +107,11 @@ rule create_cov_bed:
     output:
         covbed = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_cov.bed")
     params:
-        mappability = config['mappability_min'],
         cov_threshold = config['cov_threshold']
-    run:
-        from pyd4 import D4File,D4Builder
-        import math
-
-        #read chrom coverage values and compute min/max
-        cov_thresh = {}
-        stdv_scale = float(params.cov_threshold)
-        with open(input.stats) as stats:
-            for line in stats:
-                fields=line.split()
-                stdev = math.sqrt(float(fields[1]))
-                cov_thresh[fields[0]] = {'low' : float(fields[2]) - (stdev * stdv_scale),
-                    'high' : float(fields[2]) + (stdev * stdv_scale)}
-
-        #read d4 file into python, convert to
-        covfile = D4File(input.d4)
-        covmat = covfile.open_all_tracks()
-
-        with open(output.covbed, mode='w') as covbed:
-            for chrom in covfile.chroms():
-                for values in covmat.enumerate_values(chrom[0],0,chrom[1]):
-                    covs=values[2]
-                    res1=math.fsum(covs)
-                    if res1 <= cov_thresh[chrom[0]]['high'] and res1 >= cov_thresh[chrom[0]]['low']:
-                        print(chrom[0], values[1])
+    conda:
+        "../envs/callable.yml"
+    shell:
+        "python scripts/create_coverage_bed.py"
 
 rule callable_bed:
     input:
