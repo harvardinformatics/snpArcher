@@ -15,5 +15,6 @@ dependencies:
   - rust
   - gcc
   - binutils
+  - make
   - pip:
       - pyd4
