@@ -13,5 +13,6 @@ dependencies:
   - d4tools>=0.3.4
   - pip
   - rust
+  - gcc
   - pip:
       - pyd4
