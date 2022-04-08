@@ -23,7 +23,7 @@ rule get_fastq_pe:
         set +e
 
         ##attempt to get SRA file from NCIB (prefetch) or ENA (wget)
-        prefetch {wildcards.run}
+        prefetch --max-size u {wildcards.run}
         prefetchExit=$?
         if [[ $prefetchExit -ne 0 ]]
         then
@@ -55,7 +55,7 @@ rule download_reference:
         "../envs/fastq2bam.yml"
     shell:
         """
-        
+
         if [ -z "{input.ref}" ]  # check if this is empty
         then
             datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} &> {log} \
