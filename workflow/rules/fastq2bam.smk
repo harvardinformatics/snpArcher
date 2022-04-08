@@ -52,15 +52,13 @@ rule download_reference:
     params:
         dataset = config["refGenomeDir"] + "{refGenome}_dataset.zip",
         outdir = config["refGenomeDir"] + "{refGenome}"
-    log:
-        "logs/dl_reference/{refGenome}.log"
     conda:
         "../envs/fastq2bam.yml"
     shell:
         """
         if [ -z "{input.ref}" ]  # check if this is empty
         then
-            datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} &> {log} \
+            datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} \
             && 7z x {params.dataset} -aoa -o{params.outdir} \
             && cat {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}
         else
