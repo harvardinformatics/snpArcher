@@ -21,4 +21,4 @@ with open(snakemake.output["covbed"], mode='w') as covbed:
             covs=values[2]
             res1=math.fsum(covs)
             if res1 <= cov_thresh[chrom[0]]['high'] and res1 >= cov_thresh[chrom[0]]['low']:
-                print(chrom[0], values[1], values[1]+1, file=covbed)
+                print(chrom[0], values[1], values[1]+1, file=covbed, sep="\t")
