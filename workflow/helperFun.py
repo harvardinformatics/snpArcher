@@ -213,17 +213,7 @@ def createSeqDictGetScaffOrder(dict_file):
     return seqDictScaffs
 
 
-def createListsGetIndices(
-    maxIntervalLen,
-    maxBpPerList,
-    maxIntervalsPerList,
-    minNmer,
-    outputDir,
-    intDir,
-    wildcards,
-    dict_file,
-    intervals_file,
-):
+def createListsGetIndices(missingBpTolerance, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, outputDir, intDir, wildcards, dict_file, intervals_file):
 
     # Get the order in which scaffolds are listed in genome .dict file,  need to correspond to order in list files! So use .dict order for printing interval files
     seqDictScaffs = createSeqDictGetScaffOrder(dict_file)
@@ -348,7 +338,7 @@ def createListsGetIndices(
                         )  # add 1 to compare to lengths taken above
 
         maxIntervalLenByNmer[Nmer] = Nmer_maxIntervalLen
-        if totalACGTmerLength_overlaps < totalACGTmerLength:
+        if abs(totalACGTmerLength_overlaps - totalACGTmerLength) > missingBpTolerance:
             print(Nmer, totalACGTmerLength, totalACGTmerLength_overlaps)
             print("Error in interval creation: not all ACGTmers were accounted for")
             sys.exit(1)
