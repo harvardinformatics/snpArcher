@@ -1,6 +1,3 @@
-import gzip
-import json
-
 localrules: genome_prep
 
 ## RULES ##
@@ -56,121 +53,87 @@ rule genome_prep:
   conda:
       "../envs/callable.yml"
   shell:
-      "faToTwoBit {input.ref} {output.twobit}\n"
+      "faToTwoBit {input.ref} {output.twobit}"
       "twoBitInfo {output.twobit} stdout | sort -k2rn > {output.chrom}"
 
-rule bedgraphs:
+rule compute_d4:
     input:
         bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix']
     output:
-        temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}.sorted.bg")
+        config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}.mosdepth.global.dist.txt",
+        temp(config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}.per-base.d4"),
+        summary=config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}.mosdepth.summary.txt"
     conda:
         "../envs/callable.yml"
     benchmark:
         "benchmarks/{Organism}/bedgraphs/{refGenome}_{Organism}_{sample}.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * res_config['compute_d4']['mem']
+    threads:
+        res_config['compute_d4']['threads']
+    params:
+        prefix = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}"
     shell:
-        "bedtools genomecov -ibam {input.bam} -bga | sort -k1,1 -k2,2n - > {output}"
+        "mosdepth --d4 -t {threads} {params.prefix} {input.bam}"
 
-rule merge_bedgraph:
+rule merge_d4:
     input:
         unpack(get_input_for_coverage)
     output:
-        merge = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{Organism}.merge.bg")
+        config['output'] + "{Organism}/{refGenome}/{refGenome}_{Organism}.d4"
     benchmark:
-        "benchmarks/{Organism}/merge_begraph/{refGenome}_{Organism}.txt"
+        "benchmarks/{Organism}/merge_d4/{refGenome}_{Organism}.txt"
     conda:
         "../envs/callable.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['bedtools']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * res_config['merge_d4']['mem']
     shell:
-        "bedtools unionbedg -header -empty -g {input.chrom} -i {input.bedgraphs} > {output.merge}"
-
-rule gzip_bedgraph:
-    input:
-        get_bedgraph_to_convert
-    output:
-        bgz = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz",
-        idx = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gzi"
-    conda:
-        "../envs/callable.yml"
-    shell:
-        "bgzip -i -I {output.idx} -c {input} > {output.bgz}"
+        "d4tools merge {input.d4files} {output}"
 
 rule compute_covstats:
     input:
-        bgz = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".bg.gz"
+        d4 = config['output'] + "{Organism}/{refGenome}/{refGenome}_{Organism}.d4"
     output:
-        cov = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.bg.gz",
         stats = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.txt"
-    run:
-        covtot = 0.0
-        meantot = 0.0
-        bptot = 0.0
-        with gzip.open(input.bgz, 'rt') as f:
-            with gzip.open(output.cov, 'wt') as covbed:
-                for line in f:
-                    fields = line.split()
-                    if (len(fields) < 4):
-                        continue
-                    try:
-                        cov_fields = map(float, fields[3:])
-                    except:
-                        continue
-                    covsum = sum(cov_fields)
-                    mean = covsum / len(fields[3:])
-                    bp = float(fields[2]) - float(fields[1])
-                    covtot = covtot + (covsum * bp)
-                    meantot = meantot + (mean * bp)
-                    bptot = bptot + bp
-                    print(fields[0], fields[1], fields[2], covsum, mean, file=covbed, sep="\t")
-        stats = {"mean_summed_cov": covtot/bptot, "mean_ind_cov": meantot / bptot}
-        with open(output.stats, 'w') as st:
-            print(json.dumps(stats), file=st)
+    conda:
+        "../envs/callable.yml"
+    shell:
+        "d4tools stat {input.d4} | awk '{{ for(i=4; i<=NF;i++) j+=$i; print $1,$3,j; j=0 }}' > {output}"
 
-rule filter_bed:
+rule create_cov_bed:
     input:
-        cov = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.bg.gz",
-        map = config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg",
-        stats = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.txt"
+        stats = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.txt",
+        d4 = config['output'] + "{Organism}/{refGenome}/{refGenome}_{Organism}.d4"
     output:
-        callable_cov = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_cov.bed"),
-        callable_map = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_map.bed")
+        covbed = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_cov.bed")
     params:
-        mappability = config['mappability_min'],
-        low_cov = config['low_cov_thresh'],
-        high_cov = config['high_cov_thresh'],
-        cov_type = config['cov_type']
-    run:
-        stats = {}
-        with open(input.stats) as stats:
-            stats = json.load(stats)
-        min_cov = float(stats[params.cov_type]) * params.low_cov
-        max_cov = float(stats[params.cov_type]) * params.high_cov
-        record_num = 3 if params.cov_type == "mean_summed_cov" else 4
-        with gzip.open(input.cov, 'rt') as cov:
-            with open(output.callable_cov, 'w') as cov_out:
-                for line in cov:
-                    fields = line.split()
-                    if float(fields[record_num]) >= min_cov and float(fields[record_num]) <= max_cov:
-                        print(fields[0], fields[1], fields[2], sep="\t", file=cov_out)
-        with open(input.map) as map:
-            with open(output.callable_map, 'w') as map_out:
-                for line in map:
-                    fields=line.split()
-                    if float(fields[3]) >= params.mappability:
-                        print(fields[0], fields[1], fields[2], sep="\t", file=map_out)
+        cov_threshold = config['cov_threshold']
+    conda:
+        "../envs/callable.yml"
+    script:
+        "../scripts/create_coverage_bed.py"
 
 rule callable_bed:
     input:
-        callable_cov = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_cov.bed",
-        callable_map = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_map.bed"
+        cov = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites_cov.bed",
+        map = config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg"
     output:
         callable_sites = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".callable_sites.bed"
     conda:
         "../envs/callable.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['callable_bed']['mem']
     params:
-        merge = config['callable_merge']
+        merge = config['callable_merge'],
+        mappability = config['mappability_min'],
+        #possibly better ways to create temp files in snakemake but this will work for now
+        TEMP_cov = config['tmp_dir'] + "{Organism}_{refGenome}_TEMP.cov.bed",
+        TEMP_map = config['tmp_dir'] + "{Organism}_{refGenome}_TEMP.map.bed"
     shell:
-        "bedtools intersect -a {input.callable_cov} -b {input.callable_map} | bedtools merge -d {params.merge} -i - > {output.callable_sites}"
+        """
+        bedtools merge -i {input.cov} > {params.TEMP_cov}
+        awk 'BEGIN{{OFS="\\t";FS="\\t"}} {{ if($4>={params.mappability}) print $1,$2,$3 }}' {input.map} > {params.TEMP_map}
+        bedtools intersect -a {params.TEMP_cov} -b {params.TEMP_map} | bedtools sort -i - | bedtools merge -d {params.merge} -i - > {output.callable_sites}
+        rm {params.TEMP_cov}
+        rm {params.TEMP_map}
+        """

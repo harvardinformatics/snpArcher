@@ -61,8 +61,13 @@ genmap:
     mem: 20000
 genmap_sort:
     mem: 4000
-bedtools:
+compute_d4:
     mem: 4000
+    threads: 4
+merge_d4:
+    mem: 10000
+callable_bed:
+    mem: 10000
 
 ###
 # bam2vcf workflows
