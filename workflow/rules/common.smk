@@ -19,6 +19,7 @@ def get_ref(wildcards):
         return _refs
     else:
         return []
+        
 def get_ena_url(wildcards):
     prefix = wildcards.run[:6]
     lastdigit = wildcards.run[-1]
