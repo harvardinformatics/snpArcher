@@ -22,8 +22,11 @@ rule get_fastq_pe:
         """
         set +e
 
-        ##attempt to get SRA file from NCIB (prefetch) or ENA (wget)
-        prefetch {wildcards.run}
+        #delete existing prefetch file in case of previous run failure
+        rm -rf {wildcards.run}
+
+        ##attempt to get SRA file from NCBI (prefetch) or ENA (wget)
+        prefetch --max-size 1T {wildcards.run}
         prefetchExit=$?
         if [[ $prefetchExit -ne 0 ]]
         then
@@ -49,16 +52,13 @@ rule download_reference:
     params:
         dataset = config["refGenomeDir"] + "{refGenome}_dataset.zip",
         outdir = config["refGenomeDir"] + "{refGenome}"
-    log:
-        "logs/dl_reference/{refGenome}.log"
     conda:
         "../envs/fastq2bam.yml"
     shell:
         """
-        
         if [ -z "{input.ref}" ]  # check if this is empty
         then
-            datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} &> {log} \
+            datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} \
             && 7z x {params.dataset} -aoa -o{params.outdir} \
             && cat {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}
         else
