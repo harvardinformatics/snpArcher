@@ -24,8 +24,11 @@ rule get_fastq_pe:
         """
         set +e
 
-        ##attempt to get SRA file from NCIB (prefetch) or ENA (wget)
-        prefetch {wildcards.run}
+        #delete existing prefetch file in case of previous run failure
+        rm -rf {wildcards.run}
+
+        ##attempt to get SRA file from NCBI (prefetch) or ENA (wget)
+        prefetch --max-size 1T {wildcards.run}
         prefetchExit=$?
         if [[ $prefetchExit -ne 0 ]]
         then
@@ -43,17 +46,47 @@ rule get_fastq_pe:
         rm -rf {wildcards.run}
         """
 
-#rule gzip_fastq:
-#    input:
-#        config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq",
-#        config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq"
-#    output:
-#        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz"),
-#        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz")
-#    resources:
-#        mem_mb = lambda wildcards, attempt: attempt * res_config['gzip_fastq']['mem']
-#    shell:
-#        "gzip {input}"
+rule download_reference:
+    input:
+        ref = get_ref
+    output:
+        ref = config["refGenomeDir"] + "{refGenome}.fna"
+    params:
+        dataset = config["refGenomeDir"] + "{refGenome}_dataset.zip",
+        outdir = config["refGenomeDir"] + "{refGenome}"
+    conda:
+        "../envs/fastq2bam.yml"
+    shell:
+        """
+        if [ -z "{input.ref}" ]  # check if this is empty
+        then
+            datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} \
+            && 7z x {params.dataset} -aoa -o{params.outdir} \
+            && cat {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}
+        else
+            cp {input.ref} {output.ref}
+        fi
+        """
+rule index_ref:
+    input:
+        ref = config["refGenomeDir"] + "{refGenome}.fna"
+    output:
+        indexes = expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"]),
+        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
+        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict"
+    conda:
+        "../envs/fastq2bam.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['index_ref']['mem']
+    log:
+        "logs/index_ref/{refGenome}.log"
+    shell:
+        """
+        bwa index {input.ref} 2> {log}
+        samtools faidx {input.ref} --output {output.fai}
+        samtools dict {input.ref} -o {output.dictf} >> {log} 2>&1
+        """
+
 rule fastp:
     input:
         unpack(get_reads)
