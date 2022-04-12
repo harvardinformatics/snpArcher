@@ -16,6 +16,19 @@ def get_coords_if_available(wildcards):
     if 'lat' in samples.columns and 'long' in samples.columns:
         return config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.coords.txt"
     return []
+def get_ref(wildcards):
+    if 'refPath' in samples.columns:
+        _refs = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['refPath'].dropna().unique().tolist()
+        for ref in _refs:
+            print(ref)
+            if not os.path.exists(ref):
+                raise WorkflowError(f"Reference genome {ref} does not exist")
+            elif ref.rsplit(".", 1)[1] == '.gz':
+                raise WorkflowError(f"Reference genome {ref} must be unzipped first.")
+        return _refs
+    else:
+        return []
+        
 def get_ena_url(wildcards):
     prefix = wildcards.run[:6]
     lastdigit = wildcards.run[-1]
@@ -217,19 +230,11 @@ def get_input_for_mapfile(wildcards):
     # only gvcfs are needed for the mapfile
     return gvcfs
 
-def get_bedgraph_to_convert(wildcards):
-    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
-    if len(_samples) == 1:
-        return expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{sample}.sorted.bg", sample=_samples)
-    else:
-        return config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{Organism}.merge.bg"
-
 def get_input_for_coverage(wildcards):
     # Gets the correct sample given the organism and reference genome for the bedgraph merge step
-    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
-    bedgraphFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{sample}" + ".sorted.bg", sample=_samples)
-    chromFile = config['output'] + "{refGenome}/" + "{refGenome}" + ".sizes"
-    return {'bedgraphs': bedgraphFiles, 'chrom': chromFile}
+    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    d4files = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}" + ".per-base.d4", sample=_samples)
+    return {'d4files': d4files}
 
 def get_bedgraphs(wildcards):
     """Snakemake seems to struggle with unpack() and default_remote_prefix. So we have to do this one by one."""
