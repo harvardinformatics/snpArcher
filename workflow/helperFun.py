@@ -88,7 +88,21 @@ def collectCoverageMetrics(coverageFiles):
         CoveredBases[sample] = covbases
     return (SeqDepths, CoveredBases)
 
+def collect_inserts(files):
+    med_inserts = defaultdict(float)
+    med_insert_std = defaultdict(float)
 
+    for file in files:
+        sample = os.path.basename(file)
+        sample = sample.replace("_insert_metrics.txt", "")
+        with open(file, "r") as f:
+            for i, line in enumerate(f):
+                if i == 2:
+                    line = line.strip().split()
+                    med_inserts[sample] = line[0]
+                    med_insert_std[sample] = line[1]
+
+    return med_inserts, med_insert_std
 def printBamSumStats(
     depths,
     covered_bases,
@@ -96,30 +110,62 @@ def printBamSumStats(
     FractionReadsPassFilter,
     NumReadsPassFilter,
     out_file,
+    med_insert_sizes=None,
+    med_abs_insert_std=None
 ):
+
     samples = depths.keys()
-    with open(out_file, "w") as f:
-        print(
-            "Sample\tTotal_Reads\tPercent_mapped\tNum_duplicates\tPercent_properly_paired\tFraction_reads_pass_filter\tNumReadsPassingFilters",
-            file=f,
-        )
-        for samp in samples:
+    if med_insert_sizes is None:
+        with open(out_file, "w") as f:
             print(
-                samp,
-                "\t",
-                aln_metrics[samp]["Total alignments"],
-                "\t",
-                aln_metrics[samp]["Percent Mapped"],
-                "\t",
-                aln_metrics[samp]["Num Duplicates"],
-                "\t",
-                aln_metrics[samp]["Percent Properly Paired"],
-                "\t",
-                FractionReadsPassFilter[samp],
-                "\t",
-                NumReadsPassFilter[samp],
+                "Sample\tTotal_Reads\tPercent_mapped\tNum_duplicates\tPercent_properly_paired\tFraction_reads_pass_filter\tNumReadsPassingFilters",
                 file=f,
             )
+            for samp in samples:
+                print(
+                    samp,
+                    "\t",
+                    aln_metrics[samp]["Total alignments"],
+                    "\t",
+                    aln_metrics[samp]["Percent Mapped"],
+                    "\t",
+                    aln_metrics[samp]["Num Duplicates"],
+                    "\t",
+                    aln_metrics[samp]["Percent Properly Paired"],
+                    "\t",
+                    FractionReadsPassFilter[samp],
+                    "\t",
+                    NumReadsPassFilter[samp],
+                    file=f,
+                )
+    else:
+        with open(out_file, "w") as f:
+            print(
+                "Sample\tTotal_Reads\tPercent_mapped\tNum_duplicates\tPercent_properly_paired\tFraction_reads_pass_filter\tNumReadsPassingFilters\tMedianInsertSize\tMedianAbsDev_InsertSize",
+                file=f,
+            )
+            for samp in samples:
+                print(
+                    samp,
+                    "\t",
+                    aln_metrics[samp]["Total alignments"],
+                    "\t",
+                    aln_metrics[samp]["Percent Mapped"],
+                    "\t",
+                    aln_metrics[samp]["Num Duplicates"],
+                    "\t",
+                    aln_metrics[samp]["Percent Properly Paired"],
+                    "\t",
+                    FractionReadsPassFilter[samp],
+                    "\t",
+                    NumReadsPassFilter[samp],
+                    "\t",
+                    med_insert_sizes[samp],
+                    "\t",
+                    med_abs_insert_std[samp],
+                    file=f,
+                    )
+
 
 
 def getRefBaseName(ref):

@@ -1,4 +1,4 @@
-localrules: collect_fastp_stats, collect_sumstats
+localrules: collect_sumstats
 rule bam_sumstats:
     input:
         bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam",
@@ -59,7 +59,14 @@ rule collect_sumstats:
     output:
         config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_bam_sumstats.txt"
     run:
-        FractionReadsPassFilter, NumReadsPassFilter = helperFun.collectFastpOutput(input.fastpFiles)
-        aln_metrics = helperFun.collectAlnSumMets(input.alnSumMetsFiles)
-        SeqDepths, CoveredBases = helperFun.collectCoverageMetrics(input.coverageFiles)
-        helperFun.printBamSumStats(SeqDepths, CoveredBases, aln_metrics, FractionReadsPassFilter, NumReadsPassFilter, output[0])
+        if not config['sentieon']:
+            FractionReadsPassFilter, NumReadsPassFilter = helperFun.collectFastpOutput(input.fastpFiles)
+            aln_metrics = helperFun.collectAlnSumMets(input.alnSumMetsFiles)
+            SeqDepths, CoveredBases = helperFun.collectCoverageMetrics(input.coverageFiles)
+            helperFun.printBamSumStats(SeqDepths, CoveredBases, aln_metrics, FractionReadsPassFilter, NumReadsPassFilter, output[0])
+        else:
+            FractionReadsPassFilter, NumReadsPassFilter = helperFun.collectFastpOutput(input.fastpFiles)
+            aln_metrics = helperFun.collectAlnSumMets(input.alnSumMetsFiles)
+            SeqDepths, CoveredBases = helperFun.collectCoverageMetrics(input.coverageFiles)
+            median_inserts, median_insert_std = helperFun.collect_inserts(input.insert_files)
+            helperFun.printBamSumStats(SeqDepths, CoveredBases, aln_metrics, FractionReadsPassFilter, NumReadsPassFilter, output[0], median_inserts, median_insert_std)
