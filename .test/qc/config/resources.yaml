@@ -51,6 +51,23 @@ process_ref:
 create_intervals:
     mem: 5000
 
+
+## Callable sites workflow
+
+# genmap map
+genmap:
+    threads: 10
+    mem: 10000
+genmap_sort:
+    mem: 4000
+compute_d4:
+    mem: 4000
+    threads: 4
+merge_d4:
+    mem: 10000
+callable_bed:
+    mem: 10000
+
 ###
 # bam2vcf workflows
 ###

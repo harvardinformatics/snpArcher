@@ -40,3 +40,4 @@ tmp/
 *.lic
 config/*
 config/config.yaml
+ccgp-workflow-results/
