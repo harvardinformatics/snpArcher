@@ -152,7 +152,7 @@ rule merge_bams:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['merge_bams']['mem']
     shell:
-        "samtools merge -f --threads {params.comp_threads} -o {output.bam} {input} && samtools index --threads {params.comp_threads} {output.bam}"
+        "samtools merge -f --threads {params.comp_threads} -o {output.bam} {input} && samtools index -@ {params.comp_threads} {output.bam}"
 
 rule dedup:
     input:
