@@ -18,23 +18,21 @@ rule picard_intervals:
 
 checkpoint create_db_intervals:
     input:
-        list_dir = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "gvcf_intervals",
         ref = config["refGenomeDir"] + "{refGenome}.fna",
+        intervals = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "intervals.list"
     output:
         out_dir = directory(config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "db_intervals"),
+        
     params:
         max_intervals = get_db_interval_count
     conda:
         '../envs/bam2vcf.yml'
     shell:
         """
-        for i in {input.list_dir}/*.list; do
-            
-            gatk SplitIntervals -L $i \
-            -O {output} -R {input.ref} -scatter {params} \
-            -mode BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \
-            --interval-merging-rule OVERLAPPING_ONLY
-        done
+        gatk SplitIntervals -L {input.intervals} \
+        -O {output} -R {input.ref} -scatter {params} \
+        -mode INTERVAL_SUBDIVISION \
+        --interval-merging-rule OVERLAPPING_ONLY
         """
 
 checkpoint create_gvcf_intervals:
@@ -42,6 +40,7 @@ checkpoint create_gvcf_intervals:
         in_file = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list"
     output:
         out_dir = directory(config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "gvcf_intervals"),
+        intervals = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "intervals.list"
     params:
         max_intervals = config["maxNumIntervals"]
     script:
