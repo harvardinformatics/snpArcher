@@ -20,11 +20,11 @@ rule gvcf2DB:
     Samples are thus gathered by a shared list name, but lists are still scattered.
     """
     input:
-        l = config['output'] + "{Organism}/{refGenome}/" + config['intDir'] + "db_interval_{list}.list",
+        l = config['output'] + "{Organism}/{refGenome}/" + config['intDir'] + "db_intervals/{list}-scattered.interval_list",
         dbMapFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_mapfile.txt"
     output:
-        DB = directory(config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}"),
-        done = touch(config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}.done")
+        db = temp(directory(config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}")),
+        tar = temp(config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}.tar"),
     params:
         tmp_dir = config['tmp_dir']
     resources:
@@ -39,15 +39,20 @@ rule gvcf2DB:
     shell:
         # NOTE: reader-threads > 1 useless if you specify multiple intervals
         # a forum suggested TILEDB_DISABLE_FILE_LOCKING=1 to remedy sluggish performance
-        "export TILEDB_DISABLE_FILE_LOCKING=1 \n"
-        "gatk GenomicsDBImport "
-        "--java-options \"-Xmx{resources.reduced}m -Xms{resources.reduced}m\" "
-        "--genomicsdb-shared-posixfs-optimizations true "
-        "--batch-size 25 "
-        "--genomicsdb-workspace-path {output.DB} "
-        "-L {input.l} "
-        "--tmp-dir {params.tmp_dir} "
-        "--sample-name-map {input.dbMapFile} &> {log}"
+        """
+        export TILEDB_DISABLE_FILE_LOCKING=1
+        gatk GenomicsDBImport \
+            --java-options '-Xmx{resources.reduced}m -Xms{resources.reduced}m' \
+            --genomicsdb-shared-posixfs-optimizations true \
+            --batch-size 25 \
+            --genomicsdb-workspace-path {output.db} \
+            --merge-input-intervals \
+            -L {input.l} \
+            --tmp-dir {params.tmp_dir} \
+            --sample-name-map {input.dbMapFile} &> {log}
+        
+        tar --overwrite -cf {output.tar} {output.db}
+        """
 
 rule DB2vcf:
     """
@@ -55,15 +60,15 @@ rule DB2vcf:
     are still scattered.
     """
     input:
-        DB = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}",
+        db = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}.tar",
         ref = config["refGenomeDir"] + "{refGenome}.fna",
-        doneFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}.done"
     output:
         vcf = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "L{list}.vcf"),
         vcfidx = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "L{list}.vcf.idx")
     params:
         tmp_dir = config['tmp_dir'],
-        het = config['het_prior']
+        het = config['het_prior'],
+        db = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['DB2vcf']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (res_config['DB2vcf']['mem'] - 3000)  # this is the maximum amount given to java
@@ -74,14 +79,18 @@ rule DB2vcf:
     conda:
         "../envs/bam2vcf.yml"
     shell:
-        "gatk GenotypeGVCFs "
-        "--java-options \"-Xmx{resources.reduced}m -Xms{resources.reduced}m\" "
-        "-R {input.ref} "
-        "--heterozygosity {params.het} "
-        "--genomicsdb-shared-posixfs-optimizations true "
-        "-V gendb://{input.DB} "
-        "-O {output.vcf} "
-        "--tmp-dir {params.tmp_dir} &> {log}"
+        """
+        tar --overwrite -xf {input.db}
+
+        gatk GenotypeGVCFs \
+            --java-options '-Xmx{resources.reduced}m -Xms{resources.reduced}m' \
+            -R {input.ref} \
+            --heterozygosity {params.het} \
+            --genomicsdb-shared-posixfs-optimizations true \
+            -V gendb://{params.db} \
+            -O {output.vcf} \
+            --tmp-dir {params.tmp_dir} &> {log}
+        """
 
 rule filterVcfs:
     """
@@ -91,8 +100,8 @@ rule filterVcfs:
         vcf = config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "L{list}.vcf",
         ref = config["refGenomeDir"] + "{refGenome}.fna"
     output:
-        vcf = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf"),
-        vcfidx = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf.idx")
+        vcf = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf.gz"),
+        vcfidx = temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf.gz.tbi")
     conda:
         "../envs/bam2vcf.yml"
     resources:
@@ -114,17 +123,27 @@ rule filterVcfs:
         "--filter-expression \"vc.isSNP() && ((vc.hasAttribute('MQ') && MQ < 40.0) || (vc.hasAttribute('MQRankSum') && MQRankSum < -12.5))\" "
         "--filter-name \"QUAL_filter\" "
         "--filter-expression \"QUAL < 30.0\" "
+        "--create-output-variant-index  "
         "--invalidate-previous-filters true &> {log}"
+rule make_list_of_vcfs:
+    """Creates a file with list of vcfs for sort_gatherVcfs"""
+    input:
+        unpack(get_gather_vcfs)
+    output:
+        temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "list_of_vcfs.txt")
+    run:
+        with open(output[0], 'w') as f:
+            for line in input['gvcfs']:
+                print(line, file=f)
 
 rule sort_gatherVcfs:
     input:
-        get_gather_vcfs
+        unpack(get_gather_vcfs),
+        fof = config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "list_of_vcfs.txt",
     output:
         vcfFinal = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
-    params:
-        gather_vcfs_CLI
     conda:
-        "../envs/bam2vcf.yml"
+        "../envs/bcftools.yml"
     log:
         "logs/{Organism}/sortVcf/{refGenome}.txt"
     resources:
@@ -133,7 +152,7 @@ rule sort_gatherVcfs:
     benchmark:
         "benchmarks/{Organism}/sortVcf/{refGenome}.txt"
     shell:
-        "gatk SortVcf "
-        "--java-options \"-Xmx{resources.reduced}m -Xms{resources.reduced}m\" "
-        "{params} "
-        "-O {output.vcfFinal} &> {log}"
+        """
+        bcftools concat -f {input.fof} -D -a -Ou | bcftools sort -Oz -o {output} -
+        tabix -p vcf {output}
+        """
