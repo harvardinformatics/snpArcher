@@ -14,28 +14,36 @@ rule picard_intervals:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['process_ref']['mem']
     shell:
-        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} &> {log}\n"
+        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} OUTPUT_TYPE=ACGT &> {log}\n"
 
-checkpoint create_intervals:
+rule prepare_db_intervals:
     input:
-        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
-        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict",
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
         intervals = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list"
-    params:
-        maxIntervalLen = lambda wildcards, resources: resources.attempt * int(config['maxIntervalLen']),
-        maxBpPerList = lambda wildcards, resources: resources.attempt * int(config['maxBpPerList']),
-        maxIntervalsPerList = int(config['maxIntervalsPerList']),
-        minNmer = int(config['minNmer']),
-        max_intervals = config['maxNumIntervals'],
-        missingBpTolerance = config['missingBpTolerance']
     output:
-        config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem'],
-        attempt = lambda wildcards, attempt: attempt
-    run:
-        if config['split_by_n']:
-            LISTS = helperFun.createListsGetIndices(params.missingBpTolerance, params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
-        else:
-            LISTS = make_intervals(config["output"], config["intDir"], wildcards, input.dictf, params.max_intervals)
+        intervals = temp((config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "db.interval_list"))
+    params:
+        max_interval_size = config["maxIntervalLen"]
+    conda:
+        '../envs/bam2vcf.yml'
+    shell:
+        "picard IntervalListTools I={input} BRK={params.max_interval_size} O={output}"
+
+rule create_db_intervals:
+    input:
+        in_file = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "db.interval_list"
+    output:
+        out_files = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config["intDir"] + "db_interval_{i}.list", i=range(config["DBmaxNumIntervals"]))
+    params:
+        max_intervals = config["DBmaxNumIntervals"]
+    script:
+        "../scripts/make_intervals.py"
+
+rule create_gvcf_intervals:
+    input:
+        in_file = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list"
+    output:
+        out_files = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config["intDir"] + "gvcf_interval_{i}.list", i=range(config["maxNumIntervals"]))
+    params:
+        max_intervals = config["maxNumIntervals"]
+    script:
+        "../scripts/make_intervals.py"
