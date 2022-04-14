@@ -29,8 +29,8 @@ rule all:
         expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.callable_sites.bed", zip, Organism=ORGANISM, refGenome=REFGENOME)
         
 include: "rules/common.smk"
-include: "rules/fastq2bam.smk"
+include: "rules/fastq2gvcf.smk"
 include: "rules/intervals.smk"
-include: "rules/bam2vcf.smk"
+include: "rules/gvcf2vcf.smk"
 include: "rules/qc.smk"
 include: "rules/callable_sites.smk"
