@@ -8,7 +8,9 @@ Writes intervals groups to individual files for use by HaplotypeCaller
 """
 
 
-def make_intervals(in_file: str, num_intervals: int, output_dir: str) -> None:
+def make_intervals(
+    in_file: str, num_intervals: int, output_dir: str, int_output_file: str
+) -> None:
 
     intervals = []
 
@@ -41,12 +43,13 @@ def make_intervals(in_file: str, num_intervals: int, output_dir: str) -> None:
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
-    for i, group in enumerate(groups):
-        file = os.path.join(output_dir, f"{i}.list")
-        with open(file, "w") as f:
-
-            for chrom, start, end in group:
-                print(f"{chrom}:{start}-{end}", file=f)
+    with open(int_output_file, "w") as out:
+        for i, group in enumerate(groups):
+            file = os.path.join(output_dir, f"{i}.list")
+            with open(file, "w") as f:
+                for chrom, start, end in group:
+                    print(f"{chrom}:{start}-{end}", file=f)
+                    print(f"{chrom}:{start}-{end}", file=out)
 
 
 def main():
@@ -54,6 +57,7 @@ def main():
         snakemake.input["in_file"],
         snakemake.params["max_intervals"],
         snakemake.output["out_dir"],
+        snakemake.output["intervals"],
     )
 
 
