@@ -1,4 +1,4 @@
-import glob
+from glob import glob
 import re
 import os
 
@@ -79,20 +79,31 @@ def get_sumstats(wildcards):
     coverageFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}_coverage.txt", sample=_samples)
     return {'alnSumMetsFiles': alnSumMetsFiles, 'coverageFiles': coverageFiles, 'fastpFiles': fastpFiles}
 
+def get_db_interval_count(wildcards):
+    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
+    return max(int(config["db_scatter_factor"] * len(_samples)), 1)
+
 def get_gather_vcfs(wildcards):
     """
     Gets filtered vcfs for gathering step. This function gets the interval list indicies from the corresponding
     genome, then produces the file names for the filtered vcf with list index."""
-    return expand(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf", **wildcards, list=range(config["DBmaxNumIntervals"]))
+    checkpoint_output = checkpoints.create_db_intervals.get(**wildcards).output[0]
+    list_files = [os.path.basename(x) for x in glob(os.path.join(checkpoint_output, "*.interval_list"))]
+    list_numbers = [f.replace("-scattered.interval_list", "") for f in list_files]
+    return {"gvcfs": expand(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf.gz", **wildcards, list=list_numbers),
+            "tbis": expand(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf.gz.tbi", **wildcards, list=list_numbers)}
 
-    return out
 def get_gvcfs(wildcards):
-    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
-    return expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}/" + "L{list}.raw.g.vcf.gz", sample= _samples, list=range(config["maxNumIntervals"]))
+    checkpoint_output = checkpoints.create_gvcf_intervals.get(**wildcards).output[0]
+    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
+    num_lists = len(glob(os.path.join(checkpoint_output, "*.list")))
+    out = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}_" + "{l}.raw.g.vcf.gz", sample=_samples, l=range(num_lists))
+    return out
 def gather_vcfs_CLI(wildcards):
     """
     Gatk enforces that you have a -I before each input vcf, so this function makes that string
     """
+    
     vcfs = get_gather_vcfs(wildcards)
     out = " ".join(["-I " + vcf for vcf in vcfs])
     out = out + " --TMP_DIR " + config['tmp_dir']

@@ -16,33 +16,32 @@ rule picard_intervals:
     shell:
         "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} OUTPUT_TYPE=ACGT &> {log}\n"
 
-rule prepare_db_intervals:
+checkpoint create_db_intervals:
     input:
-        intervals = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list"
+        list_dir = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "gvcf_intervals",
+        ref = config["refGenomeDir"] + "{refGenome}.fna",
     output:
-        intervals = temp((config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "db.interval_list"))
+        out_dir = directory(config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "db_intervals"),
     params:
-        max_interval_size = config["maxIntervalLen"]
+        max_intervals = get_db_interval_count
     conda:
         '../envs/bam2vcf.yml'
     shell:
-        "picard IntervalListTools I={input} BRK={params.max_interval_size} O={output}"
+        """
+        for i in {input.list_dir}/*.list; do
+            
+            gatk SplitIntervals -L $i \
+            -O {output} -R {input.ref} -scatter {params} \
+            -mode BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \
+            --interval-merging-rule OVERLAPPING_ONLY
+        done
+        """
 
-rule create_db_intervals:
-    input:
-        in_file = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "db.interval_list"
-    output:
-        out_files = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config["intDir"] + "db_interval_{i}.list", i=range(config["DBmaxNumIntervals"]))
-    params:
-        max_intervals = config["DBmaxNumIntervals"]
-    script:
-        "../scripts/make_intervals.py"
-
-rule create_gvcf_intervals:
+checkpoint create_gvcf_intervals:
     input:
         in_file = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list"
     output:
-        out_files = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config["intDir"] + "gvcf_interval_{i}.list", i=range(config["maxNumIntervals"]))
+        out_dir = directory(config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "gvcf_intervals"),
     params:
         max_intervals = config["maxNumIntervals"]
     script:
