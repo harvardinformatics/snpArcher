@@ -1,44 +1,5 @@
 localrules: mkDBmapfile
 
-rule bam2gvcf:
-    """
-    This rule scatters analyses over two dimensions: sample name and list file. For each BAM file, one per sample,
-    a GVCF is created for all the scaffolds present in a given list file.
-    """
-    input:
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
-        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
-        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict",
-        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
-        int = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
-    output:
-        gvcf = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.raw.g.vcf.gz",
-        gvcf_idx = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.raw.g.vcf.gz.tbi",
-        doneFile = touch(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.done")
-    resources:
-        #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
-        # subtract that memory here
-        mem_mb = lambda wildcards, attempt: attempt * res_config['bam2gvcf']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (res_config['bam2gvcf']['mem'] - 1000)  # this is the maximum amount given to java
-    log:
-        "logs/{Organism}/bam2gvcf/{refGenome}_{sample}_{list}.txt"
-    benchmark:
-        "benchmarks/{Organism}/bam2gvcf/{refGenome}_{sample}_{list}.txt"
-    params:
-        minPrun = config['minP'],
-        minDang = config['minD'],
-        l = config['output'] + "{Organism}/{refGenome}/" + config['intDir'] + "list{list}.list"
-    conda:
-        "../envs/bam2vcf.yml"
-    shell:
-        "gatk HaplotypeCaller "
-        "--java-options \"-Xmx{resources.reduced}m\" "
-        "-R {input.ref} "
-        "-I {input.bam} "
-        "-O {output.gvcf} "
-        "-L {params.l} "
-        "--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang} &> {log}"
-
 rule mkDBmapfile:
     """
     This rule makes DB map files for the GenomicsDBImport function. These files contain the names of all the samples for a particular
@@ -46,11 +7,9 @@ rule mkDBmapfile:
     names on the command line, so long SLURM throws an error.
     """
     input:
-        # NOTE: the double curly brackets around 'list' prevent the expand function from operating on that variable
-        # thus, we expand by sample but not by list, such that we gather by sample for each list value
         unpack(get_input_for_mapfile)
     output:
-        dbMapFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_mapfile_L{list}"
+        dbMapFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_mapfile.txt"
     run:
         write_db_mapfile(wildcards)
 
@@ -61,8 +20,8 @@ rule gvcf2DB:
     Samples are thus gathered by a shared list name, but lists are still scattered.
     """
     input:
-        l = config['output'] + "{Organism}/{refGenome}/" + config['intDir'] + "list{list}.list",
-        dbMapFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_mapfile_L{list}"
+        l = config['output'] + "{Organism}/{refGenome}/" + config['intDir'] + "db_interval_{list}.list",
+        dbMapFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_mapfile.txt"
     output:
         DB = directory(config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}"),
         done = touch(config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_L{list}.done")
