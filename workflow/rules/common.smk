@@ -19,7 +19,7 @@ def get_ref(wildcards):
         return _refs
     else:
         return []
-        
+
 def get_ena_url(wildcards):
     prefix = wildcards.run[:6]
     lastdigit = wildcards.run[-1]
@@ -122,7 +122,7 @@ def get_input_for_mapfile(wildcards):
 
 def get_input_for_coverage(wildcards):
     # Gets the correct sample given the organism and reference genome for the bedgraph merge step
-    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].dropna().unique().tolist()
     d4files = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}" + ".per-base.d4", sample=_samples)
     return {'d4files': d4files}
 
