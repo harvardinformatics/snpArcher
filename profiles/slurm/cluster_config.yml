@@ -1,14 +1,6 @@
 __default__:
-    partition: "shared"
+    partition: "holy-cow,holy-smokes"
     time: 9000
     nodes: 1
     mem: 1000
     output: "logs/slurm/slurm-%j.out"
-
-
-###
-# bam2vcf_gatk
-###
-
-bam2gvcf:
-    partition: "serial_requeue"
