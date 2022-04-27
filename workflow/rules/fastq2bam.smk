@@ -1,4 +1,3 @@
-localrules: collect_sumstats, download_reference
 ruleorder: index_ref > download_reference
 
 ### RULES ###

@@ -1,4 +1,3 @@
-localrules: collect_sumstats
 rule bam_sumstats:
     input:
         bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam",

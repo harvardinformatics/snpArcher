@@ -1,62 +1,6 @@
 ruleorder: index_ref > download_reference
 localrules: download_reference, index_ref
 
-rule genmap_index:
-    input:
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
-    log:
-        "logs/{refGenome}/genmap_index.log"
-    conda:
-        "../envs/genmap.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap']['mem']
-    params:
-        os.path.join(workflow.default_remote_prefix, (config['output'] + "{refGenome}/" + "genmap_index"))
-    output:
-        expand(config['output'] + "{{refGenome}}/" + "genmap_index/" + "index.{ext}.{ext2}", ext=['ids', 'info', 'txt'], ext2=['concat', 'limits']),
-        expand(config['output'] + "{{refGenome}}/" + "genmap_index/" + "index.lf.{ext2}", ext2=['drp', 'drs', 'drv', 'pst']),
-        expand(config['output'] + "{{refGenome}}/" + "genmap_index/" + "index.lf.{ext}.sbl", ext=['drp', 'drv']),
-        expand(config['output'] + "{{refGenome}}/" + "genmap_index/" + "index.rev.lf.{ext2}", ext2=['drp', 'drs', 'drv', 'pst']),
-        expand(config['output'] + "{{refGenome}}/" + "genmap_index/" + "index.rev.lf.{ext}.sbl", ext=['drp', 'drv']),
-        expand(config['output'] + "{{refGenome}}/" + "genmap_index/" + "index.sa.{ext}", ext=['ind', 'len', 'val'])
-    shell:
-        # snakemake creates the output directory before the shell command, but genmap doesnt like this. so we remove the directory first.
-        "rm -rf {params} && genmap index -F {input.ref} -I {params} &> {log}"
-
-rule genmap_map:
-    input:
-        expand(config['output'] + "{{refGenome}}/" + "genmap_index/" + "index.{ext}.{ext2}", ext=['ids', 'info', 'txt'], ext2=['concat', 'limits']),
-        expand(config['output'] + "{{refGenome}}/" + "genmap_index/" + "index.lf.{ext2}", ext2=['drp', 'drs', 'drv', 'pst']),
-        expand(config['output'] + "{{refGenome}}/" + "genmap_index/" + "index.lf.{ext}.sbl", ext=['drp', 'drv']),
-        expand(config['output'] + "{{refGenome}}/" + "genmap_index/" + "index.rev.lf.{ext2}", ext2=['drp', 'drs', 'drv', 'pst']),
-        expand(config['output'] + "{{refGenome}}/" + "genmap_index/" + "index.rev.lf.{ext}.sbl", ext=['drp', 'drv']),
-        expand(config['output'] + "{{refGenome}}/" + "genmap_index/" + "index.sa.{ext}", ext=['ind', 'len', 'val'])
-    log:
-        "logs/{refGenome}/genmap_map.log"
-    params:
-        indir = os.path.join(workflow.default_remote_prefix, (config['output'] + "{refGenome}/" + "genmap_index")),
-        outdir = os.path.join(workflow.default_remote_prefix, (config['output'] + "{refGenome}/" + "genmap"))
-    conda:
-        "../envs/genmap.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap']['mem']
-    threads:
-        res_config['genmap']['threads']
-    output:
-        temp(config['output'] + "{refGenome}/" + "genmap/{refGenome}.genmap.bedgraph")
-    shell:
-        "genmap map -K 150 -E 0 -I {params.indir} -O {params.outdir} -bg -T {threads} -v  > {log}"
-
-rule sort_genmap:
-    input:
-        config['output'] + "{refGenome}/" + "genmap/{refGenome}.genmap.bedgraph"
-    output:
-        config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap_sort']['mem']
-    shell:
-        "sort -k1,1 -k2,2n {input} > {output}"
-
 rule picard_intervals:
     input:
         ref = config["refGenomeDir"] + "{refGenome}.fna",

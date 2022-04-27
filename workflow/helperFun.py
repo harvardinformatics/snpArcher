@@ -88,6 +88,7 @@ def collectCoverageMetrics(coverageFiles):
         CoveredBases[sample] = covbases
     return (SeqDepths, CoveredBases)
 
+
 def collect_inserts(files):
     med_inserts = defaultdict(float)
     med_insert_std = defaultdict(float)
@@ -99,10 +100,15 @@ def collect_inserts(files):
             for i, line in enumerate(f):
                 if i == 2:
                     line = line.strip().split()
-                    med_inserts[sample] = line[0]
-                    med_insert_std[sample] = line[1]
+                    try:
+                        med_inserts[sample] = line[0]
+                        med_insert_std[sample] = line[1]
+                    except IndexError:
+                        continue
 
     return med_inserts, med_insert_std
+
+
 def printBamSumStats(
     depths,
     covered_bases,
@@ -111,7 +117,7 @@ def printBamSumStats(
     NumReadsPassFilter,
     out_file,
     med_insert_sizes=None,
-    med_abs_insert_std=None
+    med_abs_insert_std=None,
 ):
 
     samples = depths.keys()
@@ -164,8 +170,7 @@ def printBamSumStats(
                     "\t",
                     med_abs_insert_std[samp],
                     file=f,
-                    )
-
+                )
 
 
 def getRefBaseName(ref):
@@ -213,7 +218,18 @@ def createSeqDictGetScaffOrder(dict_file):
     return seqDictScaffs
 
 
-def createListsGetIndices(missingBpTolerance, maxIntervalLen, maxBpPerList, maxIntervalsPerList, minNmer, outputDir, intDir, wildcards, dict_file, intervals_file):
+def createListsGetIndices(
+    missingBpTolerance,
+    maxIntervalLen,
+    maxBpPerList,
+    maxIntervalsPerList,
+    minNmer,
+    outputDir,
+    intDir,
+    wildcards,
+    dict_file,
+    intervals_file,
+):
 
     # Get the order in which scaffolds are listed in genome .dict file,  need to correspond to order in list files! So use .dict order for printing interval files
     seqDictScaffs = createSeqDictGetScaffOrder(dict_file)
