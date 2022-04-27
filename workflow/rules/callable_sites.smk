@@ -1,6 +1,27 @@
-localrules: genome_prep
-
-## RULES ##
+rule genmap:
+    input:
+        ref = config["refGenomeDir"] + "{refGenome}.fna",
+    log:
+        "logs/{refGenome}/genmap.log"
+    conda:
+        "../envs/genmap.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap']['mem']
+    threads:
+        res_config['genmap']['threads']
+    params:
+        indir = os.path.join(workflow.default_remote_prefix, (config['output'] + "{refGenome}/" + "genmap_index")),
+        outdir = os.path.join(workflow.default_remote_prefix, (config['output'] + "{refGenome}/" + "genmap"))
+    output:
+        bg = temp(config['output'] + "{refGenome}/" + "genmap/{refGenome}.genmap.bedgraph"),
+        sorted_bg = config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg"
+    shell:
+        # snakemake creates the output directory before the shell command, but genmap doesnt like this. so we remove the directory first.
+        """
+        rm -rf {params.indir} && genmap index -F {input.ref} -I {params.indir}
+        genmap map -K 150 -E 0 -I {params.indir} -O {params.outdir} -bg -T {threads} -v
+        sort -k1,1 -k2,2n {output.bg} > {output.sorted_bg}
+        """
 
 rule genome_prep:
   input:
