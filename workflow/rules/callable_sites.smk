@@ -37,7 +37,8 @@ rule genome_prep:
 
 rule compute_d4:
     input:
-        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix']
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam",
+        bai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam.bai"
     output:
         config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}.mosdepth.global.dist.txt",
         temp(config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}.per-base.d4"),
