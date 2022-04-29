@@ -2,7 +2,7 @@
 # Variables you need to change
 ##############################
 
-samples: ""            # name of the sample metadata CSV 
+samples: "sample_sheets/haliotis_c_coords_workflow.csv"            # name of the sample metadata CSV 
 tmp_dir: "tmp/"   # directory path for a temp dir 
 split_by_n: True    #set to False to split by chromosome/scaffold; set to True to split on runs of Ns within chromosomes/scaffolds.
 sentieon: False  #set to True if you want to use sentieon, False if you want GATK
