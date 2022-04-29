@@ -38,12 +38,16 @@ rule installpcangsd:
         "../envs/angsd.yml"
     shell:
         """
-        rm -r pcangsd
-        git clone https://github.com/Rosemeis/pcangsd.git
-        cd pcangsd
-        pip3 install -e .
-        cd ..
-        echo "pcangsd install complete" > {output.confirm}
+        if [ -d pcangsd ]
+        then
+            echo "pcangsd install complete" > {output.confirm}
+        else
+            git clone https://github.com/Rosemeis/pcangsd.git
+            cd pcangsd
+            pip3 install -e .
+            cd ..
+            echo "pcangsd install complete" > {output.confirm}
+        fi
         """
 
 rule pcangsd:
