@@ -84,6 +84,11 @@ def get_bams_for_dedup(wildcards):
     else:
         return config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam"
 
+def get_final_bams(wildcards):
+    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
+    return expand(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}_final.bam", **wildcards, sample=_samples)
+
+
 def get_reads(wildcards):
     """Returns local read files if present. Defaults to SRR if no local reads in sample sheet."""
     if config['remote_reads']:
