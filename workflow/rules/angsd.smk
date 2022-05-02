@@ -1,28 +1,24 @@
-rule bamlist:
-    input: 
-        bams = get_final_bams,
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
-    output:
-        bamlist = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}.bamlist"
-    conda:
-        "../envs/angsd.yml"
-    shell:
-        "ls {input.bams} > {output.bamlist}"
-
 rule angsd:
     input:
-        bamlist = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}.bamlist",
+        pruned = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.pruned.vcf.gz",
+        bams = get_final_bams,
         ref = config["refGenomeDir"] + "{refGenome}.fna"
     output:
-        angsd = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}_angsd.beagle.gz"
+        angsd = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}_angsd.beagle.gz",
+        bamlist = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}.bamlist"
     params:
         angsd = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}_angsd"
     conda:
         "../envs/angsd.yml"
     threads: 31
+    resources:
+        disk_mb = 2048000,
+        mem_mb = 512000
     shell:
         """
-        angsd -b {input.bamlist} -ref {input.ref}  \
+        ls -1 {input.bams} > {output.bamlist}
+
+        angsd -b {output.bamlist} -ref {input.ref}  \
                 -out {params.angsd} \
                 -uniqueOnly 1 -remove_bads 1 -only_proper_pairs 0 -trim 0 \
                 -minMapQ 20 -minQ 20 \
