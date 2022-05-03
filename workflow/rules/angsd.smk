@@ -16,6 +16,7 @@ rule angsd:
         mem_mb = 512000
     shell:
         """
+        samtools faidx {input.ref}
         ls -1 {input.bams} > {output.bamlist}
 
         angsd -b {output.bamlist} -ref {input.ref}  \
