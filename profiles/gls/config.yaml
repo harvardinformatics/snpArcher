@@ -4,5 +4,6 @@ use-conda: True
 jobs: 150
 preemption-default: 3
 preemptible-rules: 'filterVcfs=0'
+default-remote-prefix: 'ccgp-workflow-results'
 default-resources: ["machine_type=n2-standard", "disk_mb=512000"]
 ignore-incomplete: True
