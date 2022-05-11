@@ -81,7 +81,7 @@ dbDir: "04_genomicsDB/"
 vcfDir_gatk: "05_vcfs/"
 qcDir: "06_QC/"
 intDir: "intervalFiles/"
-angsdDir: "07_angsd"
+angsdDir: "07_angsd/"
 
 # These variables control the output of the FreeBayes workflow (please have forward slash follow name!)   
 fbDir: "freebayes/"
