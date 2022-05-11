@@ -9,6 +9,7 @@ sentieon: False  #set to True if you want to use sentieon, False if you want GAT
 sentieon_lic: "" #set to path of sentieon license
 remote_reads: False # set if you want reads to be on google cloud storage remote
 remote_reads_prefix: "" # set to google bucket name where reads live
+
 ##############################
 # Variables you *might* need to change
 ##############################
@@ -76,7 +77,7 @@ dbDir: "04_genomicsDB/"
 vcfDir_gatk: "05_vcfs/"
 qcDir: "06_QC/"
 intDir: "intervalFiles/"
-angsdDir: "07_angsd"
+angsdDir: "07_angsd/"
 
 # These variables control the output of the FreeBayes workflow (please have forward slash follow name!)   
 fbDir: "freebayes/"
