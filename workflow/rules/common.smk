@@ -86,7 +86,7 @@ def get_bams_for_dedup(wildcards):
 
 def get_final_bams(wildcards):
     # note the [:5] to subsample
-    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()[:5]
+    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
     return expand(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}_final.bam", **wildcards, sample=_samples)
 
 def get_reads(wildcards):

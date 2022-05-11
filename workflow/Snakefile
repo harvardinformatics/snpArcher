@@ -33,7 +33,7 @@ def get_output(refGenome, Organism):
             expand(config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_bam_sumstats.txt", zip, Organism=ORGANISM, refGenome=REFGENOME)
         )
         files.append(
-            expand(config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}.cov", zip, Organism=ORGANISM, refGenome=REFGENOME)
+           expand(config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}.cov", zip, Organism=ORGANISM, refGenome=REFGENOME)
         )
         # files.append(
         #     expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.callable_sites.bed", zip, Organism=ORGANISM, refGenome=REFGENOME)

@@ -25,6 +25,7 @@ suppressMessages(library(ggmap))
 
 
 prefix <- params$prefix
+
 set.colors <- c('#1f78b4','#33a02c','#6a3d9a','#a6cee3','#b2df8a','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6')
 
 ```
@@ -80,7 +81,7 @@ input$GMKey <- params$GMKey
 
 ### Genomic PCA
 
-```{r, fig.width = 10, fig.height = 8}
+```{r, fig.width = 6, fig.height = 8}
 # PCA plot --------------------------------------------------------------
 pca.path <- paste0(prefix, ".eigenvec")
 #this makes it reasonably robust to running with plink 1.9 or plink 2.0
@@ -88,6 +89,7 @@ tmp.head <- sub("#", "", readLines(pca.path))
 df.pca <- read.table(text = tmp.head, header = TRUE)
 df.val <- read.table(gsub("vec","val", pca.path), header = FALSE)
 df.val$prop <- (df.val$V1 / (sum(df.val$V1))) * 100
+df.val$PC <- paste0("PC", row.names(df.val))
 
 #add depth
 depth.path <- paste0(prefix, ".idepth")
@@ -114,6 +116,44 @@ df.pca$cluster <- paste("cluster",k$cluster, sep = "_")
 
 ```
 
+### Depth and PC Correlation
+
+```{r, fig.width = 4, fig.height = 8}
+
+#pivot longer so we can plot as a facet
+df.pca.long <- df.pca %>% 
+  select(-cluster, -N_SITES) %>% 
+  pivot_longer(cols = -c("IID", "MEAN_DEPTH"), names_to = "PC") %>% 
+  mutate(PC = factor(PC, levels = c("PC1", "PC2", "PC3", "PC4", "PC5",
+                                    "PC6", "PC7", "PC8", "PC9", "PC10")))
+
+#get % var expl
+df.pca.long <- left_join(df.pca.long, df.val, by = "PC")
+
+df.pca.long <- df.pca.long %>% 
+  mutate(PC.lab = paste0(PC, " (" , round(prop,1),"%)"))
+
+df.r2 <- df.pca.long %>% 
+  group_by(PC.lab) %>% 
+  nest() %>% #create a tibble of dataframes
+  mutate(Mod = map(data, ~lm(MEAN_DEPTH ~ value, data = .x))) %>% #add model result to the dataframe as a list
+  mutate(R2 = map_dbl(Mod, ~round(summary(.x)$r.squared, 3))) #extract R2 from the model
+
+df.r2 <- df.r2 %>% 
+  select(PC.lab, R2) %>% 
+  as.data.frame()
+
+(df.pca.long %>% 
+  ggplot() + 
+    geom_point(aes(x = value, y = MEAN_DEPTH, text = IID)) +
+    facet_wrap(~ PC.lab, ncol = 5) +
+    geom_text(data = df.r2, aes(x = 0, y = 1,
+              label = paste("R2 = ", R2, sep = " ")),
+              color = "blue") +
+    theme_bw() +
+    labs(x = NULL, y = "SNP Depth")) %>% 
+  ggplotly(tooltip = c("text", "x", "y"))
+```
 
 Row 
 -----------------------------------------------------------------------
@@ -142,7 +182,7 @@ df.depth.miss <- df.depth.miss %>%
     geom_point(aes(x = MEAN_DEPTH, y = F_MISS, fill = cluster), 
                size = 3, color = "black") +
     theme_bw() +
-    theme(legend.position = "top") + 
+    theme(legend.position = "none") + 
     scale_fill_manual(values = set.colors)+ 
     labs(x = "SNP Depth", y = "Missingness")) %>% 
     ggplotly(tooltip=c("text","x","y"))
@@ -154,7 +194,6 @@ df.depth.miss <- df.depth.miss %>%
 
 ```{r, fig.width = 5, fig.height = 5}
 # bamstat plot --------------------------------------------------------------
-#bamstat is read in the PCA chunk
 bamstat.path <- paste0(prefix, "_bam_sumstats.txt")
 df.bamstat <- read.table(bamstat.path, header =T)
 
@@ -169,7 +208,7 @@ df.depth.miss.bamstat <- df.depth.miss.bamstat %>%
     geom_point(aes(x = Percent_mapped, y = MEAN_DEPTH, fill = cluster), 
                size = 3, color = "black") +
     theme_bw() +
-    theme(legend.position = "top") + 
+    theme(legend.position = "none") + 
     scale_fill_manual(values = set.colors) + 
     labs(x = "% Reads Mapped", y = "SNP Depth") +
     xlim(0,100)) %>% 
@@ -179,6 +218,48 @@ df.depth.miss.bamstat <- df.depth.miss.bamstat %>%
 
 ```
 
+### Heterozygosity
+
+```{r, fig.width = 5, fig.height = 5}
+het.path <- paste0(prefix, ".het")
+df.het <- read.table(het.path, header =T)
+
+df.het <- left_join(df.het, df.pca, by = c("INDV" = "IID"))
+
+(ggplot(data = df.het, aes(x = PC1, y = F, text = INDV, color = cluster)) + 
+  geom_point() +
+    labs(y = "F (inbreeding coefficient)", x = "PC1") +
+    theme_bw() +
+    theme(legend.position = "none") +
+        scale_color_manual(values = set.colors)) %>% ggplotly()
+
+```
+
+```{r, fig.width = 10, fig.height = 5, include = F, eval = F}
+##this was per site heterozygosity and it was not that informative so it has been commented out
+
+#het.path <- paste0(prefix, ".hwe")
+#df.het <- read.table(het.path, header =T)
+#
+#biggest_chr <- df.het %>% group_by(CHR) %>% 
+#  summarise(max_pos = max(POS)) %>% 
+#  arrange(-max_pos) %>% 
+#  slice_max(max_pos)
+#
+#df.het <- df.het %>% 
+#  separate(OBS.HOM1.HET.HOM2., into = c(NA,"het",NA), sep = "/") %>% 
+#  mutate(het = as.numeric(het))
+#
+#library(zoo)
+#df.het.fil  <-  df.het %>% filter(CHR == biggest_chr$CHR) 
+#df.het.fil$het.roll <- zoo::rollmean(df.het.fil$het, 100, fill = NA)
+#
+#(ggplot(data = df.het.fil) + 
+#  geom_point(aes(x = POS/1000000, y = het.roll)) +
+#  labs(y = "Rolling mean number of heterozygous sites", x = paste("Position (Mbp) on ", biggest_chr$CHR)) +
+#  theme_bw()) %>% ggplotly()
+#
+```
 
 Row 
 -----------------------------------------------------------------------

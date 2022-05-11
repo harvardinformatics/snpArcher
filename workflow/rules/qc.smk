@@ -16,7 +16,9 @@ rule vcftools_individuals:
     output:
         depth = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.idepth",
         miss = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.imiss",
-        samps = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.samps.txt"
+        samps = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.samps.txt",
+        sum = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.FILTER.summary",
+        het = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.het"
     conda:
         "../envs/qc.yml"
     params:
@@ -26,6 +28,7 @@ rule vcftools_individuals:
         chmod +x workflow/scripts/samples_to_keep.py
         vcftools --gzvcf {input.vcf} --FILTER-summary --out {params.prefix}
         vcftools --gzvcf {input.vcf} --out {params.prefix} --depth
+        vcftools --gzvcf {input.vcf} --out {params.prefix} --het
         vcftools --gzvcf {input.vcf} --out {params.prefix} --missing-indv
         workflow/scripts/samples_to_keep.py {output.depth} > {output.samps}
         """
@@ -62,7 +65,7 @@ rule subsample_snps:
 
 rule snp_filters_qc:
     input:
-        #I switched this input to be the pruned dataset, but this may be suboptimal for evaluating var quality distributions
+        #switched this input to be the pruned dataset, but this may be suboptimal for evaluating var quality distributions
         vcf = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.pruned.vcf.gz"
     output:
         snpqc = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_snpqc.txt"
@@ -162,6 +165,8 @@ rule qc_plots:
         bim = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.bim",
         fam = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.fam",
         sumstats = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_bam_sumstats.txt",
+        sum = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.FILTER.summary",
+        het = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.het",
         coords = get_coords_if_available
     params:
         prefix = os.path.join(workflow.default_remote_prefix, (config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}")),

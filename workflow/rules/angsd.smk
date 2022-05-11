@@ -26,13 +26,16 @@ rule angsd:
                 -GL 2 -P {threads} -doGlf 2 -doMajorMinor 4
         """
 
-rule installpcangsd:
+rule pcangsd:
     input:
         angsd = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}_angsd.beagle.gz"
     output:
-        confirm = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}.confirm"
+        cov = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}.cov",
+        confirm = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}.confirm",
+        args = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}.cov.args"
     conda:
         "../envs/angsd.yml"
+    threads: 31
     shell:
         """
         if [ -d pcangsd ]
@@ -44,21 +47,9 @@ rule installpcangsd:
             pip3 install -e .
             cd ..
             echo "pcangsd install complete" > {output.confirm}
+            cd ..
         fi
-        """
 
-rule pcangsd:
-    input:
-        angsd = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}_angsd.beagle.gz"
-    output:
-        cov = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}.cov"
-    params:
-        cov = config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}.cov"
-    conda:
-        "../envs/angsd.yml"
-    threads: 31
-    shell:
-        """
         pcangsd --beagle {input.angsd} \
         --out {output.cov} -t {threads}
         """
