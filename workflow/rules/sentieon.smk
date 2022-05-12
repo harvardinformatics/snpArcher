@@ -176,7 +176,7 @@ rule combine_gvcf:
         tbis = get_tbis
     output:
         vcf = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz"),
-        tbi = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz.tbi"),
+        tbi = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz.tbi")
     params:
         gvcf = get_gvcf_cmd
     threads: 31
@@ -204,9 +204,10 @@ rule filterVcfs:
         tbi = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz.tbi",
         ref = config["refGenomeDir"] + "{refGenome}.fna",
         indices = ancient(expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["fai", "sa", "pac", "bwt", "ann", "amb"])),
-        dictf = ancient(config["refGenomeDir"] + "{refGenome}" + ".dict"),
+        dictf = ancient(config["refGenomeDir"] + "{refGenome}" + ".dict")
     output:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
+        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
+        tbi = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz.tbi"
     conda:
         "../envs/bam2vcf.yml"
     resources:
