@@ -283,7 +283,7 @@ df.het <- left_join(df.het, df.pca, by = c("INDV" = "IID"))
 
 ```
 
-> Fig. 4: The inbreeding coefficient is an estimate of excess homozygosity or heterozygosity. Values close to +1 indicate extensive homozygosity in the sample and values cluse to -1 indicate excess in heterozygotes. Check for samples that are outliers in the PCA plot that have very negative F values, as these could indicate cross contamination among samples.
+> Fig. 5: The inbreeding coefficient is an estimate of excess homozygosity or heterozygosity. Values close to +1 indicate extensive homozygosity in the sample and values cluse to -1 indicate excess in heterozygotes. Check for samples that are outliers in the PCA plot that have very negative F values, as these could indicate cross contamination among samples.
 
 ```{r, fig.width = 10, fig.height = 5, include = F, eval = F}
 ##this was per site heterozygosity and it was not that informative so it has been commented out
@@ -370,7 +370,7 @@ p.ggtree.custom
 
 ```
 
-> Fig. 5: A very simple neighbor joining tree is built from a simple distance matrix among all samples in the dataset. The leaves are colored by the clusters identified in the PCA. 
+> Fig. 6: A very simple neighbor joining tree is built from a simple distance matrix among all samples in the dataset. The leaves are colored by the clusters identified in the PCA. 
 
 Row
 -----------------------------------------------------------------------
@@ -432,7 +432,7 @@ if(length(l.inf)==0){
 
 ```
 
-> Fig. 6: We build a king relatedness matrix using Plink to evaluate if there are closely related samples. Samples with a relatedness of 0.5 indicate they are identical, values close to 0.25 indicate parent-child or sibling relatedness, and second degree relatedness are ~0.125. You may want to remove samples with > 0.354 if you want to remove very closely related sample which can bias population genomic estimates. 
+> Fig. 7: We build a king relatedness matrix using Plink to evaluate if there are closely related samples. Samples with a relatedness of 0.5 indicate they are identical, values close to 0.25 indicate parent-child or sibling relatedness, and second degree relatedness are ~0.125. You may want to remove samples with > 0.354 if you want to remove very closely related sample which can bias population genomic estimates. 
 
 Row {data-width=900, data-height=900}
 -----------------------------------------------------------------------
@@ -536,7 +536,7 @@ if(file.exists(paste0(prefix, ".coords.txt"))){
 
 ```
 
-> Fig. 7: Here, an interactive map is produced if there is a coordinate file available with latitude and longitude in decimal degrees. See the project README for how to setup this file for analysis. 
+> Fig. 8: Here, an interactive map is produced if there is a coordinate file available with latitude and longitude in decimal degrees. See the project README for how to setup this file for analysis. 
 
 Row
 -----------------------------------------------------------------------
@@ -603,4 +603,4 @@ pl.admix <- ggplotly(p.k23, tooltip=c("text", "y"))
 pl.admix
 ```
 
-> Fig. 8: Admixture is run on the dataset for k = 2 and k = 3. These are arbitrarily selected and no cross validation is done. Because these groupings are made seperate from the clusters in the PCA, they are colored by the admixture assignments and not the PCA groupings. 
+> Fig. 9: Admixture is run on the dataset for k = 2 and k = 3. These are arbitrarily selected and no cross validation is done. Because these groupings are made seperate from the clusters in the PCA, they are colored by the admixture assignments and not the PCA groupings. 
