@@ -12,7 +12,7 @@ rule check_fai:
 
 rule vcftools_individuals:
     input:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
+        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
     output:
         depth = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.idepth",
         miss = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.imiss",
@@ -36,20 +36,25 @@ rule vcftools_individuals:
 rule subsample_snps:
     input:
         vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
-        samps = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.samps.txt"
+        samps = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.samps.txt",
+        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai"
     output:
-        filtered = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.filtered.vcf.gz",
-        filtered_idx = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.filtered.vcf.gz.csi",
-        pruned = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.pruned.vcf.gz"
+        filtered = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.filtered.vcf.gz",
+        filtered_idx = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.filtered.vcf.gz.csi",
+        pruned = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.pruned.vcf.gz",
+        snpqc = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_snpqc.txt",
+        fai = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.fna.fai"
     conda:
         "../envs/qc.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']    # this is the overall memory requested
+        mem_mb = lambda wildcards, attempt: attempt * res_config['vcftools']['mem']
     shell:
         """
-        #first remove filtered sites and retain only biallelic variants
-        bcftools view -S {input.samps} -t ^mtDNA -v snps -m2 -M2 -f .,PASS -e 'AF==1 | AF==0 | ALT="*" | TYPE~"indel" | ref="N"' {input.vcf} -O z -o {output.filtered}
+        ##first remove filtered sites and retain only biallelic SNPs
+        ##Also remove sites with MAF < 0.01 and those with > 75% missing data
+        bcftools view -S {input.samps} -t ^mtDNA -v snps -m2 -M2 -f .,PASS -e 'AF==1 | AF==0 | AF<0.01 | ALT="*" | F_MISSING > 0.75 | TYPE~"indel" | ref="N"' {input.vcf} -O z -o {output.filtered}
         bcftools index {output.filtered}
+
         #figure out how many SNPs are left, then identify how big of SNP window size to get down to between 100 and 150k snps        
         ALLSITES=`bcftools query -f '%CHROM\t%POS\n' {output.filtered} | wc -l`
         SITES=`echo $(( ${{ALLSITES}} / 100000 ))`
@@ -61,21 +66,12 @@ rule subsample_snps:
         else
             bcftools view -O z -o {output.pruned} {output.filtered}
         fi
+
+        bcftools query -f '%CHROM\t%POS\t%ID\t%INFO/AF\t%QUAL\t%INFO/ReadPosRankSum\t%INFO/FS\t%INFO/SOR\t%INFO/MQ\t%INFO/MQRankSum\n' {output.pruned} > {output.snpqc}
+        
+        ##copy the fai file into the QC folder for easy access
+        cp {input.fai} {output.fai}
         """
-
-rule snp_filters_qc:
-    input:
-        #switched this input to be the pruned dataset, but this may be suboptimal for evaluating var quality distributions
-        vcf = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}.pruned.vcf.gz"
-    output:
-        snpqc = config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_snpqc.txt"
-    conda:
-        "../envs/qc.yml"
-    params:
-        prefix=config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}"
-    shell:
-        "bcftools query -f '%CHROM\t%POS\t%ID\t%INFO/AF\t%QUAL\t%INFO/ReadPosRankSum\t%INFO/FS\t%INFO/SOR\t%INFO/MQ\t%INFO/MQRankSum\n' {input.vcf} > {output.snpqc}"
-
 
 rule plink:
     """
