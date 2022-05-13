@@ -100,7 +100,7 @@ def get_gvcfs(wildcards):
     checkpoint_output = checkpoints.create_gvcf_intervals.get(**wildcards).output[0]
     _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
     num_lists = len(glob(os.path.join(checkpoint_output, "*.list")))
-    out = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}_" + "{l}.raw.g.vcf.gz", sample=_samples, l=range(num_lists))
+    out = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}/" + "{l}.raw.g.vcf.gz", sample=_samples, l=range(num_lists))
     return out
 def gather_vcfs_CLI(wildcards):
     """

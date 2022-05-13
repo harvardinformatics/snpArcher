@@ -221,8 +221,8 @@ rule bam2gvcf:
         bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
         l = config['output'] + "{Organism}/{refGenome}/" + config['intDir'] + "gvcf_intervals/{list}.list"
     output:
-        gvcf = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}_" + "{list}.raw.g.vcf.gz"),
-        gvcf_idx = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}_" + "{list}.raw.g.vcf.gz.tbi"),
+        gvcf = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "{list}.raw.g.vcf.gz"),
+        gvcf_idx = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "{list}.raw.g.vcf.gz.tbi"),
         
     resources:
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
