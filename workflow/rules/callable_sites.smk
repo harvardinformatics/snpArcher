@@ -97,6 +97,8 @@ rule compute_covstats:
         stats = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}" + ".covstats.txt"
     conda:
         "../envs/callable.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * res_config['merge_d4']['mem']
     shell:
         "d4tools stat {input.d4} | awk '{{ for(i=4; i<=NF;i++) j+=$i; print $1,$3,j; j=0 }}' > {output}"
 
