@@ -453,12 +453,76 @@ if(length(l.inf)==0){
 
 > Fig. 7: We build a king relatedness matrix using Plink to evaluate if there are closely related samples. Samples with a relatedness of 0.5 indicate they are identical, values close to 0.25 indicate parent-child or sibling relatedness, and second degree relatedness are ~0.125. You may want to remove samples with > 0.354 if you want to remove very closely related sample which can bias population genomic estimates. 
 
-Row {data-width=900, data-height=900}
+Row
 -----------------------------------------------------------------------
 
 ### Map
 
-```{r, fig.width = 10, fig.height = 10}
+```{r, fig.width = 5, fig.height = 10}
+
+# this code is highly specific to the CCGP as it generates a California map
+
+g <- list(
+  scope = 'north america',
+  showland = TRUE,
+  landcolor = toRGB("grey83"),
+  subunitcolor = toRGB("white"),
+  countrycolor = toRGB("white"),
+  showlakes = TRUE,
+  lakecolor = toRGB("white"),
+  showsubunits = TRUE,
+  showcountries = TRUE,
+  resolution = 50,
+  projection = list(
+    type = 'conic conformal',
+    rotation = list(lon = -100)
+  ),
+  lonaxis = list(
+    showgrid = TRUE,
+    gridwidth = 0.5,
+    range = c(-125, -111),
+    dtick = 5
+  ),
+  lataxis = list(
+    showgrid = TRUE,
+    gridwidth = 0.5,
+    range = c(31, 43),
+    dtick = 5
+  )
+)
+
+if(file.exists(paste0(prefix, ".coords.txt"))){
+    df.coords <- read.table(paste0(prefix, ".coords.txt"))
+    names(df.coords) <- c("sample.ID","long","lat")
+    
+    df.coords <- left_join(df.pca, df.coords, by = c("IID" = "sample.ID"))
+      
+    df.coords$color <- set.colors[factor(dist.id$cluster)]
+    
+    mycol <- set.colors[factor(df.coords$cluster)]
+    
+    df.coords$long.jit <- jitter(as.numeric(df.coords$long), 4)
+    df.coords$lat.jit <- jitter(as.numeric(df.coords$lat), 4)
+    
+    plot_geo(df.coords, lat = ~lat.jit, lon = ~long.jit) %>% 
+      layout(legend = list(orientation = 'h'), geo = g) %>% 
+      add_markers(
+        text = ~paste(IID, cluster, PC1, PC2, sep = "<br />"),
+        color = ~cluster, symbol = I("circle"), size = I(60), 
+        hoverinfo = "text", colors = set.colors[1:input$clusters],
+      ) %>% 
+     colorbar(title = "cluster")   
+  }else{
+    print("a map will appear here if you includes a .coords file ")
+}
+
+```
+
+> Fig. 8: Here, an interactive map is produced if there is a coordinate file available with latitude and longitude in decimal degrees. See the project README for how to setup this file for analysis. 
+
+### Terrain Map
+
+```{r, fig.width = 5, fig.height = 10}
 
 # this code is highly specific to the CCGP as it generates a California map
 
@@ -518,7 +582,7 @@ if(file.exists(paste0(prefix, ".coords.txt"))){
     terrain.map <- cal.map %>% 
       ggmap() + 
         geom_point(data = df.coords, aes(x = Longitude, y = Latitude,
-                                        color = cluster, size = 2.5, label = IID)) +
+                   color = cluster, size = 2.5, label = IID), alpha = 0.8) +
         theme_bw() + 
         labs(x = NULL, y = NULL) +
       scale_color_manual(values = set.colors) +
@@ -527,26 +591,7 @@ if(file.exists(paste0(prefix, ".coords.txt"))){
     ggplotly(terrain.map, tooltip=c("IID","Longitude", "Latitude"))
   
   }else{
-    df.coords <- read.table(paste0(prefix, ".coords.txt"))
-    names(df.coords) <- c("sample.ID","long","lat")
-    
-    df.coords <- left_join(df.pca, df.coords, by = c("IID" = "sample.ID"))
-      
-    df.coords$color <- set.colors[factor(dist.id$cluster)]
-    
-    mycol <- set.colors[factor(df.coords$cluster)]
-    
-    df.coords$long.jit <- jitter(as.numeric(df.coords$long), 8)
-    df.coords$lat.jit <- jitter(as.numeric(df.coords$lat), 8)
-    
-    plot_geo(df.coords, lat = ~lat.jit, lon = ~long.jit) %>% 
-      layout(legend = list(orientation = 'h'), geo = g) %>% 
-      add_markers(
-        text = ~paste(IID, cluster, PC1, PC2, sep = "<br />"),
-        color = ~cluster, symbol = I("circle"), size = I(60), 
-        hoverinfo = "text", colors = set.colors[1:input$clusters],
-      ) %>% 
-     colorbar(title = "cluster")   
+    print("a terrain map will appear here if you provide a google API key in the config file") 
   }
  
 }else{
@@ -555,7 +600,7 @@ if(file.exists(paste0(prefix, ".coords.txt"))){
 
 ```
 
-> Fig. 8: Here, an interactive map is produced if there is a coordinate file available with latitude and longitude in decimal degrees. See the project README for how to setup this file for analysis. 
+> Fig. 9: Here, a terrain map is produced using the google maps API
 
 Row
 -----------------------------------------------------------------------
@@ -622,4 +667,4 @@ pl.admix <- ggplotly(p.k23, tooltip=c("text", "y"))
 pl.admix
 ```
 
-> Fig. 9: Admixture is run on the dataset for k = 2 and k = 3. These are arbitrarily selected and no cross validation is done. Because these groupings are made seperate from the clusters in the PCA, they are colored by the admixture assignments and not the PCA groupings. 
+> Fig. 10: Admixture is run on the dataset for k = 2 and k = 3. These are arbitrarily selected and no cross validation is done. Because these groupings are made seperate from the clusters in the PCA, they are colored by the admixture assignments and not the PCA groupings. 
