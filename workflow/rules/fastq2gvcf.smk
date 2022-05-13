@@ -261,8 +261,4 @@ rule concat_gvcfs:
         bcftools concat -O z -o {output.gvcf} {input}
         tabix -p vcf {output.gvcf}
         """
-<<<<<<< HEAD:workflow/rules/fastq2gvcf.smk
     
-=======
-    
->>>>>>> d4ab90082d824c65f2f1a1c6a4060bb094ca1d3a:workflow/rules/fastq2bam.smk
