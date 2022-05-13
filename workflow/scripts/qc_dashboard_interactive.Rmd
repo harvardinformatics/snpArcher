@@ -79,13 +79,13 @@ for (i in 1:(N-1)) {
 }
 
 #theta as num. (snps / harmonic number) / sequence length
-w_theta <- round((snps_remain/(Hn)) / genome_size, 3)
+w_theta <- round((snps_remain/(Hn)) / genome_size, 3) * 100
 ```
 
 
 ### Individuals
 ```{r}
-valueBox(w_theta, icon = "fa-check-double")
+valueBox(num.samples, icon = "fa-check-double")
 ```
 
 ### Mil. SNPs
@@ -97,7 +97,8 @@ valueBox(snps_remain.m, icon = "fa-dna")
 ### Estimated diversity
 
 ```{r}
-div_text <- paste0(round((div_est*100),2),"%")
+#div_text <- paste0(round((div_est*100),2),"%")
+div_text <- paste0(w_theta, "%")
 valueBox(div_text, icon = "fa-dna")
 ```
 
@@ -667,4 +668,9 @@ pl.admix <- ggplotly(p.k23, tooltip=c("text", "y"))
 pl.admix
 ```
 
-> Fig. 10: Admixture is run on the dataset for k = 2 and k = 3. These are arbitrarily selected and no cross validation is done. Because these groupings are made seperate from the clusters in the PCA, they are colored by the admixture assignments and not the PCA groupings. 
+> Fig. 10: Admixture was run on the dataset for k = 2 and k = 3. These are arbitrarily selected and no cross validation is done. Because these groupings are made seperate from the clusters in the PCA, they are colored by the admixture assignments and not the PCA groupings. 
+
+Row
+-----------------------------------------------------------------------
+
+`Authors Erik D. Enbody, Cade Mirchandani, and Russell Corbett-Detig`
