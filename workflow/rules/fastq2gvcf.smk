@@ -152,7 +152,7 @@ rule merge_bams:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['merge_bams']['mem']
     shell:
-        "samtools merge -f --threads {params.comp_threads} -o {output.bam} {input} && samtools index --threads {params.comp_threads} {output.bam}"
+        "samtools merge -f --threads {params.comp_threads} -o {output.bam} {input} && samtools index -@ {params.comp_threads} {output.bam}"
 
 rule dedup:
     input:
@@ -261,4 +261,8 @@ rule concat_gvcfs:
         bcftools concat -O z -o {output.gvcf} {input}
         tabix -p vcf {output.gvcf}
         """
+<<<<<<< HEAD:workflow/rules/fastq2gvcf.smk
     
+=======
+    
+>>>>>>> d4ab90082d824c65f2f1a1c6a4060bb094ca1d3a:workflow/rules/fastq2bam.smk
