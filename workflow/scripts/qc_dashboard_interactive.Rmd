@@ -66,13 +66,26 @@ snps_remain <- tot_snps - fil_snps
 snps_remain.m <- round(snps_remain / 1000000,1)
 #num SNPs in pruned data
 nums.nps <- nrow(read.table(paste0(prefix, ".bim"), header = T))
+
+
+#estimate watterson's theta:
+num.samples <- nrow(read.table(paste0(prefix, ".idepth"), header = T))
+
+#harmonic number calculation for n-1 chromosomes (2*sample size)
+Hn = 0
+N = num.samples * 2
+for (i in 1:(N-1)) {
+  Hn = Hn + 1.0/i
+}
+
+#theta as num. (snps / harmonic number) / sequence length
+w_theta <- round((snps_remain/(Hn)) / genome_size, 3)
 ```
 
 
 ### Individuals
 ```{r}
-num.samples <- nrow(read.table(paste0(prefix, ".idepth"), header = T))
-valueBox(num.samples, icon = "fa-check-double")
+valueBox(w_theta, icon = "fa-check-double")
 ```
 
 ### Mil. SNPs
