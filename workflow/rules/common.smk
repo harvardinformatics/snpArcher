@@ -120,7 +120,7 @@ def get_read_group_sentieon(wildcards):
     """Denote sample name and library_id in read group."""
     return r"'@RG\tID:{lib}\tSM:{sample}\tPL:ILLUMINA'".format(
         sample=wildcards.sample,
-        lib=wildcards.sample
+        lib=wildcards.run
     )
 
 def get_read_group_bwa(wildcards):
