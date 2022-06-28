@@ -15,7 +15,7 @@ split_by_n: True            #set to False to split by chromosome/scaffold; set t
 
 # Only used if split_by_n is False
 maxNumIntervals: 20         # the maximum number of intervals when split_by_n is False. If your reference genome has hundreds of scaffolds, it can be helpful to set this to less than number of scaffolds.
-
+db_scatter_factor: 0.15
 # Only used when split_by_n is True
 minNmer: 500                # the minimum Nmer used to split up the genome; e.g. a value of 200 means only Nmers 200 or greater are used to define the boundaries of intervals. The minimum is 50.
 maxIntervalLen: 20000000    # the desired maximum size of an interval for calling variants; more than 2Mb is a good starting point
