@@ -67,7 +67,7 @@ compute_d4:
 merge_d4:
     mem: 10000
 callable_bed:
-    mem: 10000
+    mem: 20000
 
 ###
 # bam2vcf workflows

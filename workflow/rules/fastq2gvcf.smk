@@ -152,7 +152,7 @@ rule merge_bams:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['merge_bams']['mem']
     shell:
-        "samtools merge -f --threads {params.comp_threads} -o {output.bam} {input} && samtools index --threads {params.comp_threads} {output.bam}"
+        "samtools merge -f --threads {params.comp_threads} -o {output.bam} {input} && samtools index -@ {params.comp_threads} {output.bam}"
 
 rule dedup:
     input:
@@ -208,3 +208,57 @@ rule collect_sumstats:
         aln_metrics = helperFun.collectAlnSumMets(input.alnSumMetsFiles)
         SeqDepths, CoveredBases = helperFun.collectCoverageMetrics(input.coverageFiles)
         helperFun.printBamSumStats(SeqDepths, CoveredBases, aln_metrics, FractionReadsPassFilter, NumFilteredReads, output[0])
+
+rule bam2gvcf:
+    """
+    This rule scatters analyses over two dimensions: sample name and list file. For each BAM file, one per sample,
+    a GVCF is created for all the scaffolds present in a given list file.
+    """
+    input:
+        ref = config["refGenomeDir"] + "{refGenome}.fna",
+        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
+        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict",
+        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
+        l = config['output'] + "{Organism}/{refGenome}/" + config['intDir'] + "gvcf_intervals/{list}.list"
+    output:
+        gvcf = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "{list}.raw.g.vcf.gz"),
+        gvcf_idx = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "{list}.raw.g.vcf.gz.tbi"),
+        
+    resources:
+        #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
+        # subtract that memory here
+        mem_mb = lambda wildcards, attempt: attempt * res_config['bam2gvcf']['mem'],   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: attempt * (res_config['bam2gvcf']['mem'] - 1000)  # this is the maximum amount given to java
+    log:
+        "logs/{Organism}/bam2gvcf/{refGenome}_{sample}_{list}.txt"
+    benchmark:
+        "benchmarks/{Organism}/bam2gvcf/{refGenome}_{sample}_{list}.txt"
+    params:
+        minPrun = config['minP'],
+        minDang = config['minD'],
+        
+    conda:
+        "../envs/bam2vcf.yml"
+    shell:
+        "gatk HaplotypeCaller "
+        "--java-options \"-Xmx{resources.reduced}m\" "
+        "-R {input.ref} "
+        "-I {input.bam} "
+        "-O {output.gvcf} "
+        "-L {input.l} "
+        "--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang} &> {log}"
+
+rule concat_gvcfs:
+    input:
+        get_gvcfs
+    output:
+        gvcf = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz",
+        tbi = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz.tbi"
+    conda:
+        "../envs/qc.yml"
+    shell:
+        """
+        bcftools concat -O z -o {output.gvcf} {input}
+        tabix -p vcf {output.gvcf}
+        """
+    

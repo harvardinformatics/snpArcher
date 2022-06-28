@@ -14,28 +14,34 @@ rule picard_intervals:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['process_ref']['mem']
     shell:
-        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} &> {log}\n"
+        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} OUTPUT_TYPE=ACGT &> {log}\n"
 
-checkpoint create_intervals:
+checkpoint create_db_intervals:
     input:
-        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
-        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict",
         ref = config["refGenomeDir"] + "{refGenome}.fna",
-        intervals = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list"
-    params:
-        maxIntervalLen = lambda wildcards, resources: resources.attempt * int(config['maxIntervalLen']),
-        maxBpPerList = lambda wildcards, resources: resources.attempt * int(config['maxBpPerList']),
-        maxIntervalsPerList = int(config['maxIntervalsPerList']),
-        minNmer = int(config['minNmer']),
-        max_intervals = config['maxNumIntervals'],
-        missingBpTolerance = config['missingBpTolerance']
+        intervals = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "intervals.list"
     output:
-        config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem'],
-        attempt = lambda wildcards, attempt: attempt
-    run:
-        if config['split_by_n']:
-            LISTS = helperFun.createListsGetIndices(params.missingBpTolerance, params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
-        else:
-            LISTS = make_intervals(config["output"], config["intDir"], wildcards, input.dictf, params.max_intervals)
+        out_dir = directory(config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "db_intervals"),
+        
+    params:
+        max_intervals = get_db_interval_count
+    conda:
+        '../envs/bam2vcf.yml'
+    shell:
+        """
+        gatk SplitIntervals -L {input.intervals} \
+        -O {output} -R {input.ref} -scatter {params} \
+        -mode INTERVAL_SUBDIVISION \
+        --interval-merging-rule OVERLAPPING_ONLY
+        """
+
+checkpoint create_gvcf_intervals:
+    input:
+        in_file = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list"
+    output:
+        out_dir = directory(config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "gvcf_intervals"),
+        intervals = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "intervals.list"
+    params:
+        max_intervals = config["maxNumIntervals"]
+    script:
+        "../scripts/make_intervals.py"
