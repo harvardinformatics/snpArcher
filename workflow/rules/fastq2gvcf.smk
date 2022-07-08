@@ -18,26 +18,26 @@ rule get_fastq_pe:
         res_config['get_fastq_pe']['threads']
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']
-shell:
-    """
-    set +e
+    shell:
+        """
+        set +e
 
-    #delete existing prefetch file in case of previous run failure
-    rm -rf {wildcards.run}
+        #delete existing prefetch file in case of previous run failure
+        rm -rf {wildcards.run}
 
-    ##attempt to get SRA file from NCBI (prefetch) or ENA (wget)
-    prefetch --max-size 1T {wildcards.run}
-    prefetchExit=$?
-    if [[ $prefetchExit -ne 0 ]]
-    then
-        ffq --ftp {wildcards.run} | grep -Eo '"url": "[^"]*"' | grep -o '"[^"]*"$' | grep "fastq" | xargs curl --remote-name-all --output-dir {params.outdir}
-    fi
-    else
-        fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir}
-        pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
-    fi
-    rm -rf {wildcards.run}
-    """
+        ##attempt to get SRA file from NCBI (prefetch) or ENA (wget)
+        prefetch --max-size 1T {wildcards.run}
+        prefetchExit=$?
+        if [[ $prefetchExit -ne 0 ]]
+        then
+            ffq --ftp {wildcards.run} | grep -Eo '"url": "[^"]*"' | grep -o '"[^"]*"$' | grep "fastq" | xargs curl --remote-name-all --output-dir {params.outdir}
+        fi
+        else
+            fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir}
+            pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
+        fi
+        rm -rf {wildcards.run}
+        """
 
 rule download_reference:
     input:
