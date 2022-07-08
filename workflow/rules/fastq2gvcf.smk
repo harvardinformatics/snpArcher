@@ -31,7 +31,6 @@ rule get_fastq_pe:
         if [[ $prefetchExit -ne 0 ]]
         then
             ffq --ftp {wildcards.run} | grep -Eo '"url": "[^"]*"' | grep -o '"[^"]*"$' | grep "fastq" | xargs curl --remote-name-all --output-dir {params.outdir}
-        fi
         else
             fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir}
             pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
