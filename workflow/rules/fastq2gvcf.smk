@@ -18,31 +18,26 @@ rule get_fastq_pe:
         res_config['get_fastq_pe']['threads']
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']
-    shell:
-        """
-        set +e
+shell:
+    """
+    set +e
 
-        #delete existing prefetch file in case of previous run failure
-        rm -rf {wildcards.run}
+    #delete existing prefetch file in case of previous run failure
+    rm -rf {wildcards.run}
 
-        ##attempt to get SRA file from NCBI (prefetch) or ENA (wget)
-        prefetch --max-size 1T {wildcards.run}
-        prefetchExit=$?
-        if [[ $prefetchExit -ne 0 ]]
-        then
-            wget -O {wildcards.run} {params.sra_url}
-        fi
-        ##if this succeeded, we'll have the correct file in our working directory
-        if [[ -s {wildcards.run} ]]
-        then
-            fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir}
-            pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
-        else
-            wget -P {params.outdir} {params.fastq_url}/{wildcards.run}_1.fastq.gz
-            wget -P {params.outdir} {params.fastq_url}/{wildcards.run}_2.fastq.gz
-        fi
-        rm -rf {wildcards.run}
-        """
+    ##attempt to get SRA file from NCBI (prefetch) or ENA (wget)
+    prefetch --max-size 1T {wildcards.run}
+    prefetchExit=$?
+    if [[ $prefetchExit -ne 0 ]]
+    then
+        ffq --ftp {wildcards.run} | grep -Eo '"url": "[^"]*"' | grep -o '"[^"]*"$' | grep "fastq" | xargs curl --remote-name-all --output-dir {params.outdir}
+    fi
+    else
+        fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir}
+        pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
+    fi
+    rm -rf {wildcards.run}
+    """
 
 rule download_reference:
     input:
@@ -223,7 +218,7 @@ rule bam2gvcf:
     output:
         gvcf = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "{list}.raw.g.vcf.gz"),
         gvcf_idx = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "{list}.raw.g.vcf.gz.tbi"),
-        
+
     resources:
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
         # subtract that memory here
@@ -236,7 +231,7 @@ rule bam2gvcf:
     params:
         minPrun = config['minP'],
         minDang = config['minD'],
-        
+
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -261,4 +256,3 @@ rule concat_gvcfs:
         bcftools concat -O z -o {output.gvcf} {input}
         tabix -p vcf {output.gvcf}
         """
-    

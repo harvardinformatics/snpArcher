@@ -11,3 +11,6 @@ dependencies:
   - p7zip==16.02
   - pigz==2.6
   - wget==1.20.3
+  - pip==22.0.4
+  - pip:
+      - ffq
