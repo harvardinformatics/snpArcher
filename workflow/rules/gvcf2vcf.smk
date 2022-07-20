@@ -11,7 +11,10 @@ rule mkDBmapfile:
     output:
         dbMapFile = config['output'] + "{Organism}/{refGenome}/" + config['dbDir'] + "DB_mapfile.txt"
     run:
-        write_db_mapfile(wildcards)
+        with open(output.dbMapFile, "w") as f:
+            for file_path in input.gvcfs:
+                sample_name = os.path.basename(file_path).replace("final_", "").replace(".g.vcf.gz", "")
+                print(sample_name, file_path, sep="\t", file=f)
 
 rule gvcf2DB:
     """
@@ -125,21 +128,11 @@ rule filterVcfs:
         "--filter-expression \"QUAL < 30.0\" "
         "--create-output-variant-index  "
         "--invalidate-previous-filters true &> {log}"
-rule make_list_of_vcfs:
-    """Creates a file with list of vcfs for sort_gatherVcfs"""
-    input:
-        unpack(get_gather_vcfs)
-    output:
-        temp(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "list_of_vcfs.txt")
-    run:
-        with open(output[0], 'w') as f:
-            for line in input['gvcfs']:
-                print(line, file=f)
 
 rule sort_gatherVcfs:
     input:
-        unpack(get_gather_vcfs),
-        fof = config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "list_of_vcfs.txt",
+        vcfs = get_gather_vcfs,
+        tbis = get_gather_tbis
     output:
         vcfFinal = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz"
     conda:
@@ -153,6 +146,6 @@ rule sort_gatherVcfs:
         "benchmarks/{Organism}/sortVcf/{refGenome}.txt"
     shell:
         """
-        bcftools concat -f {input.fof} -D -a -Ou | bcftools sort -Oz -o {output} -
+        bcftools concat -D -a -Ou {input.vcfs} | bcftools sort -Oz -o {output} -
         tabix -p vcf {output}
         """

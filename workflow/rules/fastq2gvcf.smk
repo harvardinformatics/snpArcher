@@ -246,8 +246,8 @@ rule concat_gvcfs:
     input:
         get_gvcfs
     output:
-        gvcf = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz",
-        tbi = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz.tbi"
+        gvcf = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "final_{sample}.g.vcf.gz",
+        tbi = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "final_{sample}.g.vcf.gz.tbi"
     conda:
         "../envs/qc.yml"
     shell:
