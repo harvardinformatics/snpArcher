@@ -80,10 +80,9 @@ def get_sumstats(wildcards):
     return {'alnSumMetsFiles': alnSumMetsFiles, 'coverageFiles': coverageFiles, 'fastpFiles': fastpFiles}
 
 def get_db_interval_count(wildcards):
-    checkpoint_output = checkpoints.create_gvcf_intervals.get(**wildcards).output[0]
-    num_lists = len(glob(os.path.join(checkpoint_output, "*.list")))
+    
     _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
-    out = max(int((config["db_scatter_factor"]) * len(_samples) * num_lists), 1)
+    out = max(int((config["db_scatter_factor"]) * len(_samples) * config["maxNumIntervals"]), 1)
     return out
 
 def get_gather_vcfs(wildcards):
