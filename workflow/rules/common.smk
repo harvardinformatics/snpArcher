@@ -80,10 +80,9 @@ def get_sumstats(wildcards):
     return {'alnSumMetsFiles': alnSumMetsFiles, 'coverageFiles': coverageFiles, 'fastpFiles': fastpFiles}
 
 def get_db_interval_count(wildcards):
-    checkpoint_output = checkpoints.create_gvcf_intervals.get(**wildcards).output[0]
-    num_lists = len(glob(os.path.join(checkpoint_output, "*.list")))
+    
     _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
-    out = max(int((config["db_scatter_factor"]) * len(_samples) * num_lists), 1)
+    out = max(int((config["db_scatter_factor"]) * len(_samples) * config["maxNumIntervals"]), 1)
     return out
 
 def get_gather_vcfs(wildcards):
@@ -93,14 +92,22 @@ def get_gather_vcfs(wildcards):
     checkpoint_output = checkpoints.create_db_intervals.get(**wildcards).output[0]
     list_files = [os.path.basename(x) for x in glob(os.path.join(checkpoint_output, "*.interval_list"))]
     list_numbers = [f.replace("-scattered.interval_list", "") for f in list_files]
-    return {"gvcfs": expand(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf.gz", **wildcards, list=list_numbers),
-            "tbis": expand(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf.gz.tbi", **wildcards, list=list_numbers)}
+    return expand(config['output'] + "{Organism}/{refGenome}/" + config["vcfDir_gatk"] + "filtered_L{list}.vcf.gz", **wildcards, list=list_numbers)
+    
 
+def get_gather_tbis(wildcards):
+    """
+    Gets filtered vcfs indexes for gathering step. This function gets the interval list indicies from the corresponding
+    genome, then produces the file names for the filtered vcf with list index."""
+    files = get_gather_vcfs(wildcards)
+    return [f + ".tbi" for f in files]
+
+    
 def get_gvcfs(wildcards):
     checkpoint_output = checkpoints.create_gvcf_intervals.get(**wildcards).output[0]
     _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
     num_lists = len(glob(os.path.join(checkpoint_output, "*.list")))
-    out = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}/" + "{l}.raw.g.vcf.gz", sample=_samples, l=range(num_lists))
+    out = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{{sample}}/" + "{l}.raw.g.vcf.gz", l=range(num_lists))
     return out
 def gather_vcfs_CLI(wildcards):
     """
@@ -112,17 +119,17 @@ def gather_vcfs_CLI(wildcards):
     out = out + " --TMP_DIR " + config['tmp_dir']
     return out
 
-def write_db_mapfile(wildcards):
+def write_db_mapfile(wildcards, input):
     dbMapFile = os.path.join(config['output'], wildcards.Organism, wildcards.refGenome, config['dbDir'], f"DB_mapfile.txt")
     sample_names = set(samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist())
     with open(dbMapFile, 'w') as f:
-        for sample in sample_names:
-            gvcf_path = os.path.join(config['output'], wildcards.Organism, wildcards.refGenome, config['gvcfDir'], f"{sample}.g.vcf.gz")
-            print(sample, gvcf_path, sep="\t", file=f)
+        for f in input.gvcfs:
+            print(f)
+            # print(sample, gvcf_path, sep="\t", file=f)
 
 def get_input_for_mapfile(wildcards):
     sample_names = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
-    gvcfs = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "{sample}.g.vcf.gz", sample=sample_names, **wildcards)
+    gvcfs = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['gvcfDir'] + "final_{sample}.g.vcf.gz", sample=sample_names, **wildcards)
     return {'gvcfs': gvcfs}
 
 def get_input_for_coverage(wildcards):
