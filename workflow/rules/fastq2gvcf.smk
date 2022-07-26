@@ -30,16 +30,10 @@ rule get_fastq_pe:
         prefetchExit=$?
         if [[ $prefetchExit -ne 0 ]]
         then
-            wget -O {wildcards.run} {params.sra_url}
-        fi
-        ##if this succeeded, we'll have the correct file in our working directory
-        if [[ -s {wildcards.run} ]]
-        then
+            ffq --ftp {wildcards.run} | grep -Eo '"url": "[^"]*"' | grep -o '"[^"]*"$' | grep "fastq" | xargs curl --remote-name-all --output-dir {params.outdir}
+        else
             fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir}
             pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
-        else
-            wget -P {params.outdir} {params.fastq_url}/{wildcards.run}_1.fastq.gz
-            wget -P {params.outdir} {params.fastq_url}/{wildcards.run}_2.fastq.gz
         fi
         rm -rf {wildcards.run}
         """
@@ -223,7 +217,7 @@ rule bam2gvcf:
     output:
         gvcf = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "{list}.raw.g.vcf.gz"),
         gvcf_idx = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "{list}.raw.g.vcf.gz.tbi"),
-        
+
     resources:
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
         # subtract that memory here
@@ -236,7 +230,7 @@ rule bam2gvcf:
     params:
         minPrun = config['minP'],
         minDang = config['minD'],
-        
+
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -252,8 +246,8 @@ rule concat_gvcfs:
     input:
         get_gvcfs
     output:
-        gvcf = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz",
-        tbi = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz.tbi"
+        gvcf = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "final_{sample}.g.vcf.gz",
+        tbi = config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "final_{sample}.g.vcf.gz.tbi"
     conda:
         "../envs/qc.yml"
     shell:
@@ -261,4 +255,3 @@ rule concat_gvcfs:
         bcftools concat -O z -o {output.gvcf} {input}
         tabix -p vcf {output.gvcf}
         """
-    

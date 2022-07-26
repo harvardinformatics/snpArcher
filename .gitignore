@@ -33,3 +33,6 @@ logs/
 *_dryrun.txt
 results/
 tmp/
+
+.test/ecoli/benchmarks/*
+.test/ecoli/data/genome/*
