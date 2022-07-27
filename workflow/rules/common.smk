@@ -6,11 +6,31 @@ from collections import defaultdict, deque
 from snakemake.exceptions import WorkflowError
 ### INPUT FUNCTIONS ###
 
+def get_entry(sample_id, column_name):
+    entry = samples.loc[samples["BioSample"] == sample_id, column_name].values
+    if len(set(entry)) > 1:
+        raise ValueError("Unexpected number of items. Sample IDs are not unique")
+    elif len(entry) < 1:
+        raise ValueError(
+            f"Unexpected number of items. Sample ID {sample_id} not found for columns {column_name}"
+        )
+    return entry[0]
+
+def gvcf_input(wildcards):
+    ref = get_entry(wildcards.sample, "refGenome")
+    org = get_entry(wildcards.sample, "Organism")
+    ref_path = config["refGenomeDir"] + f"{ref}.fna"
+    indices = ancient(expand(config["refGenomeDir"] + "{refGenome}.fna.{ext}", refGenome=ref, ext=["fai", "sa", "pac", "bwt", "ann", "amb"]))
+    dictf = config["refGenomeDir"] + ref + ".dict"
+    bam = config['output'] + f"{org}/{ref}/" + config['bamDir'] + "{sample}" + "_final.bam",
+    bai = config['output'] + f"{org}/{ref}/" + config['bamDir'] + "{sample}" + "_final.bam.bai",
+    return {'ref': ref_path, 'indices': indices, 'dictf': dictf, 'bam':bam, 'bai': bai}
+
 def write_coords_file(wildcards):
     out_df = samples[["BioSample", "long", "lat"]]
     out_df.drop_duplicates("BioSample", inplace=True)
     out_df.dropna(subset=["long", "lat"], thresh=1, inplace=True)
-    outpath = os.path.join(workflow.default_remote_prefix, config['output'], f"{wildcards.Organism}/{wildcards.refGenome}/", config['qcDir'], f"{wildcards.Organism}_{wildcards.refGenome}.coords.txt")
+    outpath = os.path.join(workflow.default_remote_prefix, config['output'], f"{wildcards.Organism}/{wildcards.ref}/", config['qcDir'], f"{wildcards.Organism}_{wildcards.refGenome}.coords.txt")
     out_df.to_csv(outpath, index=False, sep="\t")
 def get_coords_if_available(wildcards):
     if 'lat' in samples.columns and 'long' in samples.columns:
@@ -56,33 +76,28 @@ def get_gvcfs_for_list(wildcards):
     return expand(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}/" + "L{list}.raw.g.vcf.gz", **wildcards, sample=sample_names)
 
 def get_gvcfs(wildcards):
-    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
-    return expand(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz", **wildcards, sample=_samples)
+    _samples = samples['BioSample'].unique().tolist()
+    return expand(config['output'] + "Organism/refGenome/" + config['gvcfDir'] + "{sample}.g.vcf.gz", sample=_samples)
 
 def get_tbis(wildcards):
-    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
-    return expand(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz.tbi", **wildcards, sample=_samples)
+    _samples = samples['BioSample'].unique().tolist()
+    return expand(config['output'] + "Organism/refGenome/" + config['gvcfDir'] + "{sample}.g.vcf.gz.tbi", sample=_samples)
 
 def get_bams_for_dedup(wildcards):
     runs = samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist()
     
     if len(runs) == 1:
-        return expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam", run=runs)
+        return expand(config['output'] + "Organism/refGenome/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam", run=runs)
     else:
-        return config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam"
+        return config['output'] + "Organism/refGenome/" + config['bamDir'] + "postMerge/{sample}.bam"
 def get_bai_for_dedup(wildcards):
     runs = samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist()
     if len(runs) == 1:
-        return expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam.bai", run=runs)
+        return expand(config['output'] + "Organism/refGenome/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam.bai", run=runs)
     else:
-        return config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam.bai"
+        return config['output'] + "Organism/refGenome/" + config['bamDir'] + "postMerge/{sample}.bam.bai"
 
-def get_bams_for_dedup(wildcards):
-    runs = samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist()
-    if len(runs) == 1:
-        return expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam", run=runs)
-    else:
-        return config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam"
+
 
 def get_final_bams(wildcards):
     # note the [:5] to subsample
@@ -109,6 +124,7 @@ def get_reads(wildcards):
 
 def get_remote_reads(wildcards):
     """Use this for reads on a different remote bucket than the default."""
+    print(wildcards)
     row = samples.loc[samples['Run'] == wildcards.run]
     r1 = GS.remote(os.path.join(GS_READS_PREFIX, row.fq1.item()))
     r2 = GS.remote(os.path.join(GS_READS_PREFIX, row.fq2.item()))
