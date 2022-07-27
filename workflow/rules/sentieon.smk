@@ -2,10 +2,10 @@ rule download_reference:
     input:
         ref = get_ref
     output:
-        ref = config["refGenomeDir"] + "{refGenome}.fna"
+        ref = config["refGenomeDir"] + "refGenome.fna"
     params:
-        dataset = config["refGenomeDir"] + "{refGenome}_dataset.zip",
-        outdir = config["refGenomeDir"] + "{refGenome}"
+        dataset = config["refGenomeDir"] + "refGenome_dataset.zip",
+        outdir = config["refGenomeDir"] + "refGenome"
     conda:
         "../envs/fastq2bam.yml"
     shell:
@@ -13,26 +13,26 @@ rule download_reference:
         if [ -z "{input.ref}" ]  # check if this is empty
         then
             mkdir -p data/genome
-            datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} \
+            datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset}\
             && 7z x {params.dataset} -aoa -o{params.outdir} \
-            && cat {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}
+            && cat {params.outdir}/ncbi_dataset/data/refGenome/*.fna > {output.ref}
         else
             cp {input.ref} {output.ref}
         fi
         """
 rule index_ref:
     input:
-        ref = config["refGenomeDir"] + "{refGenome}.fna"
+        ref = config["refGenomeDir"] + "refGenome.fna"
     output:
-        indexes = expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"]),
-        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
-        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict"
+        indexes = expand(config["refGenomeDir"] + "refGenome.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"]),
+        fai = config["refGenomeDir"] + "refGenome.fna" + ".fai",
+        dictf = config["refGenomeDir"] + "refGenome" + ".dict"
     conda:
         "../envs/fastq2bam.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['index_ref']['mem']
     log:
-        "logs/index_ref/{refGenome}.log"
+        "logs/index_ref/refGenome.log"
     shell:
         """
         bwa index {input.ref} 2> {log}
@@ -41,16 +41,13 @@ rule index_ref:
         """
 
 
-
-
-
 rule fastp:
     input:
         unpack(get_reads)
     output:
-        r1 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz"),
-        r2 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz"),
-        summ = temp(config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}/{run}.out")
+        r1 = temp(config['output'] + "Organism/refGenome/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz"),
+        r2 = temp(config['output'] + "Organism/refGenome/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz"),
+        summ = temp(config['output'] + "Organism/refGenome/" + config['sumstatDir'] + "{sample}/{run}.out")
     conda:
         "../envs/fastq2bam.yml"
     threads:
@@ -59,7 +56,7 @@ rule fastp:
         mem_mb = lambda wildcards, attempt: attempt * res_config['fastp']['mem'],
         disk_mb = 512_000
     log:
-        "logs/{Organism}/fastp/{refGenome}_{sample}_{run}.txt"
+        "logs/Organism/fastp/refGenome_{sample}_{run}.txt"
     shell:
         "fastp --in1 {input.r1} --in2 {input.r2} "
         "--out1 {output.r1} --out2 {output.r2} "
@@ -70,27 +67,27 @@ rule fastp:
 
 rule map:
     input:
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
-        r1 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz",
-        r2 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz",
-        indices = ancient(expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["fai", "sa", "pac", "bwt", "ann", "amb"])),
+        ref = config["refGenomeDir"] + "refGenome.fna",
+        r1 = config['output'] + "Organism/refGenome/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz",
+        r2 = config['output'] + "Organism/refGenome/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz",
+        indices = ancient(expand(config["refGenomeDir"] + "refGenome.fna.{ext}", ext=["fai", "sa", "pac", "bwt", "ann", "amb"])),
         lic = ancient(config['sentieon_lic'])
     output: 
-        bam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}/{run}.bam"),
-        bai = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}/{run}.bam.bai"),
+        bam = temp(config['output'] + "Organism/refGenome/" + config['bamDir'] + "preMerge/{sample}/{run}.bam"),
+        bai = temp(config['output'] + "Organism/refGenome/" + config['bamDir'] + "preMerge/{sample}/{run}.bam.bai"),
     params:
         rg = get_read_group_sentieon,
     conda:
         "../envs/sentieon.yml"
     threads: res_config['bwa_map']['threads']
     log:
-        "logs/{Organism}/{refGenome}/bwa/{sample}_{run}.txt"
+        "logs/Organism/refGenome/bwa/{sample}_{run}.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bwa_map']['mem'],
         machine_type = "n2d-standard-32",
         disk_mb = 512_000
     benchmark:
-        "benchmarks/{Organism}/{refGenome}/bwa/{sample}/{run}.txt"
+        "benchmarks/Organism/refGenome/bwa/{sample}/{run}.txt"
     shell:
         """
         export MALLOC_CONF=lg_dirty_mult:-1
@@ -102,10 +99,10 @@ rule map:
 rule merge_bams:
     input:
         lambda wildcards:
-        expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
+        expand(config['output'] + "Organism/refGenome/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
     output:
-        bam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam"),
-        bai = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam.bai")
+        bam = temp(config['output'] + "Organism/refGenome/" + config['bamDir'] + "postMerge/{sample}.bam"),
+        bai = temp(config['output'] + "Organism/refGenome/" + config['bamDir'] + "postMerge/{sample}.bam.bai")
     conda:
         "../envs/fastq2bam.yml"
     resources:
@@ -119,8 +116,8 @@ rule dedup:
         bai = get_bai_for_dedup,
         lic = ancient(config['sentieon_lic'])
     output:
-        dedupBam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam"),
-        dedupBai = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam.bai"),
+        dedupBam = temp(config['output'] + "Organism/refGenome/" + config['bamDir'] + "{sample}" + "_final.bam"),
+        dedupBai = temp(config['output'] + "Organism/refGenome/" + config['bamDir'] + "{sample}" + "_final.bam.bai"),
     conda:
         "../envs/sentieon.yml"
     threads: 
@@ -130,7 +127,7 @@ rule dedup:
         machine_type = "n2d-standard-32",
         disk_mb = 512_000
     benchmark:
-        "benchmarks/{Organism}/{refGenome}/dedup/{sample}.txt"
+        "benchmarks/Organism/refGenome/dedup/{sample}.txt"
     shell:
         """
         export SENTIEON_LICENSE={input.lic}
@@ -140,15 +137,15 @@ rule dedup:
 
 rule gvcf:
     input:
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
-        indices = ancient(expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["fai", "sa", "pac", "bwt", "ann", "amb"])),
-        dictf = ancient(config["refGenomeDir"] + "{refGenome}" + ".dict"),
-        bam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam",
-        bai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam.bai",
+        ref = config["refGenomeDir"] + "refGenome.fna",
+        indices = ancient(expand(config["refGenomeDir"] + "refGenome.fna.{ext}", ext=["fai", "sa", "pac", "bwt", "ann", "amb"])),
+        dictf = ancient(config["refGenomeDir"] + "refGenome" + ".dict"),
+        bam = config['output'] + "Organism/refGenome/" + config['bamDir'] + "{sample}" + "_final.bam",
+        bai = config['output'] + "Organism/refGenome/" + config['bamDir'] + "{sample}" + "_final.bam.bai",
         lic = ancient(config['sentieon_lic'])
     output:
-        gvcf = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz"),
-        gvcf_idx = temp(config['output'] + "{Organism}/{refGenome}/" + config['gvcfDir'] + "{sample}.g.vcf.gz.tbi"),
+        gvcf = temp(config['output'] + "Organism/refGenome/" + config['gvcfDir'] + "{sample}.g.vcf.gz"),
+        gvcf_idx = temp(config['output'] + "Organism/refGenome/" + config['gvcfDir'] + "{sample}.g.vcf.gz.tbi"),
     threads: 31
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bam2gvcf']['mem'],
@@ -157,9 +154,9 @@ rule gvcf:
     conda:
         "../envs/sentieon.yml"
     benchmark:
-        "benchmarks/{Organism}/{refGenome}/gvcf/{sample}.txt"
+        "benchmarks/Organism/refGenome/gvcf/{sample}.txt"
     log:
-        "logs/{Organism}/{refGenome}/bam2gvcf/{sample}.txt"
+        "logs/Organism/refGenome/bam2gvcf/{sample}.txt"
     shell:
         """
         export SENTIEON_LICENSE={input.lic}
@@ -168,17 +165,17 @@ rule gvcf:
 
 rule combine_gvcf:
     input:
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
-        indices = ancient(expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["fai", "sa", "pac", "bwt", "ann", "amb"])),
-        dictf = ancient(config["refGenomeDir"] + "{refGenome}" + ".dict"),
+        ref = config["refGenomeDir"] + "refGenome.fna",
+        indices = ancient(expand(config["refGenomeDir"] + "refGenome.fna.{ext}", ext=["fai", "sa", "pac", "bwt", "ann", "amb"])),
+        dictf = ancient(config["refGenomeDir"] + "refGenome" + ".dict"),
         lic = ancient(config['sentieon_lic']),
         gvcfs = get_gvcfs,
         tbis = get_tbis
     output:
-        vcf = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz"),
-        tbi = temp(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz.tbi")
+        vcf = temp(config['output'] + "Organism/refGenome/" + "Organism_refGenome_prefilter.vcf.gz"),
+        tbi = temp(config['output'] + "Organism/refGenome/" + "Organism_refGenome_prefilter.vcf.gz.tbi")
     params:
-        gvcf = get_gvcf_cmd
+        gvcf = "dd"
     threads: 31
     resources:
         mem_mb = lambda wildcards, attempt: attempt * res_config['bam2gvcf']['mem'],
@@ -186,9 +183,9 @@ rule combine_gvcf:
         disk_mb = 2000000
     conda:
         "../envs/sentieon.yml"
-    log: "logs/{Organism}/{refGenome}/combine_gvcf.txt"
+    log: "logs/Organism/refGenome/combine_gvcf.txt"
     benchmark:
-        "benchmarks/{Organism}/{refGenome}/combine_gvcf/{Organism}_{refGenome}.final.txt"
+        "benchmarks/Organism/refGenome/combine_gvcf/Organism_refGenome.final.txt"
     shell:
         """
         export SENTIEON_LICENSE={input.lic}
@@ -200,14 +197,14 @@ rule filterVcfs:
     This rule filters all of the VCFs
     """
     input:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz",
-        tbi = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}_prefilter.vcf.gz.tbi",
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
-        indices = ancient(expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["fai", "sa", "pac", "bwt", "ann", "amb"])),
-        dictf = ancient(config["refGenomeDir"] + "{refGenome}" + ".dict")
+        vcf = config['output'] + "Organism/refGenome/" + "Organism_refGenome_prefilter.vcf.gz",
+        tbi = config['output'] + "Organism/refGenome/" + "Organism_refGenome_prefilter.vcf.gz.tbi",
+        ref = config["refGenomeDir"] + "refGenome.fna",
+        indices = ancient(expand(config["refGenomeDir"] + "refGenome.fna.{ext}", ext=["fai", "sa", "pac", "bwt", "ann", "amb"])),
+        dictf = ancient(config["refGenomeDir"] + "refGenome" + ".dict")
     output:
-        vcf = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz",
-        tbi = config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.final.vcf.gz.tbi"
+        vcf = config['output'] + "Organism/refGenome/" + "Organism_refGenome.final.vcf.gz",
+        tbi = config['output'] + "Organism/refGenome/" + "Organism_refGenome.final.vcf.gz.tbi"
     conda:
         "../envs/bam2vcf.yml"
     resources:
@@ -215,9 +212,9 @@ rule filterVcfs:
         machine_type = "n2d-standard-32",
         disk_mb = 512_000
     log:
-        "logs/{Organism}/{refGenome}/filterVcfs/log.txt"
+        "logs/Organism/refGenome/filterVcfs/log.txt"
     benchmark:
-        "benchmarks/{Organism}/{refGenome}/filterVcfs/bench.txt"
+        "benchmarks/Organism/refGenome/filterVcfs/bench.txt"
     shell:
         "gatk VariantFiltration "
         "-R {input.ref} "
