@@ -1,3 +1,19 @@
+import pandas as pd
+import os
+include: "common.smk"
+
+configfile: "./config/config.yaml"
+print(os.path.exists(config["samples"]))
+samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+species_counts = samples.drop_duplicates(subset = ["BioSample", "refGenome", "Organism"]).value_counts(subset=['refGenome', 'Organism'])  #get BioSample for each refGenome/Organism combination
+REFGENOME,ORGANISM = map(list, zip(*species_counts.index))
+
+rule all:
+    input:
+        expand("results/{refGenome}/QC/{refGenome}_qc.html", refGenome=REFGENOME)
+
+
+
 rule check_fai:
     """
     checks fai file for numeric first column, then do not run plink and rest of workflow if they are all numeric
@@ -20,9 +36,9 @@ rule vcftools_individuals:
         summ = "results/{refGenome}/QC/{refGenome}.FILTER.summary",
         het = "results/{refGenome}/QC/{refGenome}.het"
     conda:
-        "../envs/qc.yml"
+        "envs/qc.yml"
     params:
-        prefix = lambda wc, input: input.het[:-4],
+        prefix = lambda wc, input: os.path.join(input.vcf.rsplit("/", 1)[0], "QC", wc.refGenome),
         min_depth = config["min_depth"]
     shell:
         """
@@ -30,7 +46,7 @@ rule vcftools_individuals:
         vcftools --gzvcf {input.vcf} --out {params.prefix} --depth
         vcftools --gzvcf {input.vcf} --out {params.prefix} --het
         vcftools --gzvcf {input.vcf} --out {params.prefix} --missing-indv
-        tail +1 {output.depth} | awk "$3>{params.min_depth}" {{print $1}}> {output.samps}
+        tail -n +2 {output.depth} | awk '$3>{params.min_depth} {{print $1}}'> {output.samps}
         """
 
 rule subsample_snps:
@@ -41,16 +57,16 @@ rule subsample_snps:
         sumstats = "results/{refGenome}/summary_stats/bam_sumstats.txt"
 
     output:
-        filtered = config['output'] + "{Organism}/{refGenome}/" + "{refGenome}.filtered.vcf.gz",
-        filtered_idx = config['output'] + "{Organism}/{refGenome}/" + "{refGenome}.filtered.vcf.gz.csi",
+        filtered = "results/{refGenome}/QC/filtered.vcf.gz",
+        filtered_idx = "results/{refGenome}/QC/filtered.vcf.gz.csi",
         pruned = "results/{refGenome}/QC/{refGenome}.pruned.vcf.gz",
         snpqc = "results/{refGenome}/QC/{refGenome}_snpqc.txt",
         fai = "results/{refGenome}/QC/{refGenome}.fna.fai",
         sumstats = "results/{refGenome}/QC/{refGenome}_bam_sumstats.txt"
     conda:
-        "../envs/qc.yml"
+        "envs/qc.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['vcftools']['mem']
+        
     shell:
         """
         ##first remove filtered sites and retain only biallelic SNPs
@@ -85,8 +101,7 @@ rule plink:
         vcf = "results/{refGenome}/QC/{refGenome}.pruned.vcf.gz",
         faiResult = "results/{refGenome}/QC/{refGenome}_fai_tmp.txt"        
     params:
-        prefix = os.path.join(workflow.default_remote_prefix, ("results/{refGenome}/QC/{refGenome}")),
-        threads = config['plink']['threads']
+        prefix = lambda wc, input: input.vcf.replace(".pruned.vcf.gz", "")
     output: 
         bed = "results/{refGenome}/QC/{refGenome}.bed",
         bim = "results/{refGenome}/QC/{refGenome}.bim",
@@ -98,9 +113,9 @@ rule plink:
         king = "results/{refGenome}/QC/{refGenome}.king"
 
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['vcftools']['mem']    # this is the overall memory requested
+        
     conda:
-        "../envs/qc.yml"
+        "envs/qc.yml"
     shell:
         #plink 2 for king relatedness matrix (robust to structure) and plink 1.9 for distance matrix
         """
@@ -120,12 +135,11 @@ rule admixture:
         admix = "results/{refGenome}/QC/{refGenome}.3.Q",
         admix2 = "results/{refGenome}/QC/{refGenome}.2.Q"
     params:
-        tmpbim = "results/{refGenome}/QC/{refGenome}",
-        outdir = os.path.join(workflow.default_remote_prefix, (config['output'] + "{Organism}/{refGenome}/" + config['qcDir']))
+        outdir = lambda wc, input: input.bed.rsplit("/", 1)[0]
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['admixture']['mem'] 
+        
     conda:
-        "../envs/qc.yml"
+        "envs/qc.yml"
     shell:
         """
         mv {input.bim} {input.bim}.orig
@@ -134,20 +148,18 @@ rule admixture:
         admixture {input.bed} 2
         admixture {input.bed} 3
 
-        mv "{wildcards.Organism}_{wildcards.refGenome}".2.* {params.outdir}
-        mv "{wildcards.Organism}_{wildcards.refGenome}".3.* {params.outdir}
+        mv "{wildcards.refGenome}".2.* {params.outdir}
+        mv "{wildcards.refGenome}".3.* {params.outdir}
         """
 
 rule generate_coords_file:
     output: 
         "results/{refGenome}/QC/{refGenome}.coords.txt"
     run:
-
         out_df = samples[["BioSample", "long", "lat"]]
         out_df.drop_duplicates("BioSample", inplace=True)
         out_df.dropna(subset=["long", "lat"], thresh=1, inplace=True)
-        outpath = os.path.join(workflow.default_remote_prefix, config['output'], f"{wildcards.Organism}/{wildcards.ref}/", config['qcDir'], f"{wildcards.Organism}_{wildcards.refGenome}.coords.txt")
-        out_df.to_csv(outpath, index=False, sep="\t")
+        out_df.to_csv(output[0], index=False, sep="\t")
 
 
 rule qc_plots:
@@ -181,8 +193,8 @@ rule qc_plots:
     output: 
         qcpdf = "results/{refGenome}/QC/{refGenome}_qc.html"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['vcftools']['mem'] # this is the overall memory requested
+        
     conda:
-        "../envs/qc.yml"
+        "envs/qc.yml"
     script:
-        "../scripts/qc_dashboard_render.R"
+        "scripts/qc_dashboard_render.R"

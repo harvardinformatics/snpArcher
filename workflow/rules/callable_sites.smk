@@ -6,9 +6,9 @@ rule genmap:
     conda:
         "../envs/genmap.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['genmap']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * config['genmap']['mem']
     threads:
-        res_config['genmap']['threads']
+        config['genmap']['threads']
     params:
         indir = os.path.join(workflow.default_remote_prefix, (config['output'] + "{refGenome}/" + "genmap_index")),
         outdir = os.path.join(workflow.default_remote_prefix, (config['output'] + "{refGenome}/" + "genmap"))
@@ -46,9 +46,9 @@ rule compute_d4:
     conda:
         "../envs/callable.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['compute_d4']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * config['compute_d4']['mem']
     threads:
-        res_config['compute_d4']['threads']
+        config['compute_d4']['threads']
     params:
         prefix = config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}"
     shell:
@@ -64,7 +64,7 @@ rule merge_d4:
     conda:
         "../envs/callable.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['merge_d4']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * config['merge_d4']['mem']
     shell:
         "d4tools merge {input.d4files} {output}"
 
@@ -100,7 +100,7 @@ rule callable_bed:
     conda:
         "../envs/callable.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['callable_bed']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * config['callable_bed']['mem']
     params:
         merge = config['callable_merge'],
         mappability = config['mappability_min'],

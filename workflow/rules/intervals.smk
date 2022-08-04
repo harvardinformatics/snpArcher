@@ -1,43 +1,68 @@
-ruleorder: index_ref > download_reference
-localrules: download_reference, index_ref
-
 rule picard_intervals:
     input:
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
-        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
-        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict",
+        ref = "results/{refGenome}/data/genome/{refGenome}.fna",
+        fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
+        dictf = "results/{refGenome}/data/genome/{refGenome}.dict"
     output:
-        intervals = temp(config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list")
+        intervals = temp("results/{refGenome}/intervals/picard_interval_list.list")
     params:
         minNmer = int(config['minNmer'])
     conda:
         '../envs/bam2vcf.yml'
     log:
-        "logs/{refGenome}/{Organism}.picard_intervals.log"
+        "logs/{refGenome}/picard_intervals/log.txt"
+    benchmark:
+        "benchmarks/{refGenome}/picard_intervals/benchmark.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['process_ref']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * config['process_ref']['mem']
     shell:
-        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} &> {log}\n"
+        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} OUTPUT_TYPE=ACGT &> {log}\n"
 
-checkpoint create_intervals:
+rule format_interval_list:
     input:
-        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
-        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict",
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
-        intervals = config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_output.interval_list"
-    params:
-        maxIntervalLen = int(config['maxIntervalLen']),
-        maxBpPerList = int(config['maxBpPerList']),
-        maxIntervalsPerList = int(config['maxIntervalsPerList']),
-        minNmer = int(config['minNmer']),
-        max_intervals = config['maxNumIntervals'],
-        missingBpTolerance = config['missingBpTolerance']
+        intervals = "results/{refGenome}/intervals/picard_interval_list.list"
     output:
-        config['output'] + "{Organism}/{refGenome}/" + config["intDir"] + "{refGenome}_intervals_fb.bed"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['create_intervals']['mem']
+        intervals = "results/{refGenome}/intervals/master_interval_list.list"
     run:
-        if config['split_by_n']:
-            LISTS = helperFun.createListsGetIndices(params.missingBpTolerance, params.maxIntervalLen, params.maxBpPerList, params.maxIntervalsPerList, params.minNmer, config["output"], config["intDir"], wildcards, input.dictf, input.intervals)
-        else:
-            LISTS = make_intervals(config["output"], config["intDir"], wildcards, input.dictf, params.max_intervals)
+        with open(output.intervals, "w") as out:
+            with open(input.intervals, "r") as inp:
+                for line in inp:
+                    if not line.startswith("@"):
+                        line = line.strip().split("\t")
+                        chrom, start, end = line[0], line[1], line[2]
+                        print(f"{chrom}:{start}-{end}", file=out)
+    
+
+checkpoint create_db_intervals:
+    input:
+        ref = "results/{refGenome}/data/genome/{refGenome}.fna",
+        intervals = "results/{refGenome}/intervals/master_interval_list.list"
+    output:
+        out_dir = directory("results/{refGenome}/intervals/db_intervals"),
+    params:
+        max_intervals = get_db_interval_count
+    conda:
+        '../envs/bam2vcf.yml'
+    shell:
+        """
+        gatk SplitIntervals -L {input.intervals} \
+        -O {output} -R {input.ref} -scatter {params} \
+        -mode INTERVAL_SUBDIVISION \
+        --interval-merging-rule OVERLAPPING_ONLY
+        """
+
+checkpoint create_gvcf_intervals:
+    input:
+        ref = "results/{refGenome}/data/genome/{refGenome}.fna",
+        intervals = "results/{refGenome}/intervals/master_interval_list.list"
+    output:
+        out_dir = directory("results/{refGenome}/intervals/gvcf_intervals"),
+    params:
+        max_intervals = config["num_gvcf_intervals"]
+    shell:
+        """
+        gatk SplitIntervals -L {input.intervals} \
+        -O {output} -R {input.ref} -scatter {params} \
+        -mode BALANCING_WITHOUT_INTERVAL_SUBDIVISION \
+        --interval-merging-rule OVERLAPPING_ONLY
+        """
