@@ -2,8 +2,9 @@ import pandas as pd
 import os
 include: "common.smk"
 
-configfile: "./config/config.yaml"
+configfile: "config/config.yaml"
 print(os.path.exists(config["samples"]))
+print(os.getcwd())
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
 species_counts = samples.drop_duplicates(subset = ["BioSample", "refGenome", "Organism"]).value_counts(subset=['refGenome', 'Organism'])  #get BioSample for each refGenome/Organism combination
 REFGENOME,ORGANISM = map(list, zip(*species_counts.index))

@@ -2,7 +2,7 @@
 # Variables you need to change
 ##############################
 
-samples: "test_coords.csv"            # name of the sample metadata CSV 
+samples: "workflow/modules/qc/config/test_coords.csv"            # name of the sample metadata CSV 
 intervals: True    #Set to True if you want to perform variant calling using interval approach. 
 sentieon: True  #set to True if you want to use sentieon, False if you want GATK
 sentieon_lic: "UCSC_Enbody_eval.lic" #set to path of sentieon license
