@@ -2,12 +2,12 @@
 # Variables you need to change
 ##############################
 
-samples: "/mnt/refactor/ccgp_workflow/.test/qc/test_coords.csv"            # name of the sample metadata CSV 
+samples: "config/test_coords.csv"            # name of the sample metadata CSV 
 intervals: True    #Set to True if you want to perform variant calling using interval approach. 
-sentieon: False  #set to True if you want to use sentieon, False if you want GATK
+sentieon: True  #set to True if you want to use sentieon, False if you want GATK
 sentieon_lic: "UCSC_Enbody_eval.lic" #set to path of sentieon license
-remote_reads: False # set if you want reads to be on google cloud storage remote
-remote_reads_prefix: "ccgp-raw-reads/41-Cyanocitta" # set to google bucket name where reads live
+remote_reads: True # Set True if reads are in a Google Bucket seperate from --default-remote-prefix. 
+remote_reads_prefix: "ccgp-raw-reads/41-Cyanocitta" # set to google bucket prefix where reads live
 
 ##############################
 # Variables you *might* need to change
