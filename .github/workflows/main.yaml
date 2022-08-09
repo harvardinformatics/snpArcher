@@ -28,4 +28,4 @@ jobs:
       with:
         snakefile: workflow/Snakefile
         directory: .test/qc/
-        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba --profile profiles/test_qc/"
+        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
