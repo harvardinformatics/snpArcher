@@ -48,7 +48,7 @@ rule concat_gvcfs:
     benchmark:
         "benchmarks/{refGenome}/concat_gvcfs/{sample}.txt"
     conda:
-        "../envs/qc.yml"
+        "../envs/bcftools.yml"
     shell:
         """
         bcftools concat -O z -o {output.gvcf} {input}

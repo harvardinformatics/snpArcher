@@ -16,6 +16,7 @@ def get_output():
     for ref in genomes:
         out.extend(expand("results/{refGenome}/final.vcf.gz", refGenome=ref))
         out.extend(expand("results/{refGenome}/summary_stats/bam_sumstats.txt", refGenome=ref))
+        out.extend(expand("result/{refGenome}/callable_sites.bed", refGenome=ref))
         if sample_counts[ref] > 2:
             out.append(rules.qc_all.input)
     return out
@@ -163,8 +164,8 @@ def get_input_for_mapfile(wildcards):
 
 def get_input_for_coverage(wildcards):
     # Gets the correct sample given the organism and reference genome for the bedgraph merge step
-    _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
-    d4files = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['sumstatDir'] + "{sample}" + ".per-base.d4", sample=_samples)
+    _samples = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    d4files = expand("results/{{refGenome}}/callable_sites/{sample}.per-base.d4", sample=_samples)
     return {'d4files': d4files}
 
 def get_bedgraphs(wildcards):

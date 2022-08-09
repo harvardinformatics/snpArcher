@@ -3,7 +3,7 @@ rule get_fastq_pe:
         temp("results/data/fastq/{refGenome}/{sample}/{run}_1.fastq.gz"),
         temp("results/data/fastq/{refGenome}/{sample}/{run}_2.fastq.gz")
     params:
-        outdir = "results/data/fastq/{refGenome}/{sample}/",
+        outdir = os.path.join(workflow.default_remote_prefix, "results/data/fastq/{refGenome}/{sample}/"),
     conda:
         "../envs/fastq2bam.yml"
     threads:
