@@ -26,13 +26,13 @@ The workflow requires a comma seperated metadata sheet to run. The fields of the
 | BioSample | The name of the sample. |
 | LibraryName | LibraryID for sample, **must be unique.** |
 | Run | The SRR for the sample, if applicable. If not, must be some **unique** value. |
-| Organism | The name of the organism. *See note* |
-| RefGenome | Reference genome accession, if applicable. *See note* |
-| BioProject | If applicable. Otherwise any value is acceptable. |
+| RefGenome | Reference genome accession, if applicable. Mutually exclusive with refPath. |
+| BioProject | Optional. |
 | fq1 | Optional. Path to read 1 for sample |
-| fq2 | Optional. Path to read 2 for sample | 
+| fq2 | Optional. Path to read 2 for sample |
+| refPath | Optional. Path to reference genome. Mutually exclusive with refGenome. |
 
-It is important to note that samples are proccessed together based on their `Organism` and `RefGenome` metadata. Thus if you want all of your samples genotyped together, all samples **must all share the same** `Organism` **name and also must share the same** `RefGenome` **value.** 
+It is important to note that samples are joint genotyped together based on `refGenome` value.
 
 If your reads are stored in somewhere seperate of the workflow (e.g.: a scratch disk) then you can specify the path to your reads using the `fq1` and `fq2` fields. 
 
@@ -55,16 +55,15 @@ The other file that needs to be updated can be found under `config/config.yml`:
 # Variables you need to change
 ##############################
 
-samples: "sample_sheets/<sample_sheet>.csv" # path to sample metadata CSV 
-tmp_dir: "tmp/"  # directory path for a temp dir 
-split_by_n: True # set to False to split by chromosome/scaffold; set to True to split on runs of Ns within chromosomes/scaffolds.
-sentieon: False  # set to True if you want to use sentieon, False if you want GATK
-sentieon_lic: "" # set to path of sentieon license
-remote_reads: False #set to True if your reads are stored in a remote Google Cloud bucket
-remote_reads_prefix: "" # name of bucket where reads live if above True.
+samples: "config/ecoli_samples.csv"  # path to the sample metadata CSV 
+intervals: True    #Set to True if you want to perform variant calling using interval (split by ns) approach. 
+sentieon: False  #set to True if you want to use sentieon, False if you want GATK
+sentieon_lic: ".lic" #set to path of sentieon license
+remote_reads: False # set if you want reads to be on google cloud storage remote
+remote_reads_prefix: "" # set to google bucket name where reads live
 ```
 
-To run this out of the box, we reccomend setting split_by_n to True and sentieon to False. 
+To run this out of the box, we reccomend setting `intervals` to True and `sentieon` to False. 
 
 The sample sheet with all of the samples to be run in the workflow should be placed in the `samples:` row.
 
@@ -81,13 +80,13 @@ e.g. switch between sentieon on scatter-gather, local vs google cloud, should in
 
 ## Output
 
-Output can be found in the `results` folder and includes everal key files:
+Output can be found in the `results` folder and includes several key files:
 
-* `results/{SPECIES_NAME}/{ASSEMBLY_NAME}`
+* `results/{refGenome}/`
 
 The main output of the pipeline is a single VCF with genotype calls for every individual: 
 
-* `results/{SPECIES_NAME}/{ASSEMBLY_NAME}/{SPECIES_NAME}_{ASSEMBLY_NAME}.final.vcf.gz`
+* `results/{refGenome}/final.vcf.gz`
 
 By default, this file contains all SNPs and Indels identified and has the basic GATK filters applied. No filtering has been done on the VCF, so it will include all individuals from the sample sheet and all variants identified. The filters are applied as annotations within the VCF file. 
 
