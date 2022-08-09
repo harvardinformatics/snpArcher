@@ -3,6 +3,7 @@ include: "rules/common.smk"
 include: "rules/sumstats.smk"
 include: "rules/fastq.smk"
 include: "rules/reference.smk"
+include: "rules/callable_sites.smk"
 
 if config['sentieon']:
     include: "rules/sentieon.smk"
