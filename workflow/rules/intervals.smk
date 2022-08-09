@@ -41,6 +41,10 @@ checkpoint create_db_intervals:
         out_dir = directory("results/{refGenome}/intervals/db_intervals"),
     params:
         max_intervals = get_db_interval_count
+    log:
+        "logs/{refGenome}/db_intervals/log.txt"
+    benchmark:
+        "benchmarks/{refGenome}/db_intervals/benchmark.txt"
     conda:
         '../envs/bam2vcf.yml'
     shell:
@@ -48,7 +52,7 @@ checkpoint create_db_intervals:
         gatk SplitIntervals -L {input.intervals} \
         -O {output} -R {input.ref} -scatter {params} \
         -mode INTERVAL_SUBDIVISION \
-        --interval-merging-rule OVERLAPPING_ONLY
+        --interval-merging-rule OVERLAPPING_ONLY &> {log}
         """
 
 checkpoint create_gvcf_intervals:
@@ -59,10 +63,16 @@ checkpoint create_gvcf_intervals:
         out_dir = directory("results/{refGenome}/intervals/gvcf_intervals"),
     params:
         max_intervals = config["num_gvcf_intervals"]
+    log:
+        "logs/{refGenome}/gvcf_intervals/log.txt"
+    benchmark:
+        "benchmarks/{refGenome}/gvcf_intervals/benchmark.txt"
+    conda:
+        '../envs/bam2vcf.yml'
     shell:
         """
         gatk SplitIntervals -L {input.intervals} \
         -O {output} -R {input.ref} -scatter {params} \
         -mode BALANCING_WITHOUT_INTERVAL_SUBDIVISION \
-        --interval-merging-rule OVERLAPPING_ONLY
+        --interval-merging-rule OVERLAPPING_ONLY  &> {log}
         """
