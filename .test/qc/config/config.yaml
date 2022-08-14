@@ -2,7 +2,8 @@
 # Variables you need to change
 ##############################
 
-samples: "config/test_coords.csv"            # name of the sample metadata CSV 
+samples: "config/test_coords.csv"            # name of the sample metadata CSV
+resource_config: "config/resources.yaml"  # path to resources yaml config
 intervals: True    #Set to True if you want to perform variant calling using interval approach. 
 sentieon: False  #set to True if you want to use sentieon, False if you want GATK
 sentieon_lic: "" #set to path of sentieon license
