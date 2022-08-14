@@ -112,7 +112,7 @@ rule callable_bed:
         cov = "results/{refGenome}/callable_sites/callable_sites_cov.bed",
         map = "results/{refGenome}/genmap/sorted_mappability.bg"
     output:
-        callable_sites = "result/{refGenome}/callable_sites.bed",
+        callable_sites = "results/{refGenome}/callable_sites.bed",
         tmp_cov = temp("results/{refGenome}/callable_sites/temp_cov.bed"),
         tmp_map = temp("results/{refGenome}/callable_sites/temp_map.bed")
     conda:

@@ -18,7 +18,7 @@ def get_output():
     for ref in genomes:
         out.extend(expand("results/{refGenome}/final.vcf.gz", refGenome=ref))
         out.extend(expand("results/{refGenome}/summary_stats/bam_sumstats.txt", refGenome=ref))
-        out.extend(expand("result/{refGenome}/callable_sites.bed", refGenome=ref))
+        out.extend(expand("results/{refGenome}/callable_sites.bed", refGenome=ref))
         if sample_counts[ref] > 2:
             out.append(rules.qc_all.input)
     return out
