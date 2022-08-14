@@ -9,7 +9,7 @@ rule bam_sumstats:
     conda:
         "../envs/fastq2bam.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['bam_sumstats']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['bam_sumstats']['mem']
     shell:
         """
         samtools coverage --output {output.cov} {input.bam}

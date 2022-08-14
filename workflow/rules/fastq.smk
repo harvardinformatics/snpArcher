@@ -7,9 +7,9 @@ rule get_fastq_pe:
     conda:
         "../envs/fastq2bam.yml"
     threads:
-        config['get_fastq_pe']['threads']
+        resources['get_fastq_pe']['threads']
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['get_fastq_pe']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['get_fastq_pe']['mem']
     shell:
         """
         set +e
@@ -38,9 +38,9 @@ rule fastp:
     conda:
         "../envs/fastq2bam.yml"
     threads:
-        config['fastp']['threads']
+        resources['fastp']['threads']
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['fastp']['mem'],
+        mem_mb = lambda wildcards, attempt: attempt * resources['fastp']['mem'],
     log:
         "logs/{refGenome}/fastp/{sample}/{run}.txt"
     benchmark:

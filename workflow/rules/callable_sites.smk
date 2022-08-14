@@ -14,9 +14,9 @@ rule genmap:
     conda:
         "../envs/genmap.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['genmap']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['genmap']['mem']
     threads:
-        config['genmap']['threads'] 
+        resources['genmap']['threads'] 
     shell:
         # snakemake creates the output directory before the shell command, but genmap doesnt like this. so we remove the directory first.
         """
@@ -56,7 +56,7 @@ rule compute_d4:
     benchmark:
         "benchmarks/{refGenome}/compute_d4/{sample}.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['compute_d4']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['compute_d4']['mem']
     threads:
         config['compute_d4']['threads']
     params:
@@ -76,7 +76,7 @@ rule merge_d4:
     benchmark:
         "benchmarks/{refGenome}/merge_d4/benchmark.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['merge_d4']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['merge_d4']['mem']
     shell:
         "d4tools merge {input.d4files} {output} &> {log}"
 
@@ -118,7 +118,7 @@ rule callable_bed:
     conda:
         "../envs/callable.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['callable_bed']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['callable_bed']['mem']
     params:
         merge = config['callable_merge'],
         mappability = config['mappability_min'],
