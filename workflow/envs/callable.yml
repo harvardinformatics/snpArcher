@@ -1,7 +1,7 @@
 channels:
-  - defaults
-  - bioconda
   - conda-forge
+  - bioconda
+  - defaults  
 dependencies:
   - bedtools==2.30.0
   - ucsc-fatotwobit==377
