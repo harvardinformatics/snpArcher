@@ -4,7 +4,6 @@ channels:
   - conda-forge
 dependencies:
   - bedtools==2.30.0
-  - htslib==1.14
   - ucsc-fatotwobit==377
   - ucsc-twobitinfo==377
   - ucsc-bedtobigbed==377
