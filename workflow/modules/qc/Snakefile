@@ -62,8 +62,7 @@ rule subsample_snps:
         sumstats = "results/{refGenome}/QC/{refGenome}_bam_sumstats.txt"
     conda:
         "envs/qc.yml"
-    resources:
-        
+    
     shell:
         """
         ##first remove filtered sites and retain only biallelic SNPs
@@ -109,8 +108,7 @@ rule plink:
         distid = "results/{refGenome}/QC/{refGenome}.dist.id",
         king = "results/{refGenome}/QC/{refGenome}.king"
 
-    resources:
-        
+  
     conda:
         "envs/qc.yml"
     shell:
@@ -133,8 +131,7 @@ rule admixture:
         admix2 = "results/{refGenome}/QC/{refGenome}.2.Q"
     params:
         outdir = lambda wc, input: input.bed.rsplit("/", 1)[0]
-    resources:
-        
+
     conda:
         "envs/qc.yml"
     shell:
@@ -189,8 +186,7 @@ rule qc_plots:
         GMKey = config['GoogleAPIKey']
     output: 
         qcpdf = "results/{refGenome}/QC/{refGenome}_qc.html"
-    resources:
-        
+  
     conda:
         "envs/qc.yml"
     script:

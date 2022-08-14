@@ -12,13 +12,13 @@ rule sentieon_map:
         rg = get_read_group,
     conda:
         "../envs/sentieon.yml"
-    threads: config['bwa_map']['threads']
+    threads: resources['bwa_map']['threads']
     log:
         "logs/{refGenome}/sentieon_map/{sample}/{run}.txt"
     benchmark:
         "benchmarks/{refGenome}/sentieon_map/{sample}/{run}.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['bwa_map']['mem'],
+        mem_mb = lambda wildcards, attempt: attempt * resources['bwa_map']['mem'],
     shell:
         """
         export MALLOC_CONF=lg_dirty_mult:-1
@@ -59,9 +59,9 @@ rule sentieon_dedup:
     benchmark:
         "benchmarks/{refGenome}/sentieon_dedup/{sample}.txt"
     threads: 
-        config['dedup']['threads']
+        resources['dedup']['threads']
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['dedup']['mem'],
+        mem_mb = lambda wildcards, attempt: attempt * resources['dedup']['mem'],
     shell:
         """
         export SENTIEON_LICENSE={input.lic}
@@ -82,7 +82,7 @@ rule sentieon_haplotyper:
         gvcf_idx = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz.tbi",
     threads: 1
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['bam2gvcf']['mem'],
+        mem_mb = lambda wildcards, attempt: attempt * resources['bam2gvcf']['mem'],
     conda:
         "../envs/sentieon.yml"
     log:
@@ -109,7 +109,7 @@ rule sentieon_combine_gvcf:
         sentieon_combine_gvcf_cmd_line
     threads: 1
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['bam2gvcf']['mem'],
+        mem_mb = lambda wildcards, attempt: attempt * resources['bam2gvcf']['mem'],
     conda:
         "../envs/sentieon.yml"
     log:
@@ -138,7 +138,7 @@ rule filter_vcf:
     conda:
         "../envs/bam2vcf.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['filterVcfs']['mem'],   # this is the overall memory requested
+        mem_mb = lambda wildcards, attempt: attempt * resources['filterVcfs']['mem'],   # this is the overall memory requested
     log:
         "logs/{refGenome}/sentieon_combine_gvcf/log.txt"
     benchmark:

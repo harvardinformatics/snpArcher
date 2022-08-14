@@ -14,7 +14,7 @@ rule picard_intervals:
     benchmark:
         "benchmarks/{refGenome}/picard_intervals/benchmark.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['process_ref']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['process_ref']['mem']
     shell:
         "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} OUTPUT_TYPE=ACGT &> {log}\n"
 

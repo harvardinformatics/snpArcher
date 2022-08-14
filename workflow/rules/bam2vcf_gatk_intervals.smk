@@ -17,8 +17,8 @@ rule bam2gvcf:
     resources:
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
         # subtract that memory here
-        mem_mb = lambda wildcards, attempt: attempt * config['bam2gvcf']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (config['bam2gvcf']['mem'] - 3000)  # this is the maximum amount given to java
+        mem_mb = lambda wildcards, attempt: attempt * resources['bam2gvcf']['mem'],   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: attempt * (resources['bam2gvcf']['mem'] - 3000)  # this is the maximum amount given to java
     log:
         "logs/{refGenome}/gatk_hc/{sample}/{l}.txt"
     benchmark:
@@ -81,8 +81,8 @@ rule gvcf2DB:
         db = temp(directory("results/{refGenome}/genomics_db_import/DB_L{l}")),
         tar = temp("results/{refGenome}/genomics_db_import/DB_L{l}.tar"),        
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['gvcf2DB']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: int(attempt * config['gvcf2DB']['mem'] * 0.80) # this is the maximum amount given to java
+        mem_mb = lambda wildcards, attempt: attempt * resources['gvcf2DB']['mem'],   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: int(attempt * resources['gvcf2DB']['mem'] * 0.80) # this is the maximum amount given to java
     log:
         "logs/{refGenome}/gatk_db_import/{l}.txt"
     benchmark:
@@ -122,8 +122,8 @@ rule DB2vcf:
         het = config['het_prior'],
         db = lambda wc, input: input.db[:-4]
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['DB2vcf']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (config['DB2vcf']['mem'] - 3000)  # this is the maximum amount given to java
+        mem_mb = lambda wildcards, attempt: attempt * resources['DB2vcf']['mem'],   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: attempt * (resources['DB2vcf']['mem'] - 3000)  # this is the maximum amount given to java
     log:
         "logs/{refGenome}/gatk_genotype_gvcfs/{l}.txt"
     benchmark:
@@ -157,7 +157,7 @@ rule filterVcfs:
     conda:
         "../envs/bam2vcf.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['filterVcfs']['mem']   # this is the overall memory requested
+        mem_mb = lambda wildcards, attempt: attempt * resources['filterVcfs']['mem']   # this is the overall memory requested
     log:
         "logs/{refGenome}/gatk_filter/{l}.txt"
     benchmark:
@@ -192,8 +192,8 @@ rule sort_gatherVcfs:
     benchmark:
         "benchmarks/{refGenome}/sort_gather_vcfs/benchmark.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['gatherVcfs']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (config['gatherVcfs']['mem'] - 2000)  # this is the maximum amount given to java
+        mem_mb = lambda wildcards, attempt: attempt * resources['gatherVcfs']['mem'],   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: attempt * (resources['gatherVcfs']['mem'] - 2000)  # this is the maximum amount given to java
     shell:
         """
         bcftools concat -D -a -Ou {input.vcfs} 2> {log}| bcftools sort -Oz -o {output.vcfFinal} - 2>> {log}

@@ -36,7 +36,7 @@ rule index_reference:
     conda:
         "../envs/fastq2bam.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['index_ref']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['index_ref']['mem']
     log:
         "logs/{refGenome}/index_ref/log.txt"
     benchmark:

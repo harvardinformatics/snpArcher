@@ -2,11 +2,13 @@ import glob
 import re
 import os
 import pandas as pd
+from yaml import safe_load
 from collections import defaultdict, deque
 from snakemake.exceptions import WorkflowError
 
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
-
+with open(config["resource_config"], "r") as f:
+    resources = safe_load(f)
 
 def get_output():
     out = []
