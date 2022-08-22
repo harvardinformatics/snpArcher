@@ -1,64 +1,34 @@
-import pandas as pd
-import yaml
-import helperFun
-from snakemake.remote.GS import RemoteProvider as GSRemoteProvider
-localrules: all
 configfile: "config/config.yaml"
-res_config = yaml.safe_load(open("config/resources.yaml"))
-
-helperFun.make_temp_dir()
-samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
-species_counts = samples.drop_duplicates(subset = ["BioSample", "refGenome", "Organism"]).value_counts(subset=['refGenome', 'Organism'])  #get BioSample for each refGenome/Organism combination
-REFGENOME,ORGANISM = map(list, zip(*species_counts.index))  # split index into ref genome and organism
-
-if config['remote_reads']:
-    GS = GSRemoteProvider()
-    GS_READS_PREFIX = config['remote_reads_prefix']
-
-def get_output(refGenome, Organism):
-    indexes = zip(refGenome,Organism)
-    files = list()
-    if not config['test_qc']:
-        for idx in indexes:
-            if species_counts[idx] > 2:
-                files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + "_qc.html")
-            else:
-                files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + ".imiss")
-                files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + ".idepth")
-                files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + "_snpqc.txt")
-        files.append(
-           expand(config['output'] + "{refGenome}/" + "genmap/{refGenome}.sorted_genmap.bg", zip, Organism=ORGANISM, refGenome=REFGENOME),
-        )
-        files.append(
-            expand(config['output'] + "{Organism}/{refGenome}/" + config['qcDir'] + "{Organism}_{refGenome}_bam_sumstats.txt", zip, Organism=ORGANISM, refGenome=REFGENOME)
-        )
-        # files.append(
-        #    expand(config['output'] + "{Organism}/{refGenome}/" + config['angsdDir'] + "{Organism}_{refGenome}.cov", zip, Organism=ORGANISM, refGenome=REFGENOME)
-        # )
-        # files.append(
-        #     expand(config['output'] + "{Organism}/{refGenome}/" + "{Organism}_{refGenome}.callable_sites.bed", zip, Organism=ORGANISM, refGenome=REFGENOME)
-        # )
-
-    else:
-        for idx in indexes:
-            files.append(config['output'] + idx[1] + "/" + idx[0] + "/" + config['qcDir'] + idx[1] + "_" + idx[0] + "_qc.html")
-    return files
-
-rule all:
-    input:
-        get_output(REFGENOME,ORGANISM),
-    
-        
-        
 include: "rules/common.smk"
-include: "rules/qc.smk"
 include: "rules/sumstats.smk"
+include: "rules/fastq.smk"
+include: "rules/reference.smk"
 include: "rules/callable_sites.smk"
-include: "rules/angsd.smk"
 
 if config['sentieon']:
     include: "rules/sentieon.smk"
 else:
-    include: "rules/bam2vcf_gatk.smk"
     include: "rules/fastq2bam.smk"
-    include: "rules/intervals.smk"
+    if config['intervals']:
+        include: "rules/bam2vcf_gatk_intervals.smk"
+        include: "rules/intervals.smk"
+    else:
+        include: "rules/bam2vcf_gatk.smk"
+
+if config['remote_reads']:
+    from snakemake.remote.GS import RemoteProvider as GSRemoteProvider
+    GS = GSRemoteProvider()
+    GS_READS_PREFIX = config['remote_reads_prefix']
+
+module qc:
+    snakefile:
+        "modules/qc/Snakefile"
+    config:
+        config
+
+use rule * from qc as qc_*
+       
+rule all:
+    input:
+        get_output()
+    default_target: True

@@ -26,6 +26,6 @@ jobs:
     - name: Test workflow (QC rules)
       uses: snakemake/snakemake-github-action@v1.24.0
       with:
-        snakefile: workflow/Snakefile
+        snakefile: workflow/modules/qc/Snakefile
         directory: .test/qc/
         args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
