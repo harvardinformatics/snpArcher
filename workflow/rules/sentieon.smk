@@ -133,16 +133,16 @@ rule filter_vcf:
         indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"]),
         dictf = "results/{refGenome}/data/genome/{refGenome}.dict"
     output:
-        vcf = "results/{refGenome}/final.vcf.gz",
-        tbi = "results/{refGenome}/final.vcf.gz.tbi"
+        vcf = "results/{refGenome}/{prefix}_final.vcf.gz",
+        tbi = "results/{refGenome}/{prefix}_final.vcf.gz.tbi"
     conda:
         "../envs/bam2vcf.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['filterVcfs']['mem'],   # this is the overall memory requested
     log:
-        "logs/{refGenome}/sentieon_combine_gvcf/log.txt"
+        "logs/{refGenome}/sentieon_combine_gvcf/{prefix}_log.txt"
     benchmark:
-        "benchmarks/{refGenome}/sentieon_combine_gvcf/benchmark.txt"
+        "benchmarks/{refGenome}/sentieon_combine_gvcf/{prefix}_benchmark.txt"
     shell:
         "gatk VariantFiltration "
         "-R {input.ref} "

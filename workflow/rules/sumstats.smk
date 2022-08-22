@@ -54,7 +54,7 @@ rule collect_sumstats:
     input:
         unpack(get_input_sumstats)
     output:
-        "results/{refGenome}/summary_stats/bam_sumstats.txt"
+        "results/{refGenome}/summary_stats/{prefix}_bam_sumstats.txt"
     run:
         if not config['sentieon']:
             FractionReadsPassFilter, NumReadsPassFilter = collectFastpOutput(input.fastpFiles)

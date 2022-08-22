@@ -58,7 +58,7 @@ rule compute_d4:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['compute_d4']['mem']
     threads:
-        config['compute_d4']['threads']
+        resources['compute_d4']['threads']
     params:
         prefix = os.path.join(workflow.default_remote_prefix, "results/{refGenome}/callable_sites/{sample}")
     shell:
@@ -112,9 +112,9 @@ rule callable_bed:
         cov = "results/{refGenome}/callable_sites/callable_sites_cov.bed",
         map = "results/{refGenome}/genmap/sorted_mappability.bg"
     output:
-        callable_sites = "results/{refGenome}/callable_sites.bed",
-        tmp_cov = temp("results/{refGenome}/callable_sites/temp_cov.bed"),
-        tmp_map = temp("results/{refGenome}/callable_sites/temp_map.bed")
+        callable_sites = "results/{refGenome}/{prefix}_callable_sites.bed",
+        tmp_cov = temp("results/{refGenome}/{prefix}_callable_sites/temp_cov.bed"),
+        tmp_map = temp("results/{refGenome}/{prefix}_callable_sites/temp_map.bed")
     conda:
         "../envs/callable.yml"
     resources:
