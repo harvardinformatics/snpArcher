@@ -38,6 +38,5 @@ tmp/
 .test/ecoli/results/
 .test/ecoli/data/
 *.lic
-config/*
-config/config.yaml
+
 ccgp-workflow-results/

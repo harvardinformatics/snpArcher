@@ -1,166 +1,58 @@
-ruleorder: index_ref > download_reference
-
-### RULES ###
-
-rule get_fastq_pe:
-    output:
-        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_1.fastq.gz"),
-        temp(config["fastqDir"] + "{Organism}/{sample}/{run}_2.fastq.gz")
-    params:
-        outdir = config["fastqDir"] + "{Organism}/{sample}/",
-        tmpdir = config['tmp_dir'],
-        sra_url = lambda wildcards: get_ena_url(wildcards)["sra_url"],
-        fastq_url = lambda wildcards: get_ena_url(wildcards)["fastq_url"]    
-    conda:
-        "../envs/fastq2bam.yml"
-    threads:
-        res_config['get_fastq_pe']['threads']
-    log:
-        "logs/{Organism}/get_fastq/{sample}/{run}.txt"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['get_fastq_pe']['mem']
-    shell:
-        """
-        set +e
-
-        #delete existing prefetch file in case of previous run failure
-        rm -rf {wildcards.run}
-
-        ##attempt to get SRA file from NCBI (prefetch) or ENA (wget)
-        prefetch --max-size 1T {wildcards.run}
-        prefetchExit=$?
-        if [[ $prefetchExit -ne 0 ]]
-        then
-            wget -O {wildcards.run} {params.sra_url}
-        fi
-        ##if this succeeded, we'll have the correct file in our working directory
-        if [[ -s {wildcards.run} ]]
-        then
-            fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {params.tmpdir}
-            pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
-        else
-            wget -P {params.outdir} {params.fastq_url}/{wildcards.run}_1.fastq.gz
-            wget -P {params.outdir} {params.fastq_url}/{wildcards.run}_2.fastq.gz
-        fi
-        rm -rf {wildcards.run}
-        """
-
-rule download_reference:
-    input:
-        ref = get_ref
-    output:
-        ref = config["refGenomeDir"] + "{refGenome}.fna"
-    params:
-        dataset = config["refGenomeDir"] + "{refGenome}_dataset.zip",
-        outdir = config["refGenomeDir"] + "{refGenome}"
-    conda:
-        "../envs/fastq2bam.yml"
-    shell:
-        """
-        if [ -z "{input.ref}" ]  # check if this is empty
-        then
-            datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} \
-            && 7z x {params.dataset} -aoa -o{params.outdir} \
-            && cat {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}
-        else
-            cp {input.ref} {output.ref}
-        fi
-        """
-rule index_ref:
-    input:
-        ref = config["refGenomeDir"] + "{refGenome}.fna"
-    output:
-        indexes = expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"]),
-        fai = config["refGenomeDir"] + "{refGenome}.fna" + ".fai",
-        dictf = config["refGenomeDir"] + "{refGenome}" + ".dict"
-    conda:
-        "../envs/fastq2bam.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['index_ref']['mem']
-    log:
-        "logs/index_ref/{refGenome}.log"
-    shell:
-        """
-        bwa index {input.ref} 2> {log}
-        samtools faidx {input.ref} --output {output.fai}
-        samtools dict {input.ref} -o {output.dictf} >> {log} 2>&1
-        """
-
-rule fastp:
-    input:
-        unpack(get_reads)
-    output:
-        r1 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz"),
-        r2 = temp(config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz"),
-        summ = temp(config['output'] + "{Organism}/{refGenome}/" + config['sumstatDir'] + "{sample}/{run}.out")
-    conda:
-        "../envs/fastq2bam.yml"
-    threads:
-        res_config['fastp']['threads']
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['fastp']['mem']
-    log:
-        "logs/{Organism}/fastp/{refGenome}_{sample}_{run}.txt"
-    shell:
-        "fastp --in1 {input.r1} --in2 {input.r2} "
-        "--out1 {output.r1} --out2 {output.r2} "
-        "--thread {threads} "
-        "--detect_adapter_for_pe "
-        "-j /dev/null -h /dev/null "
-        "2> {output.summ} > {log}"
-
 rule bwa_map:
     input:
-        ref = config["refGenomeDir"] + "{refGenome}.fna",
-        r1 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_1.fastq.gz",
-        r2 = config['output'] + "{Organism}/{refGenome}/" + config['fastqFilterDir'] + "{sample}/{run}_2.fastq.gz",
-        indices = expand(config["refGenomeDir"] + "{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb"])
-    output:
-        bam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "preMerge/{sample}/{run}.bam")
+        ref = "results/{refGenome}/data/genome/{refGenome}.fna",
+        r1 = "results/{refGenome}/filtered_fastqs/{sample}/{run}_1.fastq.gz",
+        r2 = "results/{refGenome}/filtered_fastqs/{sample}/{run}_2.fastq.gz",
+        indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"]),
+    output: 
+        bam = temp("results/{refGenome}/bams/preMerge/{sample}/{run}.bam"),
+        bai = temp("results/{refGenome}/bams/preMerge/{sample}/{run}.bam.bai"),
     params:
-        get_read_group_bwa
+        rg = get_read_group
     conda:
         "../envs/fastq2bam.yml"
     threads:
-        res_config['bwa_map']['threads']
+        resources['bwa_map']['threads']
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['bwa_map']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['bwa_map']['mem']
     log:
-        "logs/{Organism}/bwa/{refGenome}_{sample}_{run}.txt"
+        "logs/{refGenome}/bwa_mem/{sample}/{run}.txt"
     benchmark:
-        "benchmarks/{Organism}/bwa/{refGenome}_{sample}_{run}.txt"
+        "benchmarks/{refGenome}/bwa_mem/{sample}/{run}.txt"
     shell:
-        "bwa mem -M -t {threads} {params} {input.ref} {input.r1} {input.r2} 2> {log} | samtools sort -o {output.bam} -"
+        "bwa mem -M -t {threads} -R {params.rg} {input.ref} {input.r1} {input.r2} 2> {log} | samtools sort -o {output.bam} - && samtools index {output.bam} {output.bai}"
 
 rule merge_bams:
     input:
-        lambda wildcards:
-        expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{{sample}}/{run}.bam", run=samples.loc[samples['BioSample'] == wildcards.sample]['Run'].tolist())
+        merge_bams_input
     output:
-        bam = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam"),
-        bai = temp(config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "postMerge/{sample}.bam.bai")
+        bam = temp("results/{refGenome}/bams/postMerge/{sample}.bam"),
+        bai = temp("results/{refGenome}/bams/postMerge/{sample}.bam.bai")
     conda:
         "../envs/fastq2bam.yml"
+    log:
+        "logs/{refGenome}/merge_bams/{sample}.txt"
+    benchmark:
+        "benchmarks/{refGenome}/merge_bams/{sample}.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * res_config['merge_bams']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['merge_bams']['mem']
     shell:
-        "samtools merge {output.bam} {input} && samtools index {output.bam}"
+        "samtools merge {output.bam} {input} && samtools index {output.bam} > {log}"
 
 rule dedup:
     input:
-        get_bams_for_dedup
+        unpack(dedup_input)
     output:
-        dedupBam = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + config['bam_suffix'],
-        dedupBai = config['output'] + "{Organism}/{refGenome}/" + config['bamDir'] + "{sample}" + "_final.bam.bai",
+        dedupBam = "results/{refGenome}/bams/{sample}_final.bam",
+        dedupBai = "results/{refGenome}/bams/{sample}_final.bam.bai",
     conda:
         "../envs/sambamba.yml"
     resources:
-        threads = res_config['dedup']['threads'],
-        mem_mb = lambda wildcards, attempt: attempt * res_config['dedup']['mem']
+        threads = resources['dedup']['threads'],
+        mem_mb = lambda wildcards, attempt: attempt * resources['dedup']['mem']
     log:
-        "logs/{Organism}/dedup/{refGenome}_{sample}.txt"
+        "logs/{refGenome}/sambamba_dedup/{sample}.txt"
     benchmark:
-        "benchmarks/{Organism}/dedup/{refGenome}_{sample}.txt"
+        "benchmarks/{refGenome}/sambamba_dedup/{sample}.txt"
     shell:
-        "sambamba markdup -t {threads} {input} {output.dedupBam} 2> {log}"
-
+        "sambamba markdup -t {threads} {input.bam} {output.dedupBam} 2> {log}"
