@@ -10,15 +10,18 @@ samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_',
 with open(config["resource_config"], "r") as f:
     resources = safe_load(f)
 
+
 def get_output():
+    if config["final_prefix"] == "":
+        raise(WorkflowError("'final_prefix' is not set in config."))
     out = []
     genomes = samples['refGenome'].unique().tolist()
     sample_counts = samples.drop_duplicates(subset = ["BioSample", "refGenome"]).value_counts(subset=['refGenome'])  #get BioSample for each refGenome
     out.extend
     for ref in genomes:
-        out.extend(expand("results/{refGenome}/final.vcf.gz", refGenome=ref))
-        out.extend(expand("results/{refGenome}/summary_stats/bam_sumstats.txt", refGenome=ref))
-        out.extend(expand("results/{refGenome}/callable_sites.bed", refGenome=ref))
+        out.extend(expand("results/{refGenome}/{prefix}_final.vcf.gz", refGenome=ref, prefix=config['final_prefix']))
+        out.extend(expand("results/{refGenome}/summary_stats/{prefix}_bam_sumstats.txt", refGenome=ref, prefix=config['final_prefix']))
+        out.extend(expand("results/{refGenome}/{prefix}_callable_sites.bed", refGenome=ref, prefix=config['final_prefix']))
         if sample_counts[ref] > 2:
             out.append(rules.qc_all.input)
     return out

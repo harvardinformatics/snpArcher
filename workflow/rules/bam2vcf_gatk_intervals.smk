@@ -183,14 +183,14 @@ rule sort_gatherVcfs:
         vcfs = get_interval_vcfs,
         tbis = get_interval_vcfs_idx
     output:
-        vcfFinal = "results/{refGenome}/final.vcf.gz",
-        vcfFinalidx = "results/{refGenome}/final.vcf.gz.tbi"
+        vcfFinal = "results/{refGenome}/{prefix}_final.vcf.gz",
+        vcfFinalidx = "results/{refGenome}/{prefix}_final.vcf.gz.tbi"
     conda:
         "../envs/bcftools.yml"
     log:
-        "logs/{refGenome}/sort_gather_vcfs/log.txt"
+        "logs/{refGenome}/sort_gather_vcfs/{prefix}_log.txt"
     benchmark:
-        "benchmarks/{refGenome}/sort_gather_vcfs/benchmark.txt"
+        "benchmarks/{refGenome}/sort_gather_vcfs/{prefix}_benchmark.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['gatherVcfs']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (resources['gatherVcfs']['mem'] - 2000)  # this is the maximum amount given to java

@@ -1,6 +1,6 @@
-###
-# fastq2bam workflow
-##
+########################################
+## RESOURCES ##
+########################################
 
 # fastq download
 get_fastq_pe:
@@ -10,8 +10,8 @@ get_fastq_pe:
 gzip_fastq:
     mem: 4000
 # fastp program
-fastp: 
-    threads: 1 
+fastp:
+    threads: 1
     mem: 4000
 # index reference
 index_ref:
@@ -22,23 +22,25 @@ genmap:
     mem: 4000
 genmap_sort:
     mem: 4000
-# bwa mapping
-bwa_map: 
-    threads: 1 
+  # bwa mapping
+bwa_map:
+    threads: 1
     mem: 4000
 # sort bam with picard's SortSam tool
-sort_bam: 
-    mem: 4000 
+sort_bam:
+    mem: 4000
 # mark duplicates with picard's MarkDuplicates
 dedup:
     threads: 1
-    mem: 4000 
+    mem: 4000
 # calculate BAM summaries with samtools and picard
-bam_sumstats: 
-    mem: 4000 
+bam_sumstats:
+    mem: 4000
 merge_bams:
     mem: 4000
-
+bedtools:
+    mem: 4000
+    
 ###
 # Intervals workflow
 ###
@@ -49,8 +51,7 @@ process_ref:
     mem: 4000
 # custom python algo to create intervals
 create_intervals:
-    mem: 5000
-
+    mem: 4000
 
 ## Callable sites workflow
 
@@ -62,7 +63,7 @@ genmap_sort:
     mem: 4000
 compute_d4:
     mem: 4000
-    threads: 4
+    threads: 1
 merge_d4:
     mem: 4000
 callable_bed:
@@ -73,13 +74,13 @@ callable_bed:
 ###
 
 # gatk HaplotypeCaller
-bam2gvcf: 
+bam2gvcf:
     mem: 4000
 # gatk GenomicsDBImport
 gvcf2DB:
     mem: 4000
-# gatk GenotypeGVCFs 
-DB2vcf: 
+# gatk GenotypeGVCFs
+DB2vcf:
     mem: 4000
 ## freebayes program only! ##
 bam2vcf:
@@ -101,6 +102,6 @@ bedtools:
     mem: 4000
 # plink
 plink:
-    threads: 5
+    threads: 1
 admixture:
     mem: 4000

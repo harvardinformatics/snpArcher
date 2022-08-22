@@ -4,6 +4,7 @@
 
 samples: "config/samples.csv"  # path to the sample metadata CSV
 resource_config: "config/resources.yaml"  # path to resources yaml config
+final_prefix: "" # prefix for final output files
 intervals: True    #Set to True if you want to perform variant calling using interval approach. 
 sentieon: True  #set to True if you want to use sentieon, False if you want GATK
 sentieon_lic: "UCSC_Enbody_eval.lic" #set to path of sentieon license
