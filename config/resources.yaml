@@ -40,6 +40,28 @@ merge_bams:
     mem: 9000
 bedtools:
     mem: 4000
+
+# Sentieon tools
+sentieon_map:
+    machine_type: "n2d-standard-32"
+    threads: 31
+    mem: 15000
+
+sentieon_dedup:
+    machine_type: "n2d-standard-32"
+    threads: 31
+    mem: 15000
+
+sentieon_haplotyper:
+    machine_type: "n2d-standard-32"
+    threads: 31
+    mem: 15000
+
+sentieon_combine_gvcf:
+    machine_type: "n2d-standard-32"
+    threads: 31
+    mem: 15000
+    disk_mb: 2000000
     
 ###
 # Intervals workflow
