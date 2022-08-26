@@ -12,13 +12,14 @@ rule sentieon_map:
         rg = get_read_group,
     conda:
         "../envs/sentieon.yml"
-    threads: resources['bwa_map']['threads']
+    threads: resources['sentieon_map']['threads']
     log:
         "logs/{refGenome}/sentieon_map/{sample}/{run}.txt"
     benchmark:
         "benchmarks/{refGenome}/sentieon_map/{sample}/{run}.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['bwa_map']['mem'],
+        mem_mb = lambda wildcards, attempt: attempt * resources['sentieon_map']['mem'],
+        machine_type = resources['sentieon_map']['machine_type']
     shell:
         """
         export MALLOC_CONF=lg_dirty_mult:-1
@@ -39,7 +40,7 @@ rule merge_bams:
     benchmark:
         "benchmarks/{refGenome}/merge_bams/{sample}.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['merge_bams']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['merge_bams']['mem']
     shell:
         "samtools merge {output.bam} {input} && samtools index {output.bam}"
 
@@ -59,9 +60,10 @@ rule sentieon_dedup:
     benchmark:
         "benchmarks/{refGenome}/sentieon_dedup/{sample}.txt"
     threads: 
-        resources['dedup']['threads']
+        resources['sentieon_dedup']['threads']
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['dedup']['mem'],
+        mem_mb = lambda wildcards, attempt: attempt * resources['sentieon_dedup']['mem'],
+        machine_type = resources['sentieon_dedup']['machine_type']
     shell:
         """
         export SENTIEON_LICENSE={input.lic}
@@ -80,9 +82,10 @@ rule sentieon_haplotyper:
     output:
         gvcf = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz",
         gvcf_idx = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz.tbi",
-    threads: 1
+    threads: resources['sentieon_haplotyper']['threads']
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['bam2gvcf']['mem'],
+        mem_mb = lambda wildcards, attempt: attempt * resources['sentieon_haplotyper']['mem'],
+        machine_type = resources['sentieon_haplotyper']['machine_type']
     conda:
         "../envs/sentieon.yml"
     log:
@@ -107,9 +110,11 @@ rule sentieon_combine_gvcf:
         tbi = temp("results/{refGenome}/vcfs/raw.vcf.gz.tbi")
     params:
         sentieon_combine_gvcf_cmd_line
-    threads: 1
+    threads: resources['sentieon_combine_gvcf']['threads']
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['bam2gvcf']['mem'],
+        mem_mb = lambda wildcards, attempt: attempt * resources['sentieon_combine_gvcf']['mem'],
+        machine_type = resources['sentieon_combine_gvcf']['machine_type'],
+        disk_mb = resources['sentieon_combine_gvcf']['disk_mb']
     conda:
         "../envs/sentieon.yml"
     log:

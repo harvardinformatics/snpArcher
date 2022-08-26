@@ -83,12 +83,13 @@ def get_gvcfs_db(wc):
 
 def dedup_input(wc):
     runs = samples.loc[samples['BioSample'] == wc.sample]['Run'].tolist()
+    
     if len(runs) == 1:
         bam = expand("results/{{refGenome}}/bams/preMerge/{{sample}}/{run}.bam", run=runs)
         bai = expand("results/{{refGenome}}/bams/preMerge/{{sample}}/{run}.bam.bai", run=runs)
     else:
-        bam = "results/{{refGenome}}/bams/postMerge/{{sample}}.bam"
-        bai = "results/{{refGenome}}/bams/postMerge/{{sample}}.bam.bai"
+        bam = "results/{refGenome}/bams/postMerge/{sample}.bam"
+        bai = "results/{refGenome}/bams/postMerge/{sample}.bam.bai"
     return {"bam": bam, "bai": bai}
 
 def sentieon_combine_gvcf_input(wc):
