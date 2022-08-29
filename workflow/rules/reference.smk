@@ -18,7 +18,7 @@ rule download_reference:
         """
         if [ -z "{input.ref}" ]  # check if this is empty
         then
-            mkdir -p data/genome
+            mkdir -p {params.outdir}
             datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome}> {log}\
             && 7z x {params.dataset} -aoa -o{params.outdir} \
             && cat {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}

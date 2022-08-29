@@ -109,7 +109,7 @@ rule sentieon_combine_gvcf:
         vcf = temp("results/{refGenome}/vcfs/raw.vcf.gz"),
         tbi = temp("results/{refGenome}/vcfs/raw.vcf.gz.tbi")
     params:
-        sentieon_combine_gvcf_cmd_line
+        lambda wc, input: " ".join(["-v " + gvcf for gvcf in input['gvcfs']])
     threads: resources['sentieon_combine_gvcf']['threads']
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['sentieon_combine_gvcf']['mem'],
