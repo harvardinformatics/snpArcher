@@ -1,6 +1,6 @@
 def get_coords_if_available(wildcards):
     if 'lat' in samples.columns and 'long' in samples.columns:
-        return "results/{refGenome}/QC/{refGenome}.coords.txt"
+        return "results/{refGenome}/QC/{prefix}.coords.txt"
     return []
 
 def check_contig_names(fai, touch_file):
