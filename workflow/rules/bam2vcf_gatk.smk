@@ -99,7 +99,7 @@ rule gvcf2DB:
             --tmp-dir {resources.tmpdir} \
             --sample-name-map {input.db_mapfile} &> {log}
         
-        tar --overwrite -cf {output.tar} {output.db}
+        tar -cf {output.tar} {output.db}
         """
 
 rule DB2vcf:
@@ -127,7 +127,7 @@ rule DB2vcf:
         "../envs/bam2vcf.yml"
     shell:
         """
-        tar --overwrite -xf {input.db}
+        tar -xf {input.db}
         gatk GenotypeGVCFs \
             --java-options '-Xmx{resources.reduced}m -Xms{resources.reduced}m' \
             -R {input.ref} \
