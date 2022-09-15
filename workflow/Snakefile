@@ -27,7 +27,7 @@ module qc:
         config
 
 use rule * from qc as qc_*
-       
+
 rule all:
     input:
         get_output()
