@@ -104,7 +104,7 @@ rule gvcf2DB:
             --tmp-dir {resources.tmpdir} \
             --sample-name-map {input.db_mapfile} &> {log}
         
-        tar -cf --overwrite {output.tar} {output.db}
+        tar --overwrite -cf {output.tar} {output.db}
         """
 
 rule DB2vcf:

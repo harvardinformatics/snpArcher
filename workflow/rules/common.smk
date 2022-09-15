@@ -1,7 +1,9 @@
-from glob import glob
+import glob
 import re
 import os
-
+import sys
+from collections import defaultdict
+from urllib.request import urlopen
 import pandas as pd
 from yaml import safe_load
 from collections import defaultdict, deque
@@ -35,7 +37,6 @@ def get_ref(wildcards):
     if 'refPath' in samples.columns:
         _refs = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['refPath'].dropna().unique().tolist()
         for ref in _refs:
-            print(ref)
             if not os.path.exists(ref):
                 raise WorkflowError(f"Reference genome {ref} does not exist")
             elif ref.rsplit(".", 1)[1] == '.gz':
@@ -181,13 +182,8 @@ def get_bedgraphs(wildcards):
     bedgraphFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{sample}" + ".sorted.bg", sample=_samples)
     return bedgraphFiles
 
-#!/usr/bin/python -tt
-import glob
-import os
-import sys
-import re
-from collections import defaultdict
-from urllib.request import urlopen
+
+
 
 
 def collectFastpOutput(fastpFiles):
