@@ -2,31 +2,27 @@
 # Variables you need to change
 ##############################
 
-samples: "config/ecoli_samples.csv"                         # name of the sample metadata CSV
-tmp_dir: "tmp/"                                       # directory path for a temp dir
-cluster_config: "profiles/slurm/cluster_config.yml"   # cluster configuration to use
+samples: "config/ecoli_samples.csv" # name of the sample metadata CSV
+resource_config: "config/resources.yaml" # path to resources yaml config
+final_prefix: "ecoli_test" # prefix for final output files
+intervals: True #Set to True if you want to perform variant calling using interval (split by ns) approach.
+sentieon: False #set to True if you want to use sentieon, False if you want GATK
+sentieon_lic: ".lic" #set to path of sentieon license
+remote_reads: False # set if you want reads to be on google cloud storage remote
+remote_reads_prefix: "" # set to google bucket name where reads live
 
 ##############################
 # Variables you *might* need to change
 ##############################
 
-# These parameters control how the genome is split into intervals for GATK
-split_by_n: False            #set to False to split by chromosome/scaffold; set to True to split on runs of Ns within chromosomes/scaffolds.
-
-# Only used if split_by_n is False
-maxNumIntervals: 2         # the maximum number of intervals when split_by_n is False. If your reference genome has hundreds of scaffolds, it can be helpful to set this to less than number of scaffolds.
-db_scatter_factor: 0.15
-# Only used when split_by_n is True
-minNmer: 500                # the minimum Nmer used to split up the genome; e.g. a value of 200 means only Nmers 200 or greater are used to define the boundaries of intervals. The minimum is 50.
-maxIntervalLen: 30000000    # the desired maximum size of an interval for calling variants; more than 2Mb is a good starting point
-maxBpPerList: 30000000      # the desired maximum number of bp per list file for GATK4; list files potentially contain many small intervals, and we cap the fraction of the genome contained in each list file here
-maxIntervalsPerList: 200    # the desired maximum number of intervals per list file for GATK4; this prevents list files from containing thousands of small intervals, which can slow parts of GATK4. Default is good.
-missingBpTolerance: 0       # the number of bp allowed to be missing from the interval list; increase if needed to solve issues with interval creation
+# Interval approach options, only applicable if intervals is True
+minNmer: 500 # the minimum Nmer used to split up the genome; e.g. a value of 200 means only Nmers 200 or greater are used to define the boundaries of intervals. The minimum is 50.
+num_gvcf_intervals: 3 # The maximum number of intervals to create for GVCF generation. Note: the actual number of intervals may be less than the specified value if the reference genome has very few gaps.
+db_scatter_factor: 0.15 # Scatter factor for calculating number of intervals to create for genomics db generation. (scatter_factor * num_samples * num_gvcf_intervals) gives us number of db intervals to create. Reccomend <1
 
 ## Coverage options ##
-## default pipeline is optimized for low coverage data
-## if using high coverage data (> 10x), uncomment high coverage options and comment out low coverage options
-
+## default pipeline is optimized for low coverage data - if using high coverage data (> 10x), uncomment high coverage options and comment out low coverage options
+min_depth: 2
 # low coverage options (< 10x)
 minP: 1
 minD: 1
@@ -35,43 +31,20 @@ minD: 1
 #minP: 2
 #minD: 4
 
-het_prior: 0.005    #prior probabilty of heterozygous site; changes likelihood of a site being called non-ref, but not genotype likelihoods
+het_prior: 0.005 #prior probabilty of heterozygous site; changes likelihood of a site being called non-ref, but not genotype likelihoods
 
 ########################################
 ## callable sites bed file thresholds ##
 ########################################
 
-mappability_min: 1    #regions of the genome with mappability less than this will be removed from callable sites bed file
-cov_threshold: 2      #regions of the genome with coverage above/below cov_thresh standard deviations will be filtered
+mappability_min: 1 #regions of the genome with mappability less than this will be removed from callable sites bed file
+cov_threshold: 2 #regions of the genome with coverage above/below cov_thresh standard deviations will be filtered
 
 #this ignores small regions of abberatant coverage/mappability as often these are just below the threshold
 #to do strict filtering, set to 0
 
-callable_merge: 100   #merge callable regions separated by this or fewer bp into a single region
+callable_merge: 100 #merge callable regions separated by this or fewer bp into a single region
 
 ## QC options ##
 nClusters: 3
-
-#information for read groups
-flowcell: "FLOWCELL"
-platform: "ILLUMINA"
-
-##############################
-# Variables you DO NOT need to change
-# if you do, ensure all path/directory names are followed by a "/"
-##############################
-
-output: "results/"                      # all output is stored here
-fastqDir: "data/fastq/"                 # this is where raw fastqs are downloaded
-refGenomeDir: "data/genome/"            # where reference genomes go
-bam_suffix: "_final.bam"                # name for final bam files
-
-# These variables control the output of the steps of the workflow (please have forward slash follow name!)
-fastqFilterDir: "00_fastqFiltered/"     # new directory created for filtered fastq reads
-bamDir: "01_mappedReads/"               # new directory created for BAM files
-sumstatDir: "02_bamSumstats/"           # new directory created for BAM summary statistics
-gvcfDir: "03_gvcfs/"                    # new directory created for gVCFs
-dbDir: "04_genomicsDB/"                 # new directory created for genome DB
-vcfDir_gatk: "05_vcfs/"                 # new directory created for vcfs
-qcDir: "06_QC/"                         # new directory created for QC output
-intDir: "intervalFiles/"                # new directory created for interval calculation output and lists
+GoogleAPIKey:
