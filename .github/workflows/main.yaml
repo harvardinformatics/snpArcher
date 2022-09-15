@@ -19,3 +19,13 @@ jobs:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
         args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+  Testing_QC:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Test workflow (QC rules)
+      uses: snakemake/snakemake-github-action@v1.24.0
+      with:
+        snakefile: workflow/modules/qc/Snakefile
+        directory: .test/qc/
+        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
