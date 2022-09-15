@@ -1,0 +1,19 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - plink2==2.00a2.3
+  - plink==1.90b6.21
+  - admixture==1.3.0
+  - bedtools==2.29.2
+  - bcftools==1.12
+  - vcftools==0.1.16
+  - r-base==4.1.1
+  - r-tidyverse==1.3.1
+  - r-plotly==4.9.4.1
+  - r-flexdashboard==0.5.2
+  - r-ape==5.5
+  - r-reshape2==1.4.4
+  - bioconductor-ggtree==3.2.0
+  - r-ggmap=3.0.0
