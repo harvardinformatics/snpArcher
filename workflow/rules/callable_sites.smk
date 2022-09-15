@@ -12,7 +12,7 @@ rule genmap:
     benchmark:
         "benchmarks/{refGenome}/genmap/benchmark.txt"
     conda:
-        "../envs/genmap.yml"
+        "../envs/callable.yml"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['genmap']['mem']
     threads:
