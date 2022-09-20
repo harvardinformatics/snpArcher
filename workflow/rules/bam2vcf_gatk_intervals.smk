@@ -51,7 +51,7 @@ rule concat_gvcfs:
         "../envs/bcftools.yml"
     shell:
         """
-        bcftools concat -O z -o {output.gvcf} {input}
+        bcftools concat -D -a -Ou {input} | bcftools sort -Oz -o {output.gvcf} -
         tabix -p vcf {output.gvcf}
         """
 
