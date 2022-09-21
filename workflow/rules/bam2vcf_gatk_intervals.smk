@@ -39,7 +39,7 @@ rule bam2gvcf:
 
 rule concat_gvcfs:
     input:
-        get_interval_gvcfs
+        unpack(get_interval_gvcfs)
     output:
         gvcf = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz",
         tbi = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz.tbi"
@@ -51,7 +51,7 @@ rule concat_gvcfs:
         "../envs/bcftools.yml"
     shell:
         """
-        bcftools concat -D -a -Ou {input} | bcftools sort -Oz -o {output.gvcf} -
+        bcftools concat -D -a -Ou {input.gvcfs} | bcftools sort -Oz -o {output.gvcf} -
         tabix -p vcf {output.gvcf}
         """
 
@@ -180,8 +180,7 @@ rule filterVcfs:
 
 rule sort_gatherVcfs:
     input:
-        vcfs = get_interval_vcfs,
-        tbis = get_interval_vcfs_idx
+        unpack(get_interval_vcfs)
     output:
         vcfFinal = "results/{refGenome}/{prefix}_final.vcf.gz",
         vcfFinalidx = "results/{refGenome}/{prefix}_final.vcf.gz.tbi"
