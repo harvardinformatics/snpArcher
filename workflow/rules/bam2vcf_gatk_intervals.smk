@@ -12,8 +12,8 @@ rule bam2gvcf:
         bai = "results/{refGenome}/bams/{sample}_final.bam.bai",
         l = "results/{refGenome}/intervals/gvcf_intervals/{l}-scattered.interval_list"
     output:
-        gvcf = temp("results/{refGenome}/interval_gvcfs/{sample}/{l}.raw.g.vcf.gz"),
-        gvcf_idx = temp("results/{refGenome}/interval_gvcfs/{sample}/{l}.raw.g.vcf.gz.tbi"),
+        gvcf = "results/{refGenome}/interval_gvcfs/{sample}/{l}.raw.g.vcf.gz",
+        gvcf_idx = "results/{refGenome}/interval_gvcfs/{sample}/{l}.raw.g.vcf.gz.tbi"
     resources:
         #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
         # subtract that memory here
