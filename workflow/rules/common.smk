@@ -3,6 +3,8 @@ import re
 import os
 import sys
 import tempfile
+import random
+import string
 from collections import defaultdict
 from urllib.request import urlopen
 import pandas as pd
