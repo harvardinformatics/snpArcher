@@ -197,7 +197,7 @@ rule sort_gatherVcfs:
         "benchmarks/{refGenome}/sort_gather_vcfs/{prefix}_benchmark.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['gatherVcfs']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (resources['gatherVcfs']['mem'] - 2000)  # this is the maximum amount given to java
+        reduced = lambda wildcards, attempt: attempt * (resources['gatherVcfs']['mem'] - 2000),  # this is the maximum amount given to java
         tmpdir = get_big_temp
     shell:
         """
