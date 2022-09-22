@@ -2,6 +2,7 @@ import glob
 import re
 import os
 import sys
+import tempfile
 from collections import defaultdict
 from urllib.request import urlopen
 import pandas as pd
