@@ -10,6 +10,7 @@ sentieon: False #set to True if you want to use sentieon, False if you want GATK
 sentieon_lic: ".lic" #set to path of sentieon license
 remote_reads: False # set if you want reads to be on google cloud storage remote
 remote_reads_prefix: "" # set to google bucket name where reads live
+bigtmp: ""
 
 ##############################
 # Variables you *might* need to change
