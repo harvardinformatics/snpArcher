@@ -127,7 +127,7 @@ rule DB2vcf:
         db = lambda wc, input: input.db[:-4]
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['DB2vcf']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (resources['DB2vcf']['mem'] - 3000)  # this is the maximum amount given to java
+        reduced = lambda wildcards, attempt: attempt * (resources['DB2vcf']['mem'] - 3000),  # this is the maximum amount given to java
         tmpdir = get_big_temp
     log:
         "logs/{refGenome}/gatk_genotype_gvcfs/{l}.txt"
