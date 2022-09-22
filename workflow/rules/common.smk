@@ -175,9 +175,12 @@ def get_bedgraphs(wildcards):
     bedgraphFiles = expand(config['output'] + "{{Organism}}/{{refGenome}}/" + config['bamDir'] + "preMerge/{sample}" + ".sorted.bg", sample=_samples)
     return bedgraphFiles
 
-
-
-
+def get_big_temp(wildcards):
+     """Sets a temp dir for rules that need more temp space that is typical on some cluster environments. Defaults to system temp dir."""
+     if config['bigtmp']:
+         return config['bigtmp']
+     else:
+         return system_tmpdir
 
 def collectFastpOutput(fastpFiles):
 
@@ -343,7 +346,4 @@ def printBamSumStats(
                     med_abs_insert_std[samp],
                     file=f,
                 )
-
-
-
 

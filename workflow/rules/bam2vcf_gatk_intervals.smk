@@ -47,11 +47,13 @@ rule concat_gvcfs:
         "logs/{refGenome}/concat_gvcfs/{sample}.txt"
     benchmark:
         "benchmarks/{refGenome}/concat_gvcfs/{sample}.txt"
+    resources:
+        tmpdir = get_big_temp
     conda:
         "../envs/bcftools.yml"
     shell:
         """
-        bcftools concat -D -a -Ou {input.gvcfs} | bcftools sort -Oz -o {output.gvcf} -
+        bcftools concat -D -a -Ou {input.gvcfs} | bcftools sort -T {resources.tmpdir} -Oz -o {output.gvcf} -
         tabix -p vcf {output.gvcf}
         """
 
@@ -85,6 +87,8 @@ rule gvcf2DB:
         reduced = lambda wildcards, attempt: int(attempt * resources['gvcf2DB']['mem'] * 0.80) # this is the maximum amount given to java
     log:
         "logs/{refGenome}/gatk_db_import/{l}.txt"
+    resources:
+        tmpdir = get_big_temp
     benchmark:
         "benchmarks/{refGenome}/gatk_db_import/{l}.txt"
     conda:
@@ -124,6 +128,7 @@ rule DB2vcf:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['DB2vcf']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (resources['DB2vcf']['mem'] - 3000)  # this is the maximum amount given to java
+        tmpdir = get_big_temp
     log:
         "logs/{refGenome}/gatk_genotype_gvcfs/{l}.txt"
     benchmark:
@@ -193,8 +198,9 @@ rule sort_gatherVcfs:
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['gatherVcfs']['mem'],   # this is the overall memory requested
         reduced = lambda wildcards, attempt: attempt * (resources['gatherVcfs']['mem'] - 2000)  # this is the maximum amount given to java
+        tmpdir = get_big_temp
     shell:
         """
-        bcftools concat -D -a -Ou {input.vcfs} 2> {log}| bcftools sort -Oz -o {output.vcfFinal} - 2>> {log}
+        bcftools concat -D -a -Ou {input.vcfs} 2> {log}| bcftools sort -T {resources.tmpdir} -Oz -o {output.vcfFinal} - 2>> {log}
         tabix -p vcf {output.vcfFinal} 2>> {log}
         """
