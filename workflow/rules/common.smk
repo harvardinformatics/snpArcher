@@ -181,7 +181,10 @@ def get_bedgraphs(wildcards):
 def get_big_temp(wildcards):
      """Sets a temp dir for rules that need more temp space that is typical on some cluster environments. Defaults to system temp dir."""
      if config['bigtmp']:
-         return config['bigtmp'] + "".join(random.choices(string.ascii_uppercase, k=12)) + "/"
+         if config['bigtmp'].endswith("/"):
+             return config['bigtmp'] + "".join(random.choices(string.ascii_uppercase, k=12)) + "/"
+         else:
+             return config['bigtmp'] + "/" + "".join(random.choices(string.ascii_uppercase, k=12)) + "/"
      else:
          return tempfile.gettempdir()
 
