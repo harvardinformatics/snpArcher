@@ -93,8 +93,10 @@ rule compute_covstats:
     conda:
         "../envs/callable.yml"
     shell:
-        "d4tools stat {input.d4} > {output.tmp_d4} 2> {log}"
-        "awk '{{ for(i=4; i<=NF;i++) j+=$i; print $1,$3,j; j=0 }}' {output.tmp_d4} > {output} 2>> {log}"
+        """
+        d4tools stat {input.d4} > {output.tmp_d4} 2> {log}
+        awk '{{ for(i=4; i<=NF;i++) j+=$i; print $1,$3,j; j=0 }}' {output.tmp_d4} > {output} 2>> {log}
+        """
 
 rule create_cov_bed:
     input:
