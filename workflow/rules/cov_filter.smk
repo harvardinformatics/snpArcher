@@ -44,7 +44,7 @@ rule collect_covstats:
         "results/{refGenome}/summary_stats/all_cov_sumstats.txt"  
     run:
         covStats = collectCovStats(input.covStatFiles)
-        with open({output[0]}, "w") as f:
+        with open(output[0], "w") as f:
             print("chrom\tmean_cov\tstdev_cov", file=f)
             for chrom in covStats:
                 print(chrom, covStats[chrom]['mean'], covStats[chrom]['stdev'], sep="\t", file=f)

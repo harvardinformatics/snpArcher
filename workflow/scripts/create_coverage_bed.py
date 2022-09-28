@@ -33,8 +33,8 @@ with open(snakemake.input["stats"]) as stats:
             continue
 
         fields=line.split()
-        stdev = math.sqrt(fields[1])
         mean = float(fields[1])
+        stdev = math.sqrt(mean)
         #0 is chr, 1 is mean
         if stdv_scale:
             cov_thresh[fields[0]] = {
