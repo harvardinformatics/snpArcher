@@ -30,8 +30,8 @@ rule mappability_bed:
     input:
         map = "results/{refGenome}/genmap/sorted_mappability.bg"
     output:
-        callable_sites = "results/{refGenome}/callable_sites/callable_sites_map.bed" if config['cov_filter'] else "results/{refGenome}/{prefix}_callable_sites.bed",
-        tmp_map = temp("results/{refGenome}/callable_sites/temp_map.bed")
+        callable_sites = "results/{refGenome}/callable_sites/{prefix}_callable_sites_map.bed" if config['cov_filter'] else "results/{refGenome}/{prefix}_callable_sites.bed",
+        tmp_map = temp("results/{refGenome}/callable_sites/{prefix}_temp_map.bed")
     conda:
         "../envs/mappability.yml"
     resources:

@@ -4,10 +4,6 @@ channels:
   - defaults
 dependencies:
   - bedtools==2.30.0
-  - ucsc-fatotwobit==377
-  - ucsc-twobitinfo==377
-  - ucsc-bedtobigbed==377
-  - genmap>=1.3.0
   - mosdepth>=0.3.3
   - d4tools>=0.3.4
   - pip
