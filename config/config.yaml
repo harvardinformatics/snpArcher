@@ -42,7 +42,7 @@ mappability_k: 150 #the kmer used to compute mappability with genmap; you should
 #this ignores small regions of abberatant coverage/mappability as often these are just below the threshold
 #to do strict filtering, set to 0
 
-map_merge: 100 #merge passing mappability regions separated by this or fewer bp into a single region
+mappability_merge: 100 #merge passing mappability regions separated by this or fewer bp into a single region
 cov_merge: 100 #merge passing coverage regions separate by this or fewer bp into a single region
 
 ## QC options ##
@@ -53,9 +53,31 @@ GoogleAPIKey:
 ## coverage thresholds ##
 ########################################
 
-#if cov_filter is True, use these parameters to control how coverage filtering is done
+## If cov_filter is True, use these parameters to control how coverage filtering is done
+## Three options are provided for coverage-based filtering. The default option is to just filter
+## regions of the genome with mean coverage below a minimal threshold (default = 1), with a very large upper limit
+## To use this option, set the variables below to the lower absolute mean coverage limit and upper absolute mean coverage limit, 
+## and make sure all other coverage variables are empty
 
-cov_threshold: 2 #regions of the genome with coverage above/below cov_thresh standard deviations will be filtered
+cov_threshold_lower: 1
+cov_threshold_upper: 10000
+ 
+## Alternatively, filtering can be done based on standard deviations 
+## (assumes a Poisson distribution, so stdev_cov equals the square root of the mean coverage),
+## where regions of the genome with mean coverage < X standard deviations or > X standard deviations are removed.
+## To use this option, set the variables below to the desired X
+## and make sure all other coverage variables are empty
+
+cov_threshold_stdev: 
+
+## Finally, filtering can be done based on absolute scaling of the mean, 
+## where regions of the genome with mean coverage < (global mean coverge / X) or > (global mean coverge * X) are removed.
+## To use this option, set the variable below to the desired X
+## and make sure all other coverage variables are empty
+
+cov_threshold_rel: 
+
+
 
 
 
