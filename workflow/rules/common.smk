@@ -206,13 +206,13 @@ def collectCovStats(covSumFiles):
                 continue
 
             fields = line.split
-            chr = str(fields[0])
+            chrom = str(fields[0])
             cov = float(fields[3])
 
-            if chr in sampleCov:
-                sampleCov[chr].append(cov)
+            if chrom in sampleCov:
+                sampleCov[chrom].append(cov)
             else:
-                sampleCov.update(chr = [cov])
+                sampleCov.update(chrom = [cov])
     
     for chr in sampleCov:
         mean_cov = mean(sampleCov[chr])
