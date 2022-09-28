@@ -62,5 +62,16 @@ with open(snakemake.output["covbed"], mode='w') as covbed:
             covs=values[2]
             #get mean coverage for window
             res1=math.fsum(covs)/len(covs)
-            if res1 <= cov_thresh[chrom[0]]['high'] and res1 >= cov_thresh[chrom[0]]['low']:
+
+            try: 
+                thresh_high = cov_thresh[chrom[0]]['high']
+            except KeyError:
+                thresh_high = cov_thresh['total']['high']
+
+            try:
+                thresh_low = cov_thresh[chrom[0]['low']]
+            except KeyError:
+                thresh_low = cov_thresh['total']['low']
+
+            if res1 <= thresh_high and res1 >= thresh_low:
                 print(chrom[0], values[1], values[1]+1, file=covbed, sep="\t")
