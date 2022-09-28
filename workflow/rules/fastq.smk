@@ -3,13 +3,14 @@ rule get_fastq_pe:
         temp("results/data/fastq/{refGenome}/{sample}/{run}_1.fastq.gz"),
         temp("results/data/fastq/{refGenome}/{sample}/{run}_2.fastq.gz")
     params:
-        outdir = os.path.join(workflow.default_remote_prefix, "results/data/fastq/{refGenome}/{sample}/"),
+        outdir = os.path.join(workflow.default_remote_prefix, "results/data/fastq/{refGenome}/{sample}/")
     conda:
         "../envs/fastq2bam.yml"
     threads:
         resources['get_fastq_pe']['threads']
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['get_fastq_pe']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['get_fastq_pe']['mem'],
+        tmpdir = get_big_temp
     shell:
         """
         set +e
@@ -22,7 +23,7 @@ rule get_fastq_pe:
         then
             ffq --ftp {wildcards.run} | grep -Eo '"url": "[^"]*"' | grep -o '"[^"]*"$' | grep "fastq" | xargs curl --remote-name-all --output-dir {params.outdir}
         else
-            fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {resources.tmpdir}  #default tmpdir can be changed when executing: --default-resources "tmpdir='/home/user/tmp'"
+            fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {resources.tmpdir}
             pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
         fi
         rm -rf {wildcards.run}
