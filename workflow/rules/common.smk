@@ -205,21 +205,24 @@ def collectCovStats(covSumFiles):
             if "mean" in line:
                 continue
 
-            fields = line.split
-            chrom = str(fields[0])
+            fields = line.split()
+            chrom = fields[0]
             cov = float(fields[3])
 
             if chrom in sampleCov:
                 sampleCov[chrom].append(cov)
             else:
-                sampleCov.update(chrom = [cov])
+                sampleCov[chrom] = [cov]
     
     for chr in sampleCov:
-        mean_cov = mean(sampleCov[chr])
-        std_cov = stdev(sampleCov[chr])
-        covStats.update(chr = {"mean" : mean_cov, "stdev" : std_cov})
+        mean_cov = statistics.mean(sampleCov[chr])
+        try: 
+            std_cov = statistics.stdev(sampleCov[chr])
+        except:
+            std_cov = "NA"
+        covStats[chr] = {"mean" : mean_cov, "stdev" : std_cov}
     
-    return(sampleCov)
+    return(covStats)
  
 def collectFastpOutput(fastpFiles):
 
