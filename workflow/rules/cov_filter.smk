@@ -37,27 +37,21 @@ rule merge_d4:
     shell:
         "d4tools merge {input.d4files} {output} &> {log}"
 
-rule compute_covstats:
+rule collect_covstats:
     input:
-        d4 = "results/{refGenome}/callable_sites/all_samples.d4"
+        unpack(get_input_covstats)
     output:
-        stats = "results/{refGenome}/callable_sites/all_samples.covstats.txt",
-        tmp_d4 = temp("results/{refGenome}/callable_sites/all_samples.covstats.tmp")
-    log:
-        "logs/{refGenome}/compute_covstats/log.txt"
-    benchmark:
-        "benchmarks/{refGenome}/compute_covstats/benchmark.txt"
-    conda:
-        "../envs/cov_filter.yml"
-    shell:
-        """
-        d4tools stat {input.d4} > {output.tmp_d4} 2> {log}
-        awk '{{ for(i=4; i<=NF;i++) j+=$i; print $1,$3,j; j=0 }}' {output.tmp_d4} > {output} 2>> {log}
-        """
+        "results/{refGenome}/summary_stats/{prefix}_cov_sumstats.txt"  
+    run:
+        covStats = collectCovStats(input.covStatFiles)
+        with open({output}, "w") as f:
+            print("chrom\tmean_cov\tstdev_cov", file=f)
+            for chrom in covStats:
+                print(chrom, covStats[chrom]['mean'], covStats[chrom]['stdev'], sep="\t", file=f)
 
 rule create_cov_bed:
     input:
-        stats = "results/{refGenome}/callable_sites/all_samples.covstats.txt",
+        stats = "results/{refGenome}/summary_stats/{prefix}_cov_sumstats.txt",
         d4 = "results/{refGenome}/callable_sites/all_samples.d4"
     output:
         covbed = temp("results/{refGenome}/callable_sites/callable_sites_cov.bed")

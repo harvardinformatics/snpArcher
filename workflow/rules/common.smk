@@ -5,6 +5,7 @@ import sys
 import tempfile
 import random
 import string
+import statistics
 from collections import defaultdict
 from urllib.request import urlopen
 import pandas as pd
@@ -172,6 +173,12 @@ def get_input_for_coverage(wildcards):
     d4files = expand("results/{{refGenome}}/callable_sites/{sample}.per-base.d4", sample=_samples)
     return {'d4files': d4files}
 
+def get_input_covstats(wildcards):
+    # Gets the correct sample given the organism and reference genome for the bedgraph merge step
+    _samples = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    covstats = expand("results/{{refGenome}}/callable_sites/{sample}.mosdepth.summary.txt", sample=_samples)
+    return {'covStatFiles': covstats}
+
 def get_bedgraphs(wildcards):
     """Snakemake seems to struggle with unpack() and default_remote_prefix. So we have to do this one by one."""
     _samples = samples.loc[(samples['Organism'] == wildcards.Organism) & (samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
@@ -188,6 +195,32 @@ def get_big_temp(wildcards):
      else:
          return tempfile.gettempdir()
 
+def collectCovStats(covSumFiles):
+    covStats = {}
+    sampleCov = {}
+
+    for fn in covSumFiles:
+        f = open(fn, "r")
+        for line in f:
+            if "mean" in line:
+                continue
+
+            fields = line.split
+            chr = str(fields[0])
+            cov = float(fields[3])
+
+            if chr in sampleCov:
+                sampleCov[chr].append(cov)
+            else:
+                sampleCov.update(chr = [cov])
+    
+    for chr in sampleCov:
+        mean_cov = mean(sampleCov[chr])
+        std_cov = stdev(sampleCov[chr])
+        covStats.update(chr = {"mean" : mean_cov, "stdev" : std_cov})
+    
+    return(sampleCov)
+ 
 def collectFastpOutput(fastpFiles):
 
     FractionReadsPassFilter = defaultdict(float)
