@@ -41,22 +41,25 @@ rule collect_covstats:
     input:
         unpack(get_input_covstats)
     output:
-        "results/{refGenome}/summary_stats/{prefix}_cov_sumstats.txt"  
+        "results/{refGenome}/summary_stats/all_cov_sumstats.txt"  
     run:
         covStats = collectCovStats(input.covStatFiles)
-        with open({output}, "w") as f:
+        with open({output[0]}, "w") as f:
             print("chrom\tmean_cov\tstdev_cov", file=f)
             for chrom in covStats:
                 print(chrom, covStats[chrom]['mean'], covStats[chrom]['stdev'], sep="\t", file=f)
 
 rule create_cov_bed:
     input:
-        stats = "results/{refGenome}/summary_stats/{prefix}_cov_sumstats.txt",
+        stats = "results/{refGenome}/summary_stats/all_cov_sumstats.txt",
         d4 = "results/{refGenome}/callable_sites/all_samples.d4"
     output:
         covbed = temp("results/{refGenome}/callable_sites/callable_sites_cov.bed")
     params:
-        cov_threshold = config['cov_threshold']
+        cov_threshold_stdev = config["cov_threshold_stdev"],
+        cov_threshold_lower = config["cov_threshold_lower"],
+        cov_threshold_upper = config["cov_threshold_upper"],
+        cov_threshold_rel = config["cov_threshold_rel"]
     conda:
         "../envs/cov_filter.yml"
     script:
@@ -65,10 +68,10 @@ rule create_cov_bed:
 rule callable_bed:
     input:
         cov = "results/{refGenome}/callable_sites/callable_sites_cov.bed",
-        map = "results/{refGenome}/callable_sites/callable_sites_map.bed"
+        map = "results/{refGenome}/callable_sites/{prefix}_callable_sites_map.bed"
     output:
         callable_sites = "results/{refGenome}/{prefix}_callable_sites.bed",
-        tmp_cov = temp("results/{refGenome}/callable_sites/temp_cov.bed")
+        tmp_cov = temp("results/{refGenome}/callable_sites/{prefix}_temp_cov.bed")
     conda:
         "../envs/cov_filter.yml"
     resources:
