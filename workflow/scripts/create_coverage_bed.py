@@ -69,7 +69,7 @@ with open(snakemake.output["covbed"], mode='w') as covbed:
                 thresh_high = cov_thresh['total']['high']
 
             try:
-                thresh_low = cov_thresh[chrom[0]['low']]
+                thresh_low = cov_thresh[chrom[0]]['low']
             except KeyError:
                 thresh_low = cov_thresh['total']['low']
 
