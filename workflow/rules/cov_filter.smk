@@ -77,7 +77,7 @@ rule callable_bed:
     conda:
         "../envs/cov_filter.yml"
     benchmark:
-        "benchmarks/{refGenome}/callable_bed/benchmark.txt"
+        "benchmarks/{refGenome}/callable_bed/{prefix}_benchmark.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['callable_bed']['mem']
     params:
