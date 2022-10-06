@@ -34,6 +34,8 @@ rule mappability_bed:
         tmp_map = temp("results/{refGenome}/callable_sites/{prefix}_temp_map.bed")
     conda:
         "../envs/mappability.yml"
+    benchmark:
+        "benchmarks/{refGenome}/mapbed/benchmark.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['callable_bed']['mem']
     params:

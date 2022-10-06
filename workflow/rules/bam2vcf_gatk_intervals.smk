@@ -22,7 +22,7 @@ rule bam2gvcf:
     log:
         "logs/{refGenome}/gatk_hc/{sample}/{l}.txt"
     benchmark:
-        "benchmarks/{refGenome}/gatk_hc/{sample}/{l}.txt"
+        "benchmarks/{refGenome}/gatk_hc/{sample}_{l}.txt"
     params:
         minPrun = config['minP'],
         minDang = config['minD'],

@@ -17,7 +17,6 @@ samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_',
 with open(config["resource_config"], "r") as f:
     resources = safe_load(f)
 
-
 def get_output():
     if config["final_prefix"] == "":
         raise(WorkflowError("'final_prefix' is not set in config."))
@@ -32,7 +31,6 @@ def get_output():
         if sample_counts[ref] > 2:
             out.append(rules.qc_all.input)
     return out
-    
 
 def merge_bams_input(wc):
     return expand("results/{{refGenome}}/bams/preMerge/{{sample}}/{run}.bam", run=samples.loc[samples['BioSample'] == wc.sample]['Run'].tolist())
