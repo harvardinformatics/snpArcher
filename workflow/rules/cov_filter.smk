@@ -55,6 +55,8 @@ rule create_cov_bed:
         d4 = "results/{refGenome}/callable_sites/all_samples.d4"
     output:
         covbed = temp("results/{refGenome}/callable_sites/callable_sites_cov.bed")
+    benchmark:
+        "benchmarks/{refGenome}/covbed/benchmark.txt"
     params:
         cov_threshold_stdev = config["cov_threshold_stdev"],
         cov_threshold_lower = config["cov_threshold_lower"],
@@ -74,6 +76,8 @@ rule callable_bed:
         tmp_cov = temp("results/{refGenome}/callable_sites/{prefix}_temp_cov.bed")
     conda:
         "../envs/cov_filter.yml"
+    benchmark:
+        "benchmarks/{refGenome}/callable_bed/{prefix}_benchmark.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['callable_bed']['mem']
     params:

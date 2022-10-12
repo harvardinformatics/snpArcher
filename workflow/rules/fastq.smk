@@ -8,6 +8,8 @@ rule get_fastq_pe:
         "../envs/fastq2bam.yml"
     threads:
         resources['get_fastq_pe']['threads']
+    benchmark:
+        "benchmarks/{refGenome}/getfastq/{sample}_{run}.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['get_fastq_pe']['mem'],
         tmpdir = get_big_temp
@@ -45,7 +47,7 @@ rule fastp:
     log:
         "logs/{refGenome}/fastp/{sample}/{run}.txt"
     benchmark:
-        "benchmarks/{refGenome}/fastp/{sample}/{run}.txt"
+        "benchmarks/{refGenome}/fastp/{sample}_{run}.txt"
     shell:
         "fastp --in1 {input.r1} --in2 {input.r2} "
         "--out1 {output.r1} --out2 {output.r2} "
