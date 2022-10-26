@@ -1,0 +1,109 @@
+import pandas as pd
+import os
+include: "rules/common.smk"
+configfile: "config/config.yaml"
+
+if config['merge_vcfs']:
+    include: "rules/merge_vcfs.smk"
+
+samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+REFGENOME = samples['refGenome'].unique().tolist()
+
+rule all:
+    input:
+        expand("results/{refGenome}/MK/{prefix}_mk_table.tsv", refGenome=REFGENOME, prefix=config['final_prefix'])
+
+rule filter_snps:
+    """
+    Filters a vcf file to remove sites that do not overlap callable intervals, do not pass filters, and indels
+    """
+    input: 
+        bed = "results/{refGenome}/{prefix}_callable_sites.bed",
+        vcf = "results/{refGenome}/{prefix}_final.vcf.gz"
+    output:
+        filtered = "results/{refGenome}/mk/{prefix}_final.filtered.snps.vcf.gz"
+    conda:
+        "../envs/mk.yml"
+    shell:
+        """
+        bcftools view -v snps -f .,PASS \
+        -e 'ALT="*" | TYPE~"indel"' \
+        -R {input.bed} \
+        {input.vcf} -O z -o {output.filtered}
+        """
+
+rule prep_genome:
+    """
+    Gets the needed information (fasta and gff) from NCBI
+    """
+    input: 
+        ref = get_ref,
+        gff = get_gff
+    output:
+        ref = "results/{refGenome}/data/genome/{refGenome}.fna",
+        gff = "results/{refGenome}/data/genome/{refGenome}.gff"
+    params:
+        dataset = "results/{refGenome}/data/genome/{refGenome}_dataset.zip",
+        outdir = "results/{refGenome}/data/genome/{refGenome}"
+    conda:
+        "../envs/mk.yml"
+    shell:
+        """
+        set +e
+        #if genome is local, datasets will fail, we will just continue
+        mkdir -p {params.outdir}
+        datasets download genome accession --include genome,gff3 --filename {params.dataset} {wildcards.refGenome} \
+        && 7z x {params.dataset} -aoa -o{params.outdir}
+
+        if [ -z "{input.ref}" ]
+        then
+            cat {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}
+        else
+            cp {input.ref} {output.ref}
+        fi
+
+       if [ -z "{input.gff}" ]
+        then
+            cp {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/genomic.gff > {output.gff}
+        else
+            cp {input.gff} {output.gff}
+        fi
+        """
+
+rule split_samples:
+    """
+    Splits sample sheet to make ingroup and outgroup files
+    """
+    output:
+        exclude = "results/{refGenome}/mk/{prefix}_ingroups.txt",
+        outgroups = "results/{refGenome}/mk/{prefix}_ougroups.txt"
+    run:
+        out_df = samples[["BioSample", "SampleType"]]
+        out_df.drop_duplicates("BioSample", inplace=True)
+        exclude = out_df[out_df["SampleType"] == "exclude", "BioSample"]
+        outgroups = out_df[out_df["SampleType"] == "outgroup", "BioSample"]
+        exclude.to_csv(output[0], index=False, sep="\t", header=False)
+        outgroups.to_csv(output[1], index=False, sep="\t", header=False)
+ 
+
+rule degenotate:
+    """
+    Runs degenotate to compute MK tables
+    """
+    input:
+        vcf = "results/{refGenome}/mk/{prefix}_final.filtered.snps.vcf.gz",
+        genome = "results/{refGenome}/data/genome/{refGenome}.fna",
+        gff = "results/{refGenome}/data/genome/{refGenome}.gff",
+        exclude = "results/{refGenome}/mk/{prefix}_ingroups.txt",
+        outgroups = "results/{refGenome}/mk/{prefix}_ougroups.txt"
+    output:
+        "results/{refGenome}/mk/{prefix}_mk_table.tsv"
+    params:
+        delim = "space"
+    conda:
+        "../envs/mk.yml"
+    shell:
+        """"
+        degenotate.py -a {input.gff} -g {input.genome} -u {input.outgroups} -e {input.exclude} -d {params.delim} -o "results/{refGenome}/mk/{prefix}_degen_raw"
+        cp results/{refGenome}/mk/{prefix}_degen_raw/mk_table.tsv {output}
+        """
