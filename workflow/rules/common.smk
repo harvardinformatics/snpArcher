@@ -132,7 +132,7 @@ def get_read_group(wc):
     )
 
 def get_input_sumstats(wildcards):
-    _samples = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    _samples = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['BioSample']..unique().tolist()
     aln = expand("results/{{refGenome}}/summary_stats/{sample}_AlnSumMets.txt", sample=_samples)
     cov = expand("results/{{refGenome}}/summary_stats/{sample}_coverage.txt", sample=_samples)
     fastp = expand("results/{{refGenome}}/summary_stats/{sample}_fastp.out", sample=_samples)
@@ -162,18 +162,18 @@ def get_input_sumstats(wildcards):
         return out
 
 def get_input_for_mapfile(wildcards):
-    sample_names = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    sample_names = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['BioSample']..unique().tolist()
     return expand("results/{{refGenome}}/gvcfs/{sample}.g.vcf.gz", sample=sample_names)
 
 def get_input_for_coverage(wildcards):
     # Gets the correct sample given the organism and reference genome for the bedgraph merge step
-    _samples = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    _samples = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['BioSample']..unique().tolist()
     d4files = expand("results/{{refGenome}}/callable_sites/{sample}.per-base.d4", sample=_samples)
     return {'d4files': d4files}
 
 def get_input_covstats(wildcards):
     # Gets the correct sample given the organism and reference genome for the bedgraph merge step
-    _samples = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['BioSample'].tolist()
+    _samples = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['BioSample']..unique().tolist()
     covstats = expand("results/{{refGenome}}/callable_sites/{sample}.mosdepth.summary.txt", sample=_samples)
     return {'covStatFiles': covstats}
 
