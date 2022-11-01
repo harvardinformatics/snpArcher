@@ -566,7 +566,7 @@ if(file.exists(paste0(prefix, ".coords.txt"))){
     df.coords <- df.coords %>% filter(!is.na(long))
     num.missing <- df.coords %>% filter(is.na(long)) %>% nrow() 
 
-    df.coords$color <- set.colors[factor(dist.id$cluster)]
+    df.coords$color <- set.colors[factor(df.coords$cluster)]
     
     mycol <- set.colors[factor(df.coords$cluster)]
     
