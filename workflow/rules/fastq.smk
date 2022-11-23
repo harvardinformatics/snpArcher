@@ -26,7 +26,13 @@ rule get_fastq_pe:
             ffq --ftp {wildcards.run} | grep -Eo '"url": "[^"]*"' | grep -o '"[^"]*"$' | grep "fastq" | xargs curl --remote-name-all --output-dir {params.outdir}
         else
             fasterq-dump {wildcards.run} -O {params.outdir} -e {threads} -t {resources.tmpdir}
-            pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
+            if [[ ! -f  {params.outdir}{wildcards.run}_1.fastq ]]
+            then
+                fastq-dump {wildcards.run} -O {params.outdir} --split-files
+                pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
+            else
+                pigz -p {threads} {params.outdir}{wildcards.run}*.fastq
+            fi
         fi
         rm -rf {wildcards.run}
         """
