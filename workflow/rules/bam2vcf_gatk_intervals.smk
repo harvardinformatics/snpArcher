@@ -185,7 +185,8 @@ rule filterVcfs:
 
 rule sort_gatherVcfs:
     input:
-        unpack(get_interval_vcfs)
+        vcfs = get_interval_vcfs,
+        tbis = get_interval_vcf_tbis
     output:
         vcfFinal = "results/{refGenome}/{prefix}_final.vcf.gz",
         vcfFinalidx = "results/{refGenome}/{prefix}_final.vcf.gz.tbi"
