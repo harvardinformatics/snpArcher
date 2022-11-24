@@ -39,10 +39,11 @@ def get_ref(wildcards):
     if 'refPath' in samples.columns:
         _refs = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['refPath'].dropna().unique().tolist()
         for ref in _refs:
-            if not os.path.exists(ref):
-                raise WorkflowError(f"Reference genome {ref} does not exist")
-            elif ref.rsplit(".", 1)[1] == '.gz':
-                raise WorkflowError(f"Reference genome {ref} must be unzipped first.")
+            if workflow.default_remote_prefix == "":
+                if not os.path.exists(ref):
+                    raise WorkflowError(f"Reference genome {ref} does not exist")
+                elif ref.rsplit(".", 1)[1] == '.gz':
+                    raise WorkflowError(f"Reference genome {ref} must be unzipped first.")
         return _refs
     else:
         return []
@@ -70,7 +71,15 @@ def get_interval_vcfs(wc):
     list_numbers = [f.replace("-scattered.interval_list", "") for f in list_files]
     vcfs = expand("results/{{refGenome}}/vcfs/intervals/filtered_L{l}.vcf.gz", l=list_numbers)
     tbis = expand("results/{{refGenome}}/vcfs/intervals/filtered_L{l}.vcf.gz.tbi", l=list_numbers)
-    return {"vcfs": vcfs, "tbis": tbis}
+    return vcfs
+
+def get_interval_vcf_tbis(wc):
+    checkpoint_output = checkpoints.create_db_intervals.get(**wc).output[0]
+    list_files = [os.path.basename(x) for x in glob.glob(os.path.join(checkpoint_output, "*.interval_list"))]
+    list_numbers = [f.replace("-scattered.interval_list", "") for f in list_files]
+    vcfs = expand("results/{{refGenome}}/vcfs/intervals/filtered_L{l}.vcf.gz", l=list_numbers)
+    tbis = expand("results/{{refGenome}}/vcfs/intervals/filtered_L{l}.vcf.gz.tbi", l=list_numbers)
+    return tbis
     
 def get_gvcfs_db(wc):
     _samples = samples.loc[(samples['refGenome'] == wc.refGenome)]['BioSample'].unique().tolist()

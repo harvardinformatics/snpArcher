@@ -48,6 +48,7 @@ rule concat_gvcfs:
     benchmark:
         "benchmarks/{refGenome}/concat_gvcfs/{sample}.txt"
     resources:
+        mem_mb = lambda wildcards, attempt: attempt * resources['gatherVcfs']['mem'],   # this is the overall memory requested
         tmpdir = get_big_temp
     conda:
         "../envs/bcftools.yml"
@@ -185,7 +186,8 @@ rule filterVcfs:
 
 rule sort_gatherVcfs:
     input:
-        unpack(get_interval_vcfs)
+        vcfs = get_interval_vcfs,
+        tbis = get_interval_vcf_tbis
     output:
         vcfFinal = "results/{refGenome}/{prefix}_final.vcf.gz",
         vcfFinalidx = "results/{refGenome}/{prefix}_final.vcf.gz.tbi"
@@ -197,7 +199,6 @@ rule sort_gatherVcfs:
         "benchmarks/{refGenome}/sort_gather_vcfs/{prefix}_benchmark.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * resources['gatherVcfs']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (resources['gatherVcfs']['mem'] - 2000),  # this is the maximum amount given to java
         tmpdir = get_big_temp
     shell:
         """
