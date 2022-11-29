@@ -8,6 +8,8 @@ rule sentieon_map:
     output: 
         bam = temp("results/{refGenome}/bams/preMerge/{sample}/{run}.bam"),
         bai = temp("results/{refGenome}/bams/preMerge/{sample}/{run}.bam.bai"),
+        sortr1 = "results/{refGenome}/filtered_fastqs/{sample}/{run}_1_sorted.fastq.gz",
+        sortr2 = "results/{refGenome}/filtered_fastqs/{sample}/{run}_2_sorted.fastq.gz"
     params:
         rg = get_read_group,
     conda:
@@ -24,7 +26,11 @@ rule sentieon_map:
         """
         export MALLOC_CONF=lg_dirty_mult:-1
         export SENTIEON_LICENSE={input.lic}
-        sentieon bwa mem -M -R {params.rg} -t {threads} -K 10000000 {input.ref} {input.r1} {input.r2} | sentieon util sort --bam_compression 1 -r {input.ref} -o {output.bam} -t {threads} --sam2bam -i -
+
+        zcat {input.r1} | paste - - - - | sort -k1,1 -S 3G | perl -pe 's/\t/\n/g' | gzip > {output.sortr1}
+        zcat {input.r2} | paste - - - - | sort -k1,1 -S 3G | perl -pe 's/\t/\n/g' | gzip > {output.sortr2}
+
+        sentieon bwa mem -M -R {params.rg} -t {threads} -K 10000000 {input.ref} {output.sortr1} {output.sortr2} | sentieon util sort --bam_compression 1 -r {input.ref} -o {output.bam} -t {threads} --sam2bam -i -
         samtools index {output.bam} {output.bai}
         """
 rule merge_bams:
