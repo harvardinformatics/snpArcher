@@ -33,7 +33,7 @@ rule vcftools_individuals:
         summ = "results/{refGenome}/QC/{prefix}.FILTER.summary",
         het = "results/{refGenome}/QC/{prefix}.het"
     conda:
-        "envs/qc.yml"
+        "envs/vcftools_individuals.yml"
     params:
         prefix = lambda wc, input: os.path.join(input.vcf.rsplit("/", 1)[0], "QC", wc.prefix),
         min_depth = config["min_depth"]
@@ -52,7 +52,6 @@ rule subsample_snps:
         samps = "results/{refGenome}/QC/{prefix}.samps.txt",
         fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
         sumstats = "results/{refGenome}/summary_stats/{prefix}_bam_sumstats.txt"
-
     output:
         filtered = "results/{refGenome}/QC/{prefix}_filtered.vcf.gz",
         filtered_idx = "results/{refGenome}/QC/{prefix}_filtered.vcf.gz.csi",
@@ -61,8 +60,7 @@ rule subsample_snps:
         fai = "results/{refGenome}/QC/{prefix}.fna.fai",
         sumstats = "results/{refGenome}/QC/{prefix}_bam_sumstats.txt"
     conda:
-        "envs/qc.yml"
-    
+        "envs/subsample_snps.yml"
     shell:
         """
         ##first remove filtered sites and retain only biallelic SNPs
@@ -107,10 +105,8 @@ rule plink:
         dist = "results/{refGenome}/QC/{prefix}.dist",
         distid = "results/{refGenome}/QC/{prefix}.dist.id",
         king = "results/{refGenome}/QC/{prefix}.king"
-
-  
     conda:
-        "envs/qc.yml"
+        "envs/plink.yml"
     shell:
         #plink 2 for king relatedness matrix (robust to structure) and plink 1.9 for distance matrix
         """
@@ -131,9 +127,8 @@ rule admixture:
         admix2 = "results/{refGenome}/QC/{prefix}.2.Q"
     params:
         outdir = lambda wc, input: input.bed.rsplit("/", 1)[0]
-
     conda:
-        "envs/qc.yml"
+        "envs/admixture.yml"
     shell:
         """
         mv {input.bim} {input.bim}.orig
@@ -185,7 +180,6 @@ rule qc_plots:
         GMKey = config['GoogleAPIKey']
     output: 
         qcpdf = "results/{refGenome}/QC/{prefix}_qc.html"
-  
     conda:
         "envs/qc.yml"
     script:
