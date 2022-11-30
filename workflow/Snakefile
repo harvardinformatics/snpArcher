@@ -1,3 +1,6 @@
+from snakemake.utils import min_version
+min_version("7.0")
+
 configfile: "config/config.yaml"
 include: "rules/common.smk"
 include: "rules/sumstats.smk"
