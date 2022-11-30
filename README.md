@@ -1,3 +1,9 @@
+## Overview
+
+* custom config decleration in make snakefile for running multiple projects on google cloud simultaneously 
+* custom code for uploading pipeline results to hosting sites to share with CCGP project users
+* custom wrapper script for generating CCGP-specific snakemake command that is based on project ID
+
 ## Snakemake environment
 
 [Please see Snakemake's installation instructions.](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html#installation)
