@@ -21,8 +21,8 @@ rule sentieon_bam_stats:
         bam = "results/{refGenome}/bams/{sample}_final.bam",
         bai = "results/{refGenome}/bams/{sample}_final.bam.bai",
         indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"]),
-        ref = "results/{refGenome}/data/genome/{refGenome}.fna",
-        lic = ancient(config['sentieon_lic'])
+        ref = "results/{refGenome}/data/genome/{refGenome}.fna"
+        #lic = ancient(config['sentieon_lic'])
     output:
         insert_file = "results/{refGenome}/summary_stats/{sample}_insert_metrics.txt",
         qd = "results/{refGenome}/summary_stats/{sample}_qd_metrics.txt",
