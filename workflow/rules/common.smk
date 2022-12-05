@@ -31,7 +31,7 @@ def get_output():
         if sample_counts[ref] > 2:
             out.append(rules.qc_all.input)
         if config["ccgp"]:
-            out.append(ruls.ccgp_all.input)
+            out.append(rules.ccgp_all.input)
     return out
 
 def merge_bams_input(wc):
