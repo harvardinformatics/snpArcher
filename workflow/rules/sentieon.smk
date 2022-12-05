@@ -3,8 +3,8 @@ rule sentieon_map:
         ref = "results/{refGenome}/data/genome/{refGenome}.fna",
         r1 = "results/{refGenome}/filtered_fastqs/{sample}/{run}_1.fastq.gz",
         r2 = "results/{refGenome}/filtered_fastqs/{sample}/{run}_2.fastq.gz",
-        indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"]),
-        lic = ancient(config['sentieon_lic'])
+        indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"])
+        #lic = ancient(config['sentieon_lic'])
     output: 
         bam = temp("results/{refGenome}/bams/preMerge/{sample}/{run}.bam"),
         bai = temp("results/{refGenome}/bams/preMerge/{sample}/{run}.bam.bai"),
@@ -46,8 +46,8 @@ rule merge_bams:
 
 rule sentieon_dedup:
     input:
-        unpack(dedup_input),
-        lic = ancient(config['sentieon_lic']),
+        unpack(dedup_input)
+        #lic = ancient(config['sentieon_lic']),
     output:
         dedupBam = "results/{refGenome}/bams/{sample}_final.bam",
         dedupBai = "results/{refGenome}/bams/{sample}_final.bam.bai",
@@ -77,8 +77,8 @@ rule sentieon_haplotyper:
         indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"]),
         dictf = "results/{refGenome}/data/genome/{refGenome}.dict",
         bam = "results/{refGenome}/bams/{sample}_final.bam",
-        bai = "results/{refGenome}/bams/{sample}_final.bam.bai",
-        lic = ancient(config['sentieon_lic'])
+        bai = "results/{refGenome}/bams/{sample}_final.bam.bai"
+        #lic = ancient(config['sentieon_lic'])
     output:
         gvcf = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz",
         gvcf_idx = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz.tbi",
@@ -103,8 +103,8 @@ rule sentieon_combine_gvcf:
         unpack(sentieon_combine_gvcf_input),
         ref = "results/{refGenome}/data/genome/{refGenome}.fna",
         indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"]),
-        dictf = "results/{refGenome}/data/genome/{refGenome}.dict",
-        lic = ancient(config['sentieon_lic']),
+        dictf = "results/{refGenome}/data/genome/{refGenome}.dict"
+        #lic = ancient(config['sentieon_lic']),
     output:
         vcf = temp("results/{refGenome}/vcfs/raw.vcf.gz"),
         tbi = temp("results/{refGenome}/vcfs/raw.vcf.gz.tbi")
