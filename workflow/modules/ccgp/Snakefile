@@ -1,0 +1,28 @@
+import pandas as pd
+import os
+include: "common.smk"
+
+configfile: "config/config.yaml"
+
+samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+REFGENOME = samples['refGenome'].unique().tolist()
+
+rule all:
+    input:
+        expand("results/{refGenome}/CCGP/{prefix}.roh", refGenome=REFGENOME, prefix=config['final_prefix'])
+
+rule roh:
+    input:
+        vcf = "results/{refGenome}/{prefix}_final.vcf.gz"
+    output:
+        roh = "results/{refGenome}/CCGP/{prefix}.roh",
+    conda:
+        "envs/ccgp.yml"
+    params:
+        prefix = lambda wc, input: os.path.join(input.vcf.rsplit("/", 1)[0], "QC", wc.prefix),
+        min_depth = config["min_depth"]
+    shell:
+        """
+        bcftools roh -G30 --AF-dflt 0.4 -o {output.roh} {input.vcf}
+        """
+
