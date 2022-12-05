@@ -110,7 +110,7 @@ rule sentieon_combine_gvcf:
         vcf = temp("results/{refGenome}/vcfs/raw.vcf.gz"),
         tbi = temp("results/{refGenome}/vcfs/raw.vcf.gz.tbi")
     params:
-        lambda wc, input: " ".join(["-v " + gvcf for gvcf in input['gvcfs']]),
+        glist = lambda wc, input: " ".join(["-v " + gvcf for gvcf in input['gvcfs']]),
         lic = config['sentieon_lic']
     threads: resources['sentieon_combine_gvcf']['threads']
     resources:
@@ -126,7 +126,7 @@ rule sentieon_combine_gvcf:
     shell:
         """
         export SENTIEON_LICENSE={params.lic}
-        sentieon driver -r {input.ref} -t {threads} --algo GVCFtyper --emit_mode VARIANT {output.vcf} {params} 2> {log}
+        sentieon driver -r {input.ref} -t {threads} --algo GVCFtyper --emit_mode VARIANT {output.vcf} {params.glist} 2> {log}
         """
 
 rule filter_vcf:
