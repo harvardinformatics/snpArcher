@@ -3,8 +3,9 @@
 This fork of the pipeline snpArcher only differs in the following ways:
 
 * custom config decleration in make snakefile for running multiple projects on google cloud simultaneously 
-* custom code for uploading pipeline results to hosting sites to share with CCGP project users
-* custom wrapper script for generating CCGP-specific snakemake command that is based on project ID
+* comment out mappability and coverage filtering code as this does not run on the cloud
+* custom snakemake rule for uploading pipeline results to hosting sites to share with CCGP project users
+* custom python script for generating CCGP-specific snakemake command that is based on project ID
 
 ## Snakemake environment
 
