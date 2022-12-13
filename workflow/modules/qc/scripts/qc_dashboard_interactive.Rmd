@@ -10,7 +10,7 @@ editor_options:
 params:
   prefix: files.idepth
   nClusters: 3
-  GMKey: NULL
+  GMKey: 
 ---
 
 ```{r setup, include=FALSE}
@@ -193,6 +193,8 @@ df.pca.long <- df.pca.long %>%
 
 df.pca.long$PC.lab <- reorder(df.pca.long$PC.lab, df.pca.long$order)
 
+#it is easier to visualize just 6 PCs, rather than all 10
+df.pca.long <- df.pca.long %>% filter(PC %in% c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6")) 
 
 df.r2 <- df.pca.long %>% 
   group_by(PC.lab) %>% 
@@ -207,7 +209,7 @@ df.r2 <- df.r2 %>%
 (df.pca.long %>% 
   ggplot() + 
     geom_point(aes(x = value, y = MEAN_DEPTH, text = IID)) +
-    facet_wrap(~ PC.lab, ncol = 5) +
+    facet_wrap(~ PC.lab, ncol = 3) +
     geom_text(data = df.r2, aes(x = 0, y = 1,
               label = paste("R2 = ", R2, sep = " ")),
               color = "blue", size = 3) +
@@ -459,43 +461,48 @@ Row
 
 ### Map
 
-```{r, fig.width = 5, fig.height = 10}
-
-# this code is highly specific to the CCGP as it generates a California map
-
-g <- list(
-  scope = 'north america',
-  showland = TRUE,
-  landcolor = toRGB("grey83"),
-  subunitcolor = toRGB("white"),
-  countrycolor = toRGB("white"),
-  showlakes = TRUE,
-  lakecolor = toRGB("white"),
-  showsubunits = TRUE,
-  showcountries = TRUE,
-  resolution = 50,
-  projection = list(
-    type = 'conic conformal',
-    rotation = list(lon = -100)
-  ),
-  lonaxis = list(
-    showgrid = TRUE,
-    gridwidth = 0.5,
-    range = c(-125, -111),
-    dtick = 5
-  ),
-  lataxis = list(
-    showgrid = TRUE,
-    gridwidth = 0.5,
-    range = c(31, 43),
-    dtick = 5
-  )
-)
+```{r, fig.width = 10, fig.height = 10}
 
 if(file.exists(paste0(prefix, ".coords.txt"))){
     df.coords <- read.table(paste0(prefix, ".coords.txt"))
     names(df.coords) <- c("sample.ID","long","lat")
     
+    if(max(df.coords$lat < 90) & min(df.coords$lat) > 0 
+           & max(df.coords$long < -35) & min(df.coords$long > -180)){
+      map_type = "north america"
+    } else { map_type = "world"}
+    
+    g <- list(
+      scope = map_type,
+      showland = TRUE,
+      landcolor = toRGB("grey83"),
+      subunitcolor = toRGB("white"),
+      countrycolor = toRGB("white"),
+      showlakes = TRUE,
+      lakecolor = toRGB("white"),
+      showsubunits = TRUE,
+      showcountries = TRUE,
+      resolution = 50,
+      #center = list( #not sure why, but centering on a coordinates does not work (just defaults to middle of full projection)
+      #  lat = 33.94423,
+      #  lon = -119.3048))
+      projection = list(
+        type = 'conic conformal',
+        rotation = list(lon = -100)),
+      lonaxis = list(
+       showgrid = TRUE,
+       gridwidth = 0.5,
+       range = c(min(df.coords$long) - 1, max(df.coords$long) + 1),
+       dtick = 5
+     ),
+     lataxis = list(
+       showgrid = TRUE,
+       gridwidth = 0.5,
+       range = c(min(df.coords$lat) -1, max(df.coords$lat) +1),
+       dtick = 5
+     )
+   )
+   
     df.coords <- left_join(df.pca, df.coords, by = c("IID" = "sample.ID"))
       
     df.coords$color <- set.colors[factor(dist.id$cluster)]
@@ -521,40 +528,12 @@ if(file.exists(paste0(prefix, ".coords.txt"))){
 
 > Fig. 8: Here, an interactive map is produced if there is a coordinate file available with latitude and longitude in decimal degrees. See the project README for how to setup this file for analysis. 
 
+Row
+-----------------------------------------------------------------------
+
 ### Terrain Map
 
-```{r, fig.width = 5, fig.height = 10}
-
-# this code is highly specific to the CCGP as it generates a California map
-
-g <- list(
-  scope = 'north america',
-  showland = TRUE,
-  landcolor = toRGB("grey83"),
-  subunitcolor = toRGB("white"),
-  countrycolor = toRGB("white"),
-  showlakes = TRUE,
-  lakecolor = toRGB("white"),
-  showsubunits = TRUE,
-  showcountries = TRUE,
-  resolution = 50,
-  projection = list(
-    type = 'conic conformal',
-    rotation = list(lon = -100)
-  ),
-  lonaxis = list(
-    showgrid = TRUE,
-    gridwidth = 0.5,
-    range = c(-125, -111),
-    dtick = 5
-  ),
-  lataxis = list(
-    showgrid = TRUE,
-    gridwidth = 0.5,
-    range = c(31, 43),
-    dtick = 5
-  )
-)
+```{r, fig.width = 10, fig.height = 10}
 
 if(file.exists(paste0(prefix, ".coords.txt"))){
   if(!is.null(input$GMKey)){
