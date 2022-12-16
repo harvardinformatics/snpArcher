@@ -9,20 +9,38 @@ REFGENOME = samples['refGenome'].unique().tolist()
 
 rule all:
     input:
-        expand("results/{refGenome}/CCGP/{prefix}.roh", refGenome=REFGENOME, prefix=config['final_prefix'])
+        expand("results/{refGenome}/CCGP/{prefix}.roh", refGenome=REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}_ldpruned.vcf.gz", refGenome=REFGENOME, prefix=config['final_prefix'])
 
 rule roh:
     input:
         vcf = "results/{refGenome}/{prefix}_final.vcf.gz"
     output:
         roh = "results/{refGenome}/CCGP/{prefix}.roh",
+        ld = "results/{refGenome}/CCGP/{prefix}_ldpruned.vcf.gz",
     conda:
-        "envs/ccgp.yml"
-    params:
-        prefix = lambda wc, input: os.path.join(input.vcf.rsplit("/", 1)[0], "QC", wc.prefix),
-        min_depth = config["min_depth"]
+        "envs/roh.yml"
     shell:
         """
         bcftools roh -G30 --AF-dflt 0.4 -o {output.roh} {input.vcf}
+        bcftools +prune -w 20000bp -n 1 -N rand -O z -o {output.ld} {input.vcf}
         """
 
+# rule ld:
+#     input:
+#         vcf = "results/{refGenome}/{prefix}_final.vcf.gz"
+#     output:
+#         decay = "results/{refGenome}/CCGP/{prefix}.stat.gz",
+#     conda:
+#         "envs/ld.yml"
+#     params:
+#         prefix = lambda wc, input: os.path.join(input.vcf.rsplit("/", 1)[0], "QC", wc.prefix),
+#     shell:
+        # """
+        # git clone https://github.com/hewm2008/PopLDdecay.git 
+        # cd PopLDdecay; chmod 755 configure; ./configure;
+        # make;
+        # mv PopLDdecay  bin/;   
+        # cd ..
+        # ./PopLDdecay/bin/PopLDdecay -MaxDist 50 -InVCF {input.vcf} -OutStat {params.prefix}
+        # """
