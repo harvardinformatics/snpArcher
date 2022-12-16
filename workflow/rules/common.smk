@@ -30,6 +30,8 @@ def get_output():
         out.extend(expand("results/{refGenome}/{prefix}_callable_sites.bed", refGenome=ref, prefix=config['final_prefix']))
         if sample_counts[ref] > 2:
             out.append(rules.qc_all.input)
+        if config["ccgp"]:
+            out.append(rules.ccgp_all.input)
     return out
 
 def merge_bams_input(wc):
