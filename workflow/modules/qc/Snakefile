@@ -127,6 +127,8 @@ rule admixture:
         admix2 = "results/{refGenome}/QC/{prefix}.2.Q"
     params:
         outdir = lambda wc, input: input.bed.rsplit("/", 1)[0]
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * resources['admixture']['mem']
     conda:
         "envs/admixture.yml"
     shell:
@@ -178,6 +180,8 @@ rule qc_plots:
         prefix = lambda wc, input: input.het[:-4],
         nClusters = config['nClusters'],
         GMKey = config['GoogleAPIKey']
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * resources['render']['mem']
     output: 
         qcpdf = "results/{refGenome}/QC/{prefix}_qc.html"
     conda:
