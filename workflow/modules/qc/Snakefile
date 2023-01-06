@@ -107,6 +107,8 @@ rule plink:
         king = "results/{refGenome}/QC/{prefix}.king"
     conda:
         "envs/plink.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 2000
     shell:
         #plink 2 for king relatedness matrix (robust to structure) and plink 1.9 for distance matrix
         """
