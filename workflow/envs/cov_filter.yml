@@ -4,12 +4,12 @@ channels:
   - defaults
 dependencies:
   - bedtools==2.30.0
-  - mosdepth>=0.3.3
-  - d4tools>=0.3.4
-  - pip
-  - rust
-  - gcc
-  - binutils
-  - make
+  - mosdepth==0.3.3
+  - d4tools==0.3.4
+  - pip==22.3.1
+  - rust==1.65
+  - gcc==12.2.0
+  - binutils=2.39
+  - make==4.3
   - pip:
       - pyd4
