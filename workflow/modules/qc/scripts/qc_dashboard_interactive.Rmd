@@ -463,7 +463,7 @@ Row
 
 ```{r, fig.width = 10, fig.height = 10}
 
-if(file.exists(paste0(prefix, ".coords.txt"))){
+if((file.exists(paste0(prefix, ".coords.txt"))) & (file.size(paste0(prefix, ".coords.txt"))>0)){
     df.coords <- read.table(paste0(prefix, ".coords.txt"))
     names(df.coords) <- c("sample.ID","long","lat")
     
