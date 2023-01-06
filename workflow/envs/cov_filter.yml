@@ -9,7 +9,7 @@ dependencies:
   - pip==22.3.1
   - rust==1.65
   - gcc==12.2.0
-  - binutils=2.39
+  - binutils==2.39
   - make==4.3
   - pip:
       - pyd4
