@@ -1,0 +1,5 @@
+google-lifesciences: True
+google-lifesciences-region : 'us-central1'
+use-conda: True
+jobs: 15
+nolock: True
