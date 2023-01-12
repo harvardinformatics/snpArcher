@@ -32,7 +32,15 @@ module qc:
     config:
         config
 
+module ccgp:
+    snakefile:
+        "modules/ccgp/Snakefile"
+    config:
+        config
+
 use rule * from qc as qc_*
+
+use rule * from ccgp as ccgp_*
 
 rule all:
     input:
