@@ -39,12 +39,12 @@ def copy_reference(ref: Path) -> str:
         shutil.copyfile(ref, Path('data', 'genome', ref_name + ".fna"))
     return ref_name
 
-def write_sample_sheet(sample_dict: dict, ref_name: str, organism: str, ) -> None:
+def write_sample_sheet(sample_dict: dict, ref_name: str, ref_path: str, organism: str, ) -> None:
     """Writes the sample sheet"""
     with open(Path("../config", "samples.csv"), "w") as out:
-        out.write("BioSample,LibraryName,refGenome,Run,Organism,BioProject,fq1,fq2\n")
+        out.write("BioSample,LibraryName,refGenome,refPath,Run,Organism,BioProject,fq1,fq2\n")
         for i, (k, v) in enumerate(sample_dict.items()):
-            out.write(f"{k},lib_{k},{ref_name},{i},{organism},NaN,{v[0]},{v[1]}\n")
+            out.write(f"{k},lib_{k},{ref_name},{ref_path}{i},{organism},NaN,{v[0]},{v[1]}\n")
 
 
 def main() -> None:
@@ -53,6 +53,7 @@ def main() -> None:
     parser.add_argument('-s', '--sample_list', dest='samp', required=True, help="Specify path to sample list")
     parser.add_argument('-f', '--fastq_dir', dest='fastq', required=True, help="Specify path to fastq dir")
     parser.add_argument('-r', '--ref', dest='ref', required=True, help="Specify path to reference genome")
+    parser.add_argument('-c', '--copy', dest='copyref', required=False, default=False, help="Copy reference genome to data/genome in the current working dir and unzip.")
     parser.add_argument('-o', '--org', dest='org', required=True, help="Specify organism name")
     args = parser.parse_args()
 
@@ -65,8 +66,14 @@ def main() -> None:
         samples = read_sample_list(f)
 
     sample_dict, cant_find = find_sample_fastqs(samples, fastq_dir)
-    ref_name = copy_reference(ref)
-    write_sample_sheet(sample_dict, ref_name, organism)
+    if args.copyref:
+        ref_name = copy_reference(ref)
+        ref_path = "../data/genome/" + ref_name + ".fna"
+    else:
+        ref_name = ref.stem
+        ref_path = args.ref
+
+    write_sample_sheet(sample_dict, ref_name, ref_path, organism)
     if cant_find:
         print("Couldnt' find fastqs for these files:")
         for name in cant_find:
