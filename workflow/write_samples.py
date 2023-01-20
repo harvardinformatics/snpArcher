@@ -57,11 +57,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description='Write sample files.')
     parser.add_argument('-s', '--sample_list', dest='samp', required=True, help="Specify path to sample list")
     parser.add_argument('-f', '--fastq_dir', dest='fastq', required=True, help="Specify path to fastq dir")
-    parser.add_argument('-c', '--copy', dest='copyref', required=False, default=False, help="Copy reference genome to data/genome in the current working dir and unzip.")
+    parser.add_argument('-c', '--copy', dest='copyref', required=False, default=False, help="Copy reference genome to data/genome dir and unzip.")
     parser.add_argument('-o', '--org', dest='org', required=True, help="Specify organism name")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-r', '--ref', dest='ref', help="Specify path to reference genome")
-    group.add_argument('-a', '--acc', dest='acc', help="Specify reference genome accession")
+    group.add_argument('-r', '--ref', dest='ref', help="Specify path to reference genome. Mutually exclusive with -a/--acc.")
+    group.add_argument('-a', '--acc', dest='acc', help="Specify reference genome accession. Mutually exclusive with -r/--ref")
     args = parser.parse_args()
 
     sample_list = args.samp
