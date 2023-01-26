@@ -3,4 +3,5 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - zlib-devel-amzn2-aarch64
+  - plink2==2.00a2.3
+  - plink==1.90b6.21

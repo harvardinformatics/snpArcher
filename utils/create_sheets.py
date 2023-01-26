@@ -23,7 +23,8 @@ def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     list_of_dicts = []
     for _, row in df.iterrows():
         record = row.to_dict()
-        
+        # print(record.get("*sample_name"))
+        # print(record.get("files"))
         if record.get(f"run1_read1") is not None:
             pairs = {f"run{i}": None for i in range(1,107)}
             for run in pairs.keys():
@@ -32,7 +33,9 @@ def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                     break
                 if not isinstance(f1, str) and not isinstance(f2, str):
                     if math.isnan(f1) and math.isnan(f2):
-                        continue
+                        print(f"Found nan file for sample {record.get('*sample_name')}")
+                        break
+                
                 if (f1 is None and f2 is not None) or (f1 is not None and f2 is None):
                     raise ValueError(f"Sample {record['*sample_name']} has missing read pair ({run}): fq1: {f1}, fq2: {f2}")
                 if not isinstance(f1, str) or not isinstance(f2, str):
@@ -48,9 +51,9 @@ def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                     "title"
                 ] = f"Whole genome sequencing of {record_copy['*organism']}"
                 list_of_dicts.append(record_copy)
-            continue
+            # continue
                 
-        elif record.get(f"filename1") is not None:
+        if record.get(f"filename1") is not None:
             pairs = {}
             for i in range(1,107,2):
                 pairs[i] = [record.get(f"filename{i}"), record.get(f"filename{i+1}")]
@@ -72,44 +75,55 @@ def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                     ] = f"Whole genome sequencing of {record_copy['*organism']}"
                     list_of_dicts.append(record_copy)
             continue
-         
-
-        elif record.get("files") is not None:
+        '''
+        if record.get("files") is not None:
             files = record["files"]
+            if isinstance(record.get(f"files"), list):
+                for i in record[f"files"]:
+                    record.append(i.strip())
+                    print(i)
+        '''
+                
+        if record.get("files") is not None:
+            
+            files = record["files"]
+            if isinstance(record.get(f"files"), list):
+                files = record[f"files"]
+            
+                if len(files) == 2:
 
-            if len(files) == 2:
-                record["fq1"] = files[0]
-                record["fq2"] = files[1]
-                record["library_ID"] = record["fq1"].split("_R1")[0]
-                record["title"] = f"Whole genome sequencing of {record['*organism']}"
-                list_of_dicts.append(record)
-        
-            elif len(files) >= 4:
+                    record["fq1"] = files[0]
+                    record["fq2"] = files[1]
+                    record["library_ID"] = record["fq1"].split("_R1")[0]
+                    record["title"] = f"Whole genome sequencing of {record['*organism']}"
+                    list_of_dicts.append(record)
+            
+                elif len(files) >= 4:
 
-                prefixes = set()
-                for file in files:
-                    prefixes.add(
-                        re.split("_R\d[._]", file)[0]
-                    )  # this splits on the _R1/R2 of the filename
+                    prefixes = set()
+                    for file in files:
+                        prefixes.add(
+                            re.split("_R\d[._]", file)[0]
+                        )  # this splits on the _R1/R2 of the filename
 
                 # Using fuzzy matching here for the following example case:
                 # sample has two sets of reads: samp_a1_R1.fq.gz and samp_a1_L001_R1.fq.gz
                 # Splitting on R1 gives two prefixes, samp_a1_R1 and samp_a1_L001, the former is a substring of the latter,
                 # So something like [f for f in files if p in f for p in prefixes] doesn't work to find pairs of reads.
-                pairs = []
-                for p in prefixes:
-                    matches = process.extract(p, files, limit=2)
-                    pairs.append([matches[0][0], matches[1][0]])
+                    pairs = []
+                    for p in prefixes:
+                        matches = process.extract(p, files, limit=2)
+                        pairs.append([matches[0][0], matches[1][0]])
 
-                for pair in pairs:
-                    record_copy = copy.deepcopy(record)
-                    record_copy["fq1"] = pair[0]
-                    record_copy["fq2"] = pair[1]
-                    record_copy["library_ID"] = record_copy["fq1"].split("_R1")[0]
-                    record_copy[
-                        "title"
-                    ] = f"Whole genome sequencing of {record_copy['*organism']}"
-                    list_of_dicts.append(record_copy)
+                    for pair in pairs:
+                        record_copy = copy.deepcopy(record)
+                        record_copy["fq1"] = pair[0]
+                        record_copy["fq2"] = pair[1]
+                        record_copy["library_ID"] = record_copy["fq1"].split("_R1")[0]
+                        record_copy[
+                            "title"
+                        ] = f"Whole genome sequencing of {record_copy['*organism']}"
+                        list_of_dicts.append(record_copy)
             
             
     out_df = pd.DataFrame(list_of_dicts)
@@ -126,6 +140,10 @@ def create_workflow_sheet(
     df = preprocess_dataframe(
         pd.DataFrame(list(ccgp_samples.find({"ccgp-project-id": project_id})))
     )
+    num_samples = len(list(ccgp_samples.find({"ccgp-project-id": project_id})))
+    print(f"Created sheet for {num_samples} from project: {project_id}")
+    
+    
     try:
         workflow_df = df[
             [

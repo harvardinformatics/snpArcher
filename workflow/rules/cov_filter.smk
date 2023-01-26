@@ -73,7 +73,7 @@ rule callable_bed:
         map = "results/{refGenome}/callable_sites/{prefix}_callable_sites_map.bed"
     output:
         callable_sites = "results/{refGenome}/{prefix}_callable_sites.bed",
-        tmp_cov = temp("results/{refGenome}/callable_sites/{prefix}_temp_cov.bed")
+        tmp_cov = temp("results/{refGenome}/callable_sites/{prefix}_temp_cov.bed"),
     conda:
         "../envs/cov_filter.yml"
     benchmark:
@@ -88,3 +88,5 @@ rule callable_bed:
         bedtools sort -i {output.tmp_cov} | bedtools merge -d {params.merge} -i - > {output.tmp_cov}
         bedtools intersect -a {output.tmp_cov} -b {input.map} | bedtools sort -i - | bedtools merge -i - > {output.callable_sites}
         """
+#awk -F'\t' 'BEGIN{SUM=0}{ SUM+=$3-$2 }END{print SUM}' {output.callable_sites} > {output.bed_l}
+#bed_l = temp("results/{refGenome}/callable_sites/{prefix}_length.txt")

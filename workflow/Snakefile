@@ -6,7 +6,7 @@ include: "rules/common.smk"
 include: "rules/sumstats.smk"
 include: "rules/fastq.smk"
 include: "rules/reference.smk"
-#include: "rules/mappability.smk"
+include: "rules/mappability.smk"
 
 if config['sentieon']:
     include: "rules/sentieon.smk"
@@ -18,8 +18,8 @@ else:
     else:
         include: "rules/bam2vcf_gatk.smk"
 
-# if config['cov_filter']:
-#     include: "rules/cov_filter.smk"
+if config['cov_filter']:
+    include: "rules/cov_filter.smk"
 
 if config['remote_reads']:
     from snakemake.remote.GS import RemoteProvider as GSRemoteProvider

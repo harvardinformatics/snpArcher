@@ -3,6 +3,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
+  - python==3.10.8
   - bedtools==2.30.0
   - mosdepth==0.3.3
   - d4tools==0.3.4
