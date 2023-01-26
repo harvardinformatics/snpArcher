@@ -54,7 +54,7 @@ rule create_cov_bed:
         stats = "results/{refGenome}/summary_stats/all_cov_sumstats.txt",
         d4 = "results/{refGenome}/callable_sites/all_samples.d4"
     output:
-        covbed = temp("results/{refGenome}/callable_sites/callable_sites_cov.bed")
+        covbed = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed"
     benchmark:
         "benchmarks/{refGenome}/covbed/benchmark.txt"
     params:
@@ -69,7 +69,7 @@ rule create_cov_bed:
 
 rule callable_bed:
     input:
-        cov = "results/{refGenome}/callable_sites/callable_sites_cov.bed",
+        cov = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed",
         map = "results/{refGenome}/callable_sites/{prefix}_callable_sites_map.bed"
     output:
         callable_sites = "results/{refGenome}/{prefix}_callable_sites.bed",
@@ -84,7 +84,6 @@ rule callable_bed:
         merge = config['cov_merge']
     shell:
         """
-        bedtools merge -i {input.cov} > {output.tmp_cov}
-        bedtools sort -i {output.tmp_cov} | bedtools merge -d {params.merge} -i - > {output.tmp_cov}
+        bedtools sort -i {input.cov} | bedtools merge -d {params.merge} -i - > {output.tmp_cov}
         bedtools intersect -a {output.tmp_cov} -b {input.map} | bedtools sort -i - | bedtools merge -i - > {output.callable_sites}
         """
