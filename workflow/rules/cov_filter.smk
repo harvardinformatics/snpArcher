@@ -56,7 +56,7 @@ rule create_cov_bed:
     output:
         covbed = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed"
     benchmark:
-        "benchmarks/{refGenome}/covbed/benchmark.txt"
+        "benchmarks/{refGenome}/covbed/{prefix}_benchmark.txt"
     params:
         cov_threshold_stdev = config["cov_threshold_stdev"],
         cov_threshold_lower = config["cov_threshold_lower"],
