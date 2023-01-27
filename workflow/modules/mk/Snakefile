@@ -3,15 +3,12 @@ import os
 include: "rules/common.smk"
 configfile: "config/config.yaml"
 
-if config['merge_vcfs']:
-    include: "rules/merge_vcfs.smk"
-
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
 REFGENOME = samples['refGenome'].unique().tolist()
 
 rule all:
     input:
-        expand("results/{refGenome}/MK/{prefix}_mk_table.tsv", refGenome=REFGENOME, prefix=config['final_prefix'])
+        expand("results/{refGenome}/mk/{prefix}_mk_table.tsv", refGenome=REFGENOME, prefix=config['final_prefix'])
 
 rule filter_snps:
     """
@@ -21,13 +18,13 @@ rule filter_snps:
         bed = "results/{refGenome}/{prefix}_callable_sites.bed",
         vcf = "results/{refGenome}/{prefix}_final.vcf.gz"
     output:
-        filtered = "results/{refGenome}/mk/{prefix}_final.filtered.snps.vcf.gz"
+        filtered = "results/{refGenome}/mk/{prefix}.filtered_snps.vcf.gz"
     conda:
         "../envs/mk.yml"
     shell:
         """
         bcftools view -v snps -f .,PASS \
-        -e 'ALT="*" | TYPE~"indel"' \
+        -e 'AF==1 | AF==0 | ALT="*" | TYPE~"indel" | ref="N"' \
         -R {input.bed} \
         {input.vcf} -O z -o {output.filtered}
         """
