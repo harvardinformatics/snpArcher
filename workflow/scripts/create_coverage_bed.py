@@ -57,21 +57,41 @@ covfile = D4File(snakemake.input["d4"])
 covmat = covfile.open_all_tracks()
 
 with open(snakemake.output["covbed"], mode='w') as covbed:
+    good_interval = False
     for chrom in covfile.chroms():
+        
+        try: 
+            thresh_high = cov_thresh[chrom[0]]['high']
+        except KeyError:
+            thresh_high = cov_thresh['total']['high']
+
+        try:
+            thresh_low = cov_thresh[chrom[0]]['low']
+        except KeyError:
+            thresh_low = cov_thresh['total']['low']
+
         for values in covmat.enumerate_values(chrom[0],0,chrom[1]):
             covs=values[2]
+            pos=values[1]
+            chr=values[0]
             #get mean coverage for window
             res1=math.fsum(covs)/len(covs)
 
-            try: 
-                thresh_high = cov_thresh[chrom[0]]['high']
-            except KeyError:
-                thresh_high = cov_thresh['total']['high']
+            if res1 <= thresh_high and res1 >= thresh_low and good_interval == False:
+                # we are starting a new interval, print chr and pos
+                print(chr, pos, file=covbed, sep="\t", end="")
+                # set good interval to True
+                good_interval = True
+            elif (res1 > thresh_high or res1 < thresh_low) and good_interval:
+                # we are ending a good interval
+                print("\t", pos, file=covbed, sep="")
+                good_interval = False
+            else:
+                # we are either in a good interval, or in a bad interval, so just keep going
+                continue
+        # if at this stage we are in a good interval, that means the good interval goes ot the end of the chromosome
+        if good_interval:
+            endpos = chrom[1]+1
+            print("\t", endpos, file=covbed, sep="")
+            good_interval = False
 
-            try:
-                thresh_low = cov_thresh[chrom[0]]['low']
-            except KeyError:
-                thresh_low = cov_thresh['total']['low']
-
-            if res1 <= thresh_high and res1 >= thresh_low:
-                print(chrom[0], values[1], values[1]+1, file=covbed, sep="\t")
