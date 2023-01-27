@@ -107,6 +107,8 @@ rule plink:
         king = "results/{refGenome}/QC/{prefix}.king"
     conda:
         "envs/plink.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 2000
     shell:
         #plink 2 for king relatedness matrix (robust to structure) and plink 1.9 for distance matrix
         """
@@ -127,6 +129,8 @@ rule admixture:
         admix2 = "results/{refGenome}/QC/{prefix}.2.Q"
     params:
         outdir = lambda wc, input: input.bed.rsplit("/", 1)[0]
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 4000
     conda:
         "envs/admixture.yml"
     shell:
@@ -145,7 +149,7 @@ rule generate_coords_file:
     output: 
         "results/{refGenome}/QC/{prefix}.coords.txt"
     run:
-        out_df = samples[["BioSample", "long", "lat"]]
+        out_df = samples.loc[(samples['refGenome'] == wildcards.refGenome)][["BioSample", "long", "lat"]]
         out_df.drop_duplicates("BioSample", inplace=True)
         out_df.dropna(subset=["long", "lat"], thresh=1, inplace=True)
         out_df.to_csv(output[0], index=False, sep="\t", header=False)
@@ -178,6 +182,8 @@ rule qc_plots:
         prefix = lambda wc, input: input.het[:-4],
         nClusters = config['nClusters'],
         GMKey = config['GoogleAPIKey']
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 2000
     output: 
         qcpdf = "results/{refGenome}/QC/{prefix}_qc.html"
     conda:

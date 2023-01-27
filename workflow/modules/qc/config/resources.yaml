@@ -104,4 +104,6 @@ bedtools:
 plink:
     threads: 5
 admixture:
-    mem: 4000
+    mem: 6000
+render:
+    mem: 2000
