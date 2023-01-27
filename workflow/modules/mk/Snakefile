@@ -10,25 +10,6 @@ rule all:
     input:
         expand("results/{refGenome}/mk/{prefix}_mk_table.tsv", refGenome=REFGENOME, prefix=config['final_prefix'])
 
-rule filter_snps:
-    """
-    Filters a vcf file to remove sites that do not overlap callable intervals, do not pass filters, and indels
-    """
-    input: 
-        bed = "results/{refGenome}/{prefix}_callable_sites.bed",
-        vcf = "results/{refGenome}/{prefix}_final.vcf.gz"
-    output:
-        filtered = "results/{refGenome}/mk/{prefix}.filtered_snps.vcf.gz"
-    conda:
-        "../envs/mk.yml"
-    shell:
-        """
-        bcftools view -v snps -f .,PASS \
-        -e 'AF==1 | AF==0 | ALT="*" | TYPE~"indel" | ref="N"' \
-        -R {input.bed} \
-        {input.vcf} -O z -o {output.filtered}
-        """
-
 rule prep_genome:
     """
     Gets the needed information (fasta and gff) from NCBI
@@ -72,26 +53,25 @@ rule split_samples:
     Splits sample sheet to make ingroup and outgroup files
     """
     output:
-        exclude = "results/{refGenome}/mk/{prefix}_ingroups.txt",
+        exclude = "results/{refGenome}/mk/{prefix}_exclude.txt",
         outgroups = "results/{refGenome}/mk/{prefix}_ougroups.txt"
     run:
         out_df = samples[["BioSample", "SampleType"]]
         out_df.drop_duplicates("BioSample", inplace=True)
-        exclude = out_df[out_df["SampleType"] == "exclude", "BioSample"]
+        exclude = out_df[out_df["SampleType"] != "ingroup" or out_df["SampleType"] != "outgroup", "BioSample"]
         outgroups = out_df[out_df["SampleType"] == "outgroup", "BioSample"]
         exclude.to_csv(output[0], index=False, sep="\t", header=False)
         outgroups.to_csv(output[1], index=False, sep="\t", header=False)
- 
 
 rule degenotate:
     """
     Runs degenotate to compute MK tables
     """
     input:
-        vcf = "results/{refGenome}/mk/{prefix}_final.filtered.snps.vcf.gz",
+        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
         genome = "results/{refGenome}/data/genome/{refGenome}.fna",
         gff = "results/{refGenome}/data/genome/{refGenome}.gff",
-        exclude = "results/{refGenome}/mk/{prefix}_ingroups.txt",
+        exclude = "results/{refGenome}/mk/{prefix}_exclude.txt",
         outgroups = "results/{refGenome}/mk/{prefix}_ougroups.txt"
     output:
         "results/{refGenome}/mk/{prefix}_mk_table.tsv"
@@ -101,6 +81,11 @@ rule degenotate:
         "../envs/mk.yml"
     shell:
         """"
-        degenotate.py -a {input.gff} -g {input.genome} -u {input.outgroups} -e {input.exclude} -d {params.delim} -o "results/{refGenome}/mk/{prefix}_degen_raw"
+        if [ -s input.exclude ]
+        then
+            degenotate.py -a {input.gff} -g {input.genome} -u {input.outgroups} -e {input.exclude} -d {params.delim} -o "results/{refGenome}/mk/{prefix}_degen_raw"
+        else
+            degenotate.py -a {input.gff} -g {input.genome} -u {input.outgroups} -d {params.delim} -o "results/{refGenome}/mk/{prefix}_degen_raw"
+        fi
         cp results/{refGenome}/mk/{prefix}_degen_raw/mk_table.tsv {output}
         """

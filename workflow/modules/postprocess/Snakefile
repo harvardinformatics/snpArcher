@@ -12,21 +12,115 @@ rule all:
         expand("results/{refGenome}/{prefix}_clean_snps.vcf.gz", refGenome=REFGENOME, prefix=config['final_prefix']),
         expand("results/{refGenome}/{prefix}_clean_indels.vcf.gz", refGenome=REFGENOME, prefix=config['final_prefix'])
 
-rule filter_snps:
+rule filter_individuals:
     """
-    Filters a vcf file to remove sites that do not overlap callable intervals, do not pass filters, and indels
+    make list of individuals to exclude based on sampleType column
+    """
+    output:
+        include = "results/{refGenome}/postprocess/{prefix}_samps.txt",
+    run:
+        out_df = samples[["BioSample", "SampleType"]]
+        out_df.drop_duplicates("BioSample", inplace=True)
+        exclude = out_df[out_df["SampleType"] != "exclude", "BioSample"]
+        exclude.to_csv(output[0], index=False, sep="\t", header=False)
+
+rule basic_filter:
+    """
+    Filters a vcf file to remove samples marked exclude, sites that don't pass filters,
+    sites with reference equal to N or alt equal to ., and sites fixed in the same,
+    that is with AF == 1 or AF == 0.
     """
     input: 
-        bed = "results/{refGenome}/{prefix}_callable_sites.bed",
-        vcf = "results/{refGenome}/{prefix}_raw.vcf.gz"
+        vcf = "results/{refGenome}/{prefix}_raw.vcf.gz",
+        include = "results/{refGenome}/postprocess/{prefix}_exclude.txt"
     output:
-        filtered = "results/{refGenome}/{prefix}_filtered.vcf.gz"
+        filtered = "results/{refGenome}/postprocess/{prefix}_filtered.vcf.gz"
     conda:
-        "../envs/mk.yml"
+        "../envs/filter.yml"
     shell:
         """
-        bcftools view -v snps -f .,PASS \
-        -e 'AF==1 | AF==0 | ALT="*" | TYPE~"indel" | ref="N"' \
-        -R {input.bed} \
-        {input.vcf} -O z -o {output.filtered}
+        bcftools view -S {input.include} -f .,PASS {input.vcf} -a -U -O u |
+        bcftools view -m2 -e 'AF==1 | AF==0 | ref="N" | ALT="."' -O z -o {output.filtered}
+        bcftools index {output.filtered}
+        """
+
+rule update_bed:
+    """
+    Updates callable sites bed file to add contigs less than threshold to regions to exclude
+    """
+    input:
+        bed = "results/{refGenome}/{prefix}_callable_sites.bed",
+        fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai"
+    output:
+        "results/{refGenome}/postprocess/{prefix}_exclude_sites.bed"
+    conda:
+        "../envs/bed.yml"
+    params:
+        size_filter = config["contig_size"],
+        tmp_bed = "results/{refGenome}/postprocess/tmp.bed"
+    shell:
+        """
+        awk 'BEGIN{OFS="\t"}{$2<{params.size_filter} {{print $1,0,$2}}' {input.fai} > {params.tmp_bed}
+        cat {params.tmp_bed} {input.bed} | bedtools merge -i - > {output}
+        """
+
+rule strict_filter:  
+    input: 
+        bed = "results/{refGenome}/postprocess/{prefix}_exclude_sites.bed",
+        vcf = "results/{refGenome}/postprocess/{prefix}_filtered.vcf.gz"
+    output: 
+        vcf = temp("results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz"),
+        idx = temp("results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi")
+    conda:
+        "../envs/filter.yml"
+    params:
+        miss = config["missingness"],
+        maf = config["maf"],
+        chr_ex = config["scaffolds_to_exclude"]
+    shell:
+        """
+        if [ -z "{params.chr_ex}" ]
+        then
+            bcftools view -R {input.bed} -m2 -M2 \
+            -e 'F_MISSING > {params.miss} | AF<{params.maf}' \
+            {input.vcf} -O u -o {output.vcf}
+        else
+            bcftools view -t ^{params.chr_ex} -R {input.bed} -m2 -M2 \
+            -e 'F_MISSING > {params.miss} | AF<{params.maf}' \
+            {input.vcf} -O u -o {output.vcf} 
+        fi
+        bcftools index {output.vcf}
+        """
+
+ rule subset_indels:
+    """
+    Produce a clean vcf with only indels variants.
+    """
+    input: 
+        vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
+        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi",
+        ref = "results/{refGenome}/data/genome/{refGenome}.fna"
+    output: 
+        "results/{refGenome}/postprocess/{prefix}_clean_indels.vcf.gz"
+    conda:
+        "../envs/filter.yml"
+    shell:
+        """
+        bcftools norm -f {input.ref} -a --atom-overlaps \* -m- indels {input.vcf} -O u | bcftools view -v indels {input.vcf} -O z -o {output}
+        """
+
+rule subset_snps:
+    """
+    Produce a clean vcf with only simple snps.
+    """
+    input: 
+        vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
+        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi"
+    output: 
+        "results/{refGenome}/postprocess/{prefix}_clean_snps.vcf.gz"
+    conda:
+        "../envs/filter.yml"
+    shell:
+        """
+        bcftools norm -m- snps {input.vcf} -O u | bcftools view -v snps -e 'TYPE~"indel"' -O z -o {output}
         """

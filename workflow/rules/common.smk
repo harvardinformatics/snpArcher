@@ -30,9 +30,9 @@ def get_output():
         out.extend(expand("results/{refGenome}/{prefix}_callable_sites.bed", refGenome=ref, prefix=config['final_prefix']))
         if sample_counts[ref] > 2:
             out.append(rules.qc_all.input)
-        if "sampleType" in samples.columns:
+        if "SampleType" in samples.columns:
             out.append(rules.postprocess_all.input)
-            if all(i in samples['sampleType'].tolist() for i in ["ingroup", "outgroup"]):
+            if all(i in samples['SampleType'].tolist() for i in ["ingroup", "outgroup"]):
                 out.append(rules.mk_all.input)
     return out
 
