@@ -100,10 +100,4 @@ vcftools:
 # bedtools program
 bedtools:
     mem: 30000
-# plink
-plink:
-    threads: 5
-admixture:
-    mem: 6000
-render:
-    mem: 2000
+

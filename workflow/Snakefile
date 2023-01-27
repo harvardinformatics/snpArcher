@@ -32,6 +32,18 @@ module qc:
     config:
         config
 
+module mk:
+    snakefile:
+        "modules/mk/Snakefile"
+    config:
+        config
+
+module postprocess:
+    snakefile:
+        "modules/postprocess/Snakefile"
+    config:
+        config
+
 use rule * from qc as qc_*
 use rule * from postprocess as postprocess_*
 use rule * from mk as mk_*

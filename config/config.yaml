@@ -24,7 +24,7 @@ db_scatter_factor: 0.15 # Scatter factor for calculating number of intervals to 
 
 ## Coverage options ##
 ## default pipeline is optimized for low coverage data - if using high coverage data (> 10x), uncomment high coverage options and comment out low coverage options
-min_depth: 2
+
 # low coverage options (< 10x)
 minP: 1
 minD: 1
@@ -48,6 +48,7 @@ cov_merge: 100 #merge passing coverage regions separate by this or fewer bp into
 ## QC options ##
 nClusters: 3
 GoogleAPIKey:
+min_depth: 2
 
 ########################################
 ## coverage thresholds ##
