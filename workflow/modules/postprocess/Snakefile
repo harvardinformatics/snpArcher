@@ -1,0 +1,32 @@
+import pandas as pd
+import os
+include: "rules/common.smk"
+configfile: "config/config.yaml"
+
+samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+REFGENOME = samples['refGenome'].unique().tolist()
+
+rule all:
+    input:
+        expand("results/{refGenome}/{prefix}_filtered.vcf.gz", refGenome=REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/{prefix}_clean_snps.vcf.gz", refGenome=REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/{prefix}_clean_indels.vcf.gz", refGenome=REFGENOME, prefix=config['final_prefix'])
+
+rule filter_snps:
+    """
+    Filters a vcf file to remove sites that do not overlap callable intervals, do not pass filters, and indels
+    """
+    input: 
+        bed = "results/{refGenome}/{prefix}_callable_sites.bed",
+        vcf = "results/{refGenome}/{prefix}_raw.vcf.gz"
+    output:
+        filtered = "results/{refGenome}/{prefix}_filtered.vcf.gz"
+    conda:
+        "../envs/mk.yml"
+    shell:
+        """
+        bcftools view -v snps -f .,PASS \
+        -e 'AF==1 | AF==0 | ALT="*" | TYPE~"indel" | ref="N"' \
+        -R {input.bed} \
+        {input.vcf} -O z -o {output.filtered}
+        """
