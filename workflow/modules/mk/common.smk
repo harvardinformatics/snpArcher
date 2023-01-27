@@ -24,9 +24,9 @@ def get_gff(wildcards):
         _refs = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['refGFF'].dropna().unique().tolist()
         for ref in _refs:
             if not os.path.exists(ref):
-                raise WorkflowError(f"Reference genome {ref} does not exist")
+                raise WorkflowError(f"Reference gff {ref} does not exist")
             elif ref.rsplit(".", 1)[1] == '.gz':
-                raise WorkflowError(f"Reference genome {ref} must be unzipped first.")
+                raise WorkflowError(f"Reference gff {ref} must be unzipped first.")
         return _refs
     else:
         return []

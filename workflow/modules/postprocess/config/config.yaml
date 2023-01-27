@@ -2,14 +2,11 @@
 # Variables you need to change
 ##############################
 
-samples: "config/test_coords.csv"  # name of the sample metadata CSV 
+samples: "config/samples.csv"  # name of the sample metadata CSV 
 final_prefix: "" # prefix for final output files
 
 ##############################
 # Variables you *might* need to change
 ##############################
 
-## QC options ##
-nClusters: 3
-GoogleAPIKey:
-min_depth: 2
+## Filtering options ##
