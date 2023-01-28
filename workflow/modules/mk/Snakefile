@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-include: "rules/common.smk"
+include: "common.smk"
 configfile: "config/config.yaml"
 
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
