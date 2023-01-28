@@ -1,6 +1,5 @@
 import pandas as pd
 import os
-include: "rules/common.smk"
 configfile: "config/config.yaml"
 
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
@@ -92,7 +91,7 @@ rule strict_filter:
         bcftools index {output.vcf}
         """
 
- rule subset_indels:
+rule subset_indels:
     """
     Produce a clean vcf with only indels variants.
     """
