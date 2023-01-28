@@ -18,13 +18,13 @@ rule prep_genome:
         ref = get_ref,
         gff = get_gff
     output:
-        ref = "results/{refGenome}/data/genome/{refGenome}.fna",
-        gff = "results/{refGenome}/data/genome/{refGenome}.gff"
+        ref = "results/{refGenome}/mk/{refGenome}.fna",
+        gff = "results/{refGenome}/mk/{refGenome}.gff"
     params:
-        dataset = "results/{refGenome}/data/genome/{refGenome}_dataset.zip",
-        outdir = "results/{refGenome}/data/genome/{refGenome}"
+        dataset = "results/{refGenome}/mk/{refGenome}_dataset.zip",
+        outdir = "results/{refGenome}/mk/{refGenome}"
     conda:
-        "../envs/mk.yml"
+        "../envs/ncbi.yml"
     shell:
         """
         set +e
