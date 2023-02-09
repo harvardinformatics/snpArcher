@@ -60,7 +60,7 @@ rule update_bed:
         tmp_bed = "results/{refGenome}/postprocess/tmp.bed"
     shell:
         """
-        awk 'BEGIN{{OFS="\\t"}}{{if ($2<{params.size_filter}) print $1,0,$2}}' {input.fai} > {params.tmp_bed}
+        awk 'BEGIN{{OFS="\\t"}}{{if ($2<{params.size_filter}) {{print $1,0,$2}}}}' {input.fai} > {params.tmp_bed}
         cat {params.tmp_bed} {input.bed} | bedtools merge -i - > {output}
         """
 
