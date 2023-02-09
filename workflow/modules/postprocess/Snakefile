@@ -20,8 +20,8 @@ rule filter_individuals:
     run:
         out_df = samples[["BioSample", "SampleType"]]
         out_df.drop_duplicates("BioSample", inplace=True)
-        exclude = out_df[out_df["SampleType"] != "exclude", "BioSample"]
-        exclude.to_csv(output[0], index=False, sep="\t", header=False)
+        include =out_df[~out_df.SampleType.isin(["exclude"])].BioSample
+        include.dropna.to_csv(output[0], index=False, sep="\t", header=False)
 
 rule basic_filter:
     """
