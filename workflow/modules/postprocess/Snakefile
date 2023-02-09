@@ -35,7 +35,7 @@ rule basic_filter:
     output:
         filtered = "results/{refGenome}/{prefix}_filtered.vcf.gz"
     conda:
-        "../envs/filter.yml"
+        "envs/filter.yml"
     shell:
         """
         bcftools view -S {input.include} -f .,PASS {input.vcf} -a -U -O u |
@@ -53,7 +53,7 @@ rule update_bed:
     output:
         "results/{refGenome}/postprocess/{prefix}_exclude_sites.bed"
     conda:
-        "../envs/bed.yml"
+        "envs/bed.yml"
     params:
         size_filter = config["contig_size"],
         tmp_bed = "results/{refGenome}/postprocess/tmp.bed"
@@ -71,7 +71,7 @@ rule strict_filter:
         vcf = temp("results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz"),
         idx = temp("results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi")
     conda:
-        "../envs/filter.yml"
+        "envs/filter.yml"
     params:
         miss = config["missingness"],
         maf = config["maf"],
@@ -102,7 +102,7 @@ rule subset_indels:
     output: 
         "results/{refGenome}/{prefix}_clean_indels.vcf.gz"
     conda:
-        "../envs/filter.yml"
+        "envs/filter.yml"
     shell:
         """
         bcftools norm -f {input.ref} -a --atom-overlaps \* -m- indels {input.vcf} -O u | bcftools view -v indels {input.vcf} -O z -o {output}
@@ -118,7 +118,7 @@ rule subset_snps:
     output: 
         "results/{refGenome}/{prefix}_clean_snps.vcf.gz"
     conda:
-        "../envs/filter.yml"
+        "envs/filter.yml"
     shell:
         """
         bcftools norm -m- snps {input.vcf} -O u | bcftools view -v snps -e 'TYPE~"indel"' -O z -o {output}
