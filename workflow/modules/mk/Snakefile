@@ -83,9 +83,9 @@ rule degenotate:
         """"
         if [ -s input.exclude ]
         then
-            degenotate.py -a {input.gff} -g {input.genome} -u {input.outgroups} -e {input.exclude} -d {params.delim} -o "results/{refGenome}/mk/{prefix}_degen_raw"
+            degenotate.py -a {input.gff} -g {input.genome} -u {input.outgroups} -e {input.exclude} -d {params.delim} -o "results/{wildcards.refGenome}/mk/{prefix}_degen_raw"
         else
-            degenotate.py -a {input.gff} -g {input.genome} -u {input.outgroups} -d {params.delim} -o "results/{refGenome}/mk/{prefix}_degen_raw"
+            degenotate.py -a {input.gff} -g {input.genome} -u {input.outgroups} -d {params.delim} -o "results/{wildcards.refGenome}/mk/{prefix}_degen_raw"
         fi
         cp results/{refGenome}/mk/{prefix}_degen_raw/mk_table.tsv {output}
         """
