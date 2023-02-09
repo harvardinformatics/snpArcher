@@ -31,7 +31,7 @@ rule basic_filter:
     """
     input: 
         vcf = "results/{refGenome}/{prefix}_raw.vcf.gz",
-        include = "results/{refGenome}/postprocess/{prefix}_exclude.txt"
+        include = "results/{refGenome}/postprocess/{prefix}_samps.txt"
     output:
         filtered = "results/{refGenome}/{prefix}_filtered.vcf.gz"
     conda:
