@@ -33,7 +33,7 @@ rule basic_filter:
         vcf = "results/{refGenome}/{prefix}_raw.vcf.gz",
         include = "results/{refGenome}/postprocess/{prefix}_exclude.txt"
     output:
-        filtered = "results/{refGenome}/postprocess/{prefix}_filtered.vcf.gz"
+        filtered = "results/{refGenome}/{prefix}_filtered.vcf.gz"
     conda:
         "../envs/filter.yml"
     shell:
@@ -66,7 +66,7 @@ rule update_bed:
 rule strict_filter:  
     input: 
         bed = "results/{refGenome}/postprocess/{prefix}_exclude_sites.bed",
-        vcf = "results/{refGenome}/postprocess/{prefix}_filtered.vcf.gz"
+        vcf = "results/{refGenome}/{prefix}_filtered.vcf.gz"
     output: 
         vcf = temp("results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz"),
         idx = temp("results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi")
@@ -100,7 +100,7 @@ rule subset_indels:
         idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi",
         ref = "results/{refGenome}/data/genome/{refGenome}.fna"
     output: 
-        "results/{refGenome}/postprocess/{prefix}_clean_indels.vcf.gz"
+        "results/{refGenome}/{prefix}_clean_indels.vcf.gz"
     conda:
         "../envs/filter.yml"
     shell:
@@ -116,7 +116,7 @@ rule subset_snps:
         vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
         idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi"
     output: 
-        "results/{refGenome}/postprocess/{prefix}_clean_snps.vcf.gz"
+        "results/{refGenome}/{prefix}_clean_snps.vcf.gz"
     conda:
         "../envs/filter.yml"
     shell:
