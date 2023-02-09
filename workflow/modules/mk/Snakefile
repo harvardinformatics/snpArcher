@@ -30,7 +30,7 @@ rule prep_genome:
         set +e
         #if genome is local, datasets will fail, we will just continue
         mkdir -p {params.outdir}
-        datasets download genome accession --include genome,gff3 --filename {params.dataset} {wildcards.refGenome} \
+        datasets download genome accession --filename {params.dataset} {wildcards.refGenome} \
         && 7z x {params.dataset} -aoa -o{params.outdir}
 
         if [ -z "{input.ref}" ]
@@ -42,7 +42,7 @@ rule prep_genome:
 
        if [ -z "{input.gff}" ]
         then
-            cp {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/genomic.gff > {output.gff}
+            cp {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/genomic.gff {output.gff}
         else
             cp {input.gff} {output.gff}
         fi
