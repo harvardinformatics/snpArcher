@@ -24,7 +24,7 @@ rule prep_genome:
         dataset = "results/{refGenome}/mk/{refGenome}_dataset.zip",
         outdir = "results/{refGenome}/mk/{refGenome}"
     conda:
-        "../envs/ncbi.yml"
+        "envs/ncbi.yml"
     shell:
         """
         set +e
@@ -69,8 +69,8 @@ rule degenotate:
     """
     input:
         vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
-        genome = "results/{refGenome}/data/genome/{refGenome}.fna",
-        gff = "results/{refGenome}/data/genome/{refGenome}.gff",
+        genome = "results/{refGenome}/mk/{refGenome}.fna",
+        gff = "results/{refGenome}/mk/{refGenome}.gff",
         exclude = "results/{refGenome}/mk/{prefix}_exclude.txt",
         outgroups = "results/{refGenome}/mk/{prefix}_ougroups.txt"
     output:
@@ -78,7 +78,7 @@ rule degenotate:
     params:
         delim = "space"
     conda:
-        "../envs/mk.yml"
+        "envs/mk.yml"
     shell:
         """"
         if [ -s input.exclude ]
