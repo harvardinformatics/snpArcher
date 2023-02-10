@@ -106,7 +106,7 @@ rule subset_indels:
         "envs/filter.yml"
     shell:
         """
-        bcftools norm -f {input.ref} -a --atom-overlaps \* -m- indels {input.vcf} -O u | bcftools view -v indels {input.vcf} -O z -o {output}
+        bcftools norm -f {input.ref} -a --atom-overlaps \* -m -indels {input.vcf} -O u | bcftools view -v indels {input.vcf} -O z -o {output}
         bcftools index {output}
         """
 
@@ -123,6 +123,6 @@ rule subset_snps:
         "envs/filter.yml"
     shell:
         """
-        bcftools norm -m- snps {input.vcf} -O u | bcftools view -v snps -e 'TYPE~"indel"' -O z -o {output}
+        bcftools norm -m -snps {input.vcf} -O u | bcftools view -v snps -e 'TYPE~"indel"' -O z -o {output}
         bcftools index {output}
         """
