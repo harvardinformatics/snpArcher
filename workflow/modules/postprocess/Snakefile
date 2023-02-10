@@ -70,7 +70,7 @@ rule strict_filter:
         vcf = "results/{refGenome}/{prefix}_filtered.vcf.gz"
     output: 
         vcf = temp("results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz"),
-        idx = temp("results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi")
+        idx = temp("results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi")
     conda:
         "envs/filter.yml"
     params:
@@ -98,7 +98,7 @@ rule subset_indels:
     """
     input: 
         vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
-        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi",
+        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi",
         ref = "results/{refGenome}/data/genome/{refGenome}.fna"
     output: 
         "results/{refGenome}/{prefix}_clean_indels.vcf.gz"
@@ -107,6 +107,7 @@ rule subset_indels:
     shell:
         """
         bcftools norm -f {input.ref} -a --atom-overlaps \* -m- indels {input.vcf} -O u | bcftools view -v indels {input.vcf} -O z -o {output}
+        bcftools index {output}
         """
 
 rule subset_snps:
@@ -115,7 +116,7 @@ rule subset_snps:
     """
     input: 
         vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
-        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi"
+        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi"
     output: 
         "results/{refGenome}/{prefix}_clean_snps.vcf.gz"
     conda:
@@ -123,4 +124,5 @@ rule subset_snps:
     shell:
         """
         bcftools norm -m- snps {input.vcf} -O u | bcftools view -v snps -e 'TYPE~"indel"' -O z -o {output}
+        bcftools index {output}
         """
