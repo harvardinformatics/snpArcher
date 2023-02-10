@@ -38,7 +38,7 @@ rule basic_filter:
         "envs/filter.yml"
     shell:
         """
-        bcftools view -S {input.include} -f .,PASS {input.vcf} -a -U -O u |
+        bcftools view -S {input.include} -f .,PASS {input.vcf} -a -U -O u | bcftools +fill-tags -Ou |
         bcftools view -m2 -e 'AF==0 | ref="N" | ALT="."' -O z -o {output.filtered}
         bcftools index {output.filtered}
         """
@@ -107,7 +107,7 @@ rule subset_indels:
         "logs/{refGenome}/postprocess/{prefix}_subset_indels.txt"
     shell:
         """
-        bcftools norm -f {input.ref} -a --atom-overlaps \* -m -indels {input.vcf} -O u | bcftools view -v indels {input.vcf} -O z -o {output}
+        bcftools view -v indels {input.vcf} -O z -o {output}
         bcftools index {output}
         """
 
@@ -126,6 +126,6 @@ rule subset_snps:
         "logs/{refGenome}/postprocess/{prefix}_subset_snps.txt"
     shell:
         """
-        bcftools norm -m -snps {input.vcf} -O u | bcftools view -v snps -e 'TYPE~"indel"' -O z -o {output}
+        bcftools view -v snps -e 'TYPE~"indel"' -O z -o {output}
         bcftools index {output}
         """
