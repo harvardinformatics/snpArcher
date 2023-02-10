@@ -27,8 +27,7 @@ rule filter_individuals:
 rule basic_filter:
     """
     Filters a vcf file to remove samples marked exclude, sites that don't pass filters,
-    sites with reference equal to N or alt equal to ., and sites fixed in the same,
-    that is with AF == 1 or AF == 0.
+    sites with reference equal to N or alt equal to ., and sites with AF == 0.
     """
     input: 
         vcf = "results/{refGenome}/{prefix}_raw.vcf.gz",
@@ -40,7 +39,7 @@ rule basic_filter:
     shell:
         """
         bcftools view -S {input.include} -f .,PASS {input.vcf} -a -U -O u |
-        bcftools view -m2 -e 'AF==1 | AF==0 | ref="N" | ALT="."' -O z -o {output.filtered}
+        bcftools view -m2 -e 'AF==0 | ref="N" | ALT="."' -O z -o {output.filtered}
         bcftools index {output.filtered}
         """
 
@@ -104,6 +103,8 @@ rule subset_indels:
         "results/{refGenome}/{prefix}_clean_indels.vcf.gz"
     conda:
         "envs/filter.yml"
+    log:
+        "logs/{refGenome}/postprocess/{prefix}_subset_indels.txt"
     shell:
         """
         bcftools norm -f {input.ref} -a --atom-overlaps \* -m -indels {input.vcf} -O u | bcftools view -v indels {input.vcf} -O z -o {output}
@@ -120,7 +121,9 @@ rule subset_snps:
     output: 
         "results/{refGenome}/{prefix}_clean_snps.vcf.gz"
     conda:
-        "envs/filter.yml"
+        "envs/filter.yml"    
+    log:
+        "logs/{refGenome}/postprocess/{prefix}_subset_snps.txt"
     shell:
         """
         bcftools norm -m -snps {input.vcf} -O u | bcftools view -v snps -e 'TYPE~"indel"' -O z -o {output}
