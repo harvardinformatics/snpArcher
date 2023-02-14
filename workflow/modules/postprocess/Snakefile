@@ -107,7 +107,7 @@ rule subset_indels:
         "logs/{refGenome}/postprocess/{prefix}_subset_indels.txt"
     shell:
         """
-        bcftools view -v indels {input.vcf} -O z -o {output}
+        bcftools view -v indels -O z -o {output} {input.vcf}
         bcftools index {output}
         """
 
@@ -126,6 +126,6 @@ rule subset_snps:
         "logs/{refGenome}/postprocess/{prefix}_subset_snps.txt"
     shell:
         """
-        bcftools view -v snps -e 'TYPE~"indel"' -O z -o {output}
+        bcftools view -v snps -e 'TYPE ~ "indel"' -O z -o {output} {input.vcf}
         bcftools index {output}
         """
