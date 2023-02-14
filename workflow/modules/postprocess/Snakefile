@@ -97,7 +97,7 @@ rule subset_indels:
     """
     input: 
         vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
-        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi",
+        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi",
         ref = "results/{refGenome}/data/genome/{refGenome}.fna"
     output: 
         "results/{refGenome}/{prefix}_clean_indels.vcf.gz"
@@ -108,7 +108,7 @@ rule subset_indels:
     shell:
         """
         bcftools view -v indels -O z -o {output} {input.vcf}
-        bcftools index {output}
+        bcftools index -t {output}
         """
 
 rule subset_snps:
@@ -117,7 +117,7 @@ rule subset_snps:
     """
     input: 
         vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
-        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi"
+        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi"
     output: 
         "results/{refGenome}/{prefix}_clean_snps.vcf.gz"
     conda:
@@ -127,5 +127,5 @@ rule subset_snps:
     shell:
         """
         bcftools view -v snps -e 'TYPE ~ "indel"' -O z -o {output} {input.vcf}
-        bcftools index {output}
+        bcftools index -t {output}
         """
