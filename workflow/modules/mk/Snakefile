@@ -77,6 +77,8 @@ rule degenotate:
         "results/{refGenome}/mk/{prefix}_mk_table.tsv"
     params:
         delim = "space"
+    log:
+        "logs/{refGenome}/mk/{prefix}_degenotate.txt"
     conda:
         "envs/mk.yml"
     shell:
