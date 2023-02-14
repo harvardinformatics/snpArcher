@@ -83,7 +83,7 @@ rule degenotate:
         "envs/mk.yml"
     shell:
         """"
-        if [ -s input.exclude ]
+        if [ -s {input.exclude} ]
         then
             degenotate.py --overwrite -a {input.gff} -g {input.genome} -u {input.outgroups} -e {input.exclude} -d {params.delim} -o "results/{wildcards.refGenome}/mk/{wildcards.prefix}_degen_raw" -v {input.vcf}
         else
