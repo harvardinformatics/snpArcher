@@ -25,13 +25,17 @@ def get_output():
     sample_counts = samples.drop_duplicates(subset = ["BioSample", "refGenome"]).value_counts(subset=['refGenome'])  #get BioSample for each refGenome
     out.extend
     for ref in genomes:
-        out.extend(expand("results/{refGenome}/{prefix}_final.vcf.gz", refGenome=ref, prefix=config['final_prefix']))
+        out.extend(expand("results/{refGenome}/{prefix}_raw.vcf.gz", refGenome=ref, prefix=config['final_prefix']))
         out.extend(expand("results/{refGenome}/summary_stats/{prefix}_bam_sumstats.txt", refGenome=ref, prefix=config['final_prefix']))
         out.extend(expand("results/{refGenome}/{prefix}_callable_sites.bed", refGenome=ref, prefix=config['final_prefix']))
         out.extend(expand("results/{refGenome}/CCGP/{prefix}.froh", refGenome=ref, prefix=config['final_prefix']))
         out.extend(expand("results/{refGenome}/CCGP/{prefix}.1.windowed.pi", refGenome=ref, prefix=config['final_prefix']))
         if sample_counts[ref] > 2:
              out.append(rules.qc_all.input)
+        if "SampleType" in samples.columns:
+            out.append(rules.postprocess_all.input)
+            if all(i in samples['SampleType'].tolist() for i in ["ingroup", "outgroup"]):
+                out.append(rules.mk_all.input)
     return out
 
 def merge_bams_input(wc):

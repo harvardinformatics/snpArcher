@@ -1,3 +1,4 @@
+.DS_Store
 data_preparation/
 .snakemake*
 template_slurm.sh
