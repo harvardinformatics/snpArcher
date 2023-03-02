@@ -42,22 +42,6 @@ use rule * from qc as qc_*
 
 use rule * from ccgp as ccgp_*
 
-module mk:
-    snakefile:
-        "modules/mk/Snakefile"
-    config:
-        config
-
-use rule * from mk as mk_*
-
-module postprocess:
-    snakefile:
-        "modules/postprocess/Snakefile"
-    config:
-        config
-
-use rule * from postprocess as postprocess_*
-
 rule all:
     input:
         get_output()

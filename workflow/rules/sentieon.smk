@@ -140,8 +140,8 @@ rule filter_vcf:
         indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"]),
         dictf = "results/{refGenome}/data/genome/{refGenome}.dict"
     output:
-        vcf = "results/{refGenome}/{prefix}_raw.vcf.gz",
-        tbi = "results/{refGenome}/{prefix}_raw.vcf.gz.tbi"
+        vcf = "results/{refGenome}/{prefix}_final.vcf.gz",
+        tbi = "results/{refGenome}/{prefix}_final.vcf.gz.tbi"
     conda:
         "../envs/bam2vcf.yml"
     resources:

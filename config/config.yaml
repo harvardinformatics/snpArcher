@@ -24,7 +24,7 @@ db_scatter_factor: 0.15 # Scatter factor for calculating number of intervals to 
 
 ## Coverage options ##
 ## default pipeline is optimized for low coverage data - if using high coverage data (> 10x), uncomment high coverage options and comment out low coverage options
-
+min_depth: 2
 # low coverage options (< 10x)
 minP: 1
 minD: 1
@@ -48,14 +48,6 @@ cov_merge: 100 #merge passing coverage regions separate by this or fewer bp into
 ## QC options ##
 nClusters: 3
 GoogleAPIKey:
-min_depth: 2
-
-## Filtering options ##
-
-contig_size: 10000 # snps on contigs this size or smaller will be filtered from the final clean vcfs. Set to 0 to disable.
-maf: 0.01 #snps with MAF below this value will be filtered from the final clean vcfs. Set to 0 to disable.
-missingness: 0.75 #snps with missingness greater than this value will be filtered from the final clean vcfs. Set to 1 to disable.
-scaffolds_to_exclude: "mtDNA,Y" #comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
 
 ########################################
 ## coverage thresholds ##

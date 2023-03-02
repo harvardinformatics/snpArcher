@@ -178,8 +178,8 @@ rule sort_gatherVcfs:
         vcf = "results/{refGenome}/vcfs/filtered.vcf.gz",
         vcfidx = "results/{refGenome}/vcfs/filtered.vcf.gz.tbi"
     output:
-        vcfFinal = "results/{refGenome}/{prefix}_raw.vcf.gz",
-        vcfFinalidx = "results/{refGenome}/{prefix}_raw.vcf.gz.tbi"
+        vcfFinal = "results/{refGenome}/{prefix}_final.vcf.gz",
+        vcfFinalidx = "results/{refGenome}/{prefix}_final.vcf.gz.tbi"
     conda:
         "../envs/bcftools.yml"
     log:
