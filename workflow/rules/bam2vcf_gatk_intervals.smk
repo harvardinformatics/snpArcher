@@ -189,8 +189,8 @@ rule sort_gatherVcfs:
         vcfs = get_interval_vcfs,
         tbis = get_interval_vcf_tbis
     output:
-        vcfFinal = "results/{refGenome}/{prefix}_final.vcf.gz",
-        vcfFinalidx = "results/{refGenome}/{prefix}_final.vcf.gz.tbi"
+        vcfFinal = "results/{refGenome}/{prefix}_raw.vcf.gz",
+        vcfFinalidx = "results/{refGenome}/{prefix}_raw.vcf.gz.tbi"
     conda:
         "../envs/bcftools.yml"
     log:

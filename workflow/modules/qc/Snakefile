@@ -16,7 +16,7 @@ rule check_fai:
     checks fai file for numeric first column, then do not run plink and rest of workflow if they are all numeric
     """
     input:
-        vcf = "results/{refGenome}/{prefix}_final.vcf.gz",
+        vcf = "results/{refGenome}/{prefix}_raw.vcf.gz",
         fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
     output:
         faiResult = "results/{refGenome}/QC/{prefix}_fai_tmp.txt"
@@ -25,7 +25,7 @@ rule check_fai:
 
 rule vcftools_individuals:
     input:
-        vcf = "results/{refGenome}/{prefix}_final.vcf.gz"
+        vcf = "results/{refGenome}/{prefix}_raw.vcf.gz"
     output:
         depth = "results/{refGenome}/QC/{prefix}.idepth",
         miss = "results/{refGenome}/QC/{prefix}.imiss",
@@ -48,13 +48,13 @@ rule vcftools_individuals:
 
 rule subsample_snps:
     input:
-        vcf = "results/{refGenome}/{prefix}_final.vcf.gz",
+        vcf = "results/{refGenome}/{prefix}_raw.vcf.gz",
         samps = "results/{refGenome}/QC/{prefix}.samps.txt",
         fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
         sumstats = "results/{refGenome}/summary_stats/{prefix}_bam_sumstats.txt"
     output:
-        filtered = "results/{refGenome}/QC/{prefix}_filtered.vcf.gz",
-        filtered_idx = "results/{refGenome}/QC/{prefix}_filtered.vcf.gz.csi",
+        filtered = temp("results/{refGenome}/QC/{prefix}_filtered.vcf.gz"),
+        filtered_idx = temp("results/{refGenome}/QC/{prefix}_filtered.vcf.gz.csi"),
         pruned = "results/{refGenome}/QC/{prefix}.pruned.vcf.gz",
         snpqc = "results/{refGenome}/QC/{prefix}_snpqc.txt",
         fai = "results/{refGenome}/QC/{prefix}.fna.fai",

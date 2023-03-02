@@ -1,0 +1,93 @@
+import pandas as pd
+import os
+include: "common.smk"
+configfile: "config/config.yaml"
+
+samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+REFGENOME = samples['refGenome'].unique().tolist()
+
+rule all:
+    input:
+        expand("results/{refGenome}/mk/{prefix}_mk_table.tsv", refGenome=REFGENOME, prefix=config['final_prefix'])
+
+rule prep_genome:
+    """
+    Gets the needed information (fasta and gff) from NCBI
+    """
+    input: 
+        ref = get_ref,
+        gff = get_gff
+    output:
+        ref = "results/{refGenome}/mk/{refGenome}.fna",
+        gff = "results/{refGenome}/mk/{refGenome}.gff"
+    params:
+        dataset = "results/{refGenome}/mk/{refGenome}_dataset.zip",
+        outdir = "results/{refGenome}/mk/{refGenome}"
+    conda:
+        "envs/ncbi.yml"
+    shell:
+        """
+        set +e
+        #if genome is local, datasets will fail, we will just continue
+        mkdir -p {params.outdir}
+        datasets download genome accession  --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} \
+        && 7z x {params.dataset} -aoa -o{params.outdir}
+
+        if [ -z "{input.ref}" ]
+        then
+            cat {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}
+        else
+            cp {input.ref} {output.ref}
+        fi
+
+       if [ -z "{input.gff}" ]
+        then
+            cp {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/genomic.gff {output.gff}
+        else
+            cp {input.gff} {output.gff}
+        fi
+        """
+
+rule split_samples:
+    """
+    Splits sample sheet to make ingroup and outgroup files
+    """
+    output:
+        exclude = "results/{refGenome}/mk/{prefix}_exclude.txt",
+        outgroups = "results/{refGenome}/mk/{prefix}_ougroups.txt"
+    run:
+        out_df = samples[["BioSample", "SampleType"]]
+        out_df.drop_duplicates("BioSample", inplace=True)
+        exclude =out_df[~out_df.SampleType.isin(["ingroup", "outgroup"])].BioSample
+        outgroups = out_df[out_df.SampleType.isin(["outgroup"])].BioSample
+        exclude.to_csv(output[0], index=False, sep="\t", header=False)
+        outgroups.to_csv(output[1], index=False, sep="\t", header=False)
+
+rule degenotate:
+    """
+    Runs degenotate to compute MK tables
+    """
+    input:
+        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
+        genome = "results/{refGenome}/mk/{refGenome}.fna",
+        gff = "results/{refGenome}/mk/{refGenome}.gff",
+        exclude = "results/{refGenome}/mk/{prefix}_exclude.txt",
+        outgroups = "results/{refGenome}/mk/{prefix}_ougroups.txt"
+    output:
+        "results/{refGenome}/mk/{prefix}_mk_table.tsv"
+    params:
+        delim = "space"
+    log:
+        "logs/{refGenome}/mk/{prefix}_degenotate.txt"
+    conda:
+        "envs/mk.yml"
+    shell:
+        """
+        if [ -s {input.exclude} ]
+        then
+            degenotate.py --overwrite -a {input.gff} -g {input.genome} -u {input.outgroups} -e {input.exclude} -d {params.delim} -o "results/{wildcards.refGenome}/mk/{wildcards.prefix}_degen_raw" -v {input.vcf}
+        else
+            degenotate.py --overwrite -a {input.gff} -g {input.genome} -u {input.outgroups} -d {params.delim} -o "results/{wildcards.refGenome}/mk/{wildcards.prefix}_degen_raw" -v {input.vcf}
+        fi
+        cp results/{wildcards.refGenome}/mk/{wildcards.prefix}_degen_raw/mk_table.tsv {output}
+        """
