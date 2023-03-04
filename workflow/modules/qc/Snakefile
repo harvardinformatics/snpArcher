@@ -53,11 +53,11 @@ rule subsample_snps:
         fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
         sumstats = "results/{refGenome}/summary_stats/{prefix}_bam_sumstats.txt"
     output:
-        filtered = temp("results/{refGenome}/QC/{prefix}_filtered.vcf.gz"),
-        filtered_idx = temp("results/{refGenome}/QC/{prefix}_filtered.vcf.gz.csi"),
+        filtered = temp("results/{refGenome}/QC/{prefix}_filteredQC.vcf.gz"),
+        filtered_idx = temp("results/{refGenome}/QC/{prefix}_filteredQC.vcf.gz.csi"),
         pruned = "results/{refGenome}/QC/{prefix}.pruned.vcf.gz",
         snpqc = "results/{refGenome}/QC/{prefix}_snpqc.txt",
-        fai = "results/{refGenome}/QC/{prefix}.fna.fai",
+        fai = "results/{refGenome}/QC/{prefix}.QC.fai",
         sumstats = "results/{refGenome}/QC/{prefix}_bam_sumstats.txt"
     conda:
         "envs/subsample_snps.yml"
@@ -176,7 +176,7 @@ rule qc_plots:
         sumstats = "results/{refGenome}/QC/{prefix}_bam_sumstats.txt",
         summ = "results/{refGenome}/QC/{prefix}.FILTER.summary",
         het = "results/{refGenome}/QC/{prefix}.het",
-        fai = "results/{refGenome}/QC/{prefix}.fna.fai",
+        fai = "results/{refGenome}/QC/{prefix}.QC.fai",
         coords = get_coords_if_available
     params:
         prefix = lambda wc, input: input.het[:-4],

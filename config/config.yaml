@@ -67,8 +67,8 @@ scaffolds_to_exclude: "mtDNA,Y" #comma separated, no spaces list of scaffolds to
 ## To use this option, set the variables below to the lower absolute mean coverage limit and upper absolute mean coverage limit, 
 ## and make sure all other coverage variables are empty
 
-cov_threshold_lower: 1
-cov_threshold_upper: 10000
+cov_threshold_lower: 
+cov_threshold_upper: 
  
 ## Alternatively, filtering can be done based on standard deviations 
 ## (assumes a Poisson distribution, so stdev_cov equals the square root of the mean coverage),
@@ -76,7 +76,7 @@ cov_threshold_upper: 10000
 ## To use this option, set the variables below to the desired X
 ## and make sure all other coverage variables are empty
 
-cov_threshold_stdev: 
+cov_threshold_stdev: 2
 
 ## Finally, filtering can be done based on absolute scaling of the mean, 
 ## where regions of the genome with mean coverage < (global mean coverge / X) or > (global mean coverge * X) are removed.

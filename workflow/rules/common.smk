@@ -28,8 +28,11 @@ def get_output():
         out.extend(expand("results/{refGenome}/{prefix}_raw.vcf.gz", refGenome=ref, prefix=config['final_prefix']))
         out.extend(expand("results/{refGenome}/summary_stats/{prefix}_bam_sumstats.txt", refGenome=ref, prefix=config['final_prefix']))
         out.extend(expand("results/{refGenome}/{prefix}_callable_sites.bed", refGenome=ref, prefix=config['final_prefix']))
-        out.extend(expand("results/{refGenome}/CCGP/{prefix}.froh", refGenome=ref, prefix=config['final_prefix']))
-        out.extend(expand("results/{refGenome}/CCGP/{prefix}.1.windowed.pi", refGenome=ref, prefix=config['final_prefix']))
+        #out.extend(expand("results/{refGenome}/CCGP/{prefix}.froh", refGenome=ref, prefix=config['final_prefix']))
+        #out.extend(expand("results/{refGenome}/CCGP/{prefix}.1.windowed.pi", refGenome=ref, prefix=config['final_prefix']))
+        if config["CCGP"]:
+            #out.append(expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz", refGenome=ref, prefix=config["final_prefix"]))
+            out.append(rules.ccgp_all.input)
         if sample_counts[ref] > 2:
              out.append(rules.qc_all.input)
         if "SampleType" in samples.columns:
