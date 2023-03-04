@@ -1,0 +1,85 @@
+import pandas as pd
+import os
+include: "common.smk"
+configfile: "config/config.yaml"
+
+samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+REFGENOME = samples['refGenome'].unique().tolist()
+WINDOWS = config["trackhub_windows"]
+FILE_TYPES = ["Tajima", "SNP-Density", "Pi"]
+
+rule all:
+    input:
+        expand("results/{refGenome}/trackhub/{file_type}_{window}.bw", refGenome=REFGENOME, file_type=FILE_TYPES, window=WINDOWS),
+        expand("results/{refGenome}/trackhub/trackDb.txt")
+
+
+rule calc_tajima:
+    input:
+        expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz")
+    output:
+        "results/{refGenome}/trackhub/{window}.Tajima"
+    log:
+        "logs/{refGenome}/trackhub/tajima/{window}.log"
+    shell:
+        """
+        vcftools --gzvcf {input} --TajimaD {wildcards.window} --stdout > {output} 2>> {log}
+        """
+
+rule calc_snpden:
+    input:
+        expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz")
+    output:
+        "results/{refGenome}/trackhub/{window}.SNP-Density"
+    params:
+        config["SNP_Density_MAF_min"]
+    log:
+        "logs/{refGenome}/trackhub/SNP-Density/{window}.log"
+    shell:
+        """
+        vcftools --gzvcf {input} --SNPdensity {wildcards.window} --maf {params} --stdout > {output} 2> {log}
+        """
+
+
+rule calc_tajima:
+    input:
+        expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz")
+    output:
+        "results/{refGenome}/trackhub/{window}.Pi"
+    log:
+        "logs/{refGenome}/trackhub/Pi/{window}.log"
+    shell:
+        """
+        vcftools --gzvcf {input} --window-pi {wildcards.window} --stdout > {output} 2> {log}
+        """
+
+rule chrom_sizes:
+    input:
+        "results/{refGenome}/data/genome/{refGenome}.fna.fai"
+    output:
+        "results/{refGenome}/trackhub/chrom.sizes"
+    shell:
+        "cut -f1,2 {input} > {output}"
+
+rule convert_to_bedgraph:
+    input:
+        stat_file = "results/{refGenome}/trackhub/{window}.{file_type}",
+        chrom_sizes = "results/{refGenome}/trackhub/chrom.sizes"
+    output:
+        "results/{refGenome}/trackhub/{file_type}_{window}.bg"
+    script:
+        "scripts/vcftools_out_to_bg.py"
+
+rule bedgraph_to_bigwig:
+    input:
+       bg = "results/{refGenome}/trackhub/{file_type}_{window}.bg",
+       chrom_sizes = "results/{refGenome}/trackhub/chrom.sizes"
+    output:
+        "results/{refGenome}/trackhub/{file_type}_{window}.bw"
+    conda:
+        "envs/kentUtils.yaml"
+    shell:
+        "bedGraphToBigWig {input.bg} {input.chrom_sizes} {output}"
+
+
+    
