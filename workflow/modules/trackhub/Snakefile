@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-include: "common.smk"
+
 configfile: "config/config.yaml"
 
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
@@ -11,16 +11,18 @@ FILE_TYPES = ["Tajima", "SNP-Density", "Pi"]
 rule all:
     input:
         expand("results/{refGenome}/trackhub/{file_type}_{window}.bw", refGenome=REFGENOME, file_type=FILE_TYPES, window=WINDOWS),
-        expand("results/{refGenome}/trackhub/trackDb.txt")
+        # expand("results/{refGenome}/trackhub/trackDb.txt")
 
 
 rule calc_tajima:
     input:
-        expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz")
+        expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config["final_prefix"])
     output:
-        "results/{refGenome}/trackhub/{window}.Tajima"
+        temp("results/{refGenome}/trackhub/{window}.Tajima")
     log:
         "logs/{refGenome}/trackhub/tajima/{window}.log"
+    conda:
+        "envs/trackhub.yml"
     shell:
         """
         vcftools --gzvcf {input} --TajimaD {wildcards.window} --stdout > {output} 2>> {log}
@@ -28,26 +30,27 @@ rule calc_tajima:
 
 rule calc_snpden:
     input:
-        expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz")
+        expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config["final_prefix"])
     output:
-        "results/{refGenome}/trackhub/{window}.SNP-Density"
-    params:
-        config["SNP_Density_MAF_min"]
+        temp("results/{refGenome}/trackhub/{window}.SNP-Density")
     log:
         "logs/{refGenome}/trackhub/SNP-Density/{window}.log"
+    conda:
+        "envs/trackhub.yml"
     shell:
         """
-        vcftools --gzvcf {input} --SNPdensity {wildcards.window} --maf {params} --stdout > {output} 2> {log}
+        vcftools --gzvcf {input} --SNPdensity {wildcards.window} --stdout > {output} 2> {log}
         """
 
-
-rule calc_tajima:
+rule calc_pi:
     input:
-        expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz")
+        expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config["final_prefix"])
     output:
-        "results/{refGenome}/trackhub/{window}.Pi"
+       temp( "results/{refGenome}/trackhub/{window}.Pi")
     log:
         "logs/{refGenome}/trackhub/Pi/{window}.log"
+    conda:
+        "envs/trackhub.yml"
     shell:
         """
         vcftools --gzvcf {input} --window-pi {wildcards.window} --stdout > {output} 2> {log}
@@ -66,7 +69,7 @@ rule convert_to_bedgraph:
         stat_file = "results/{refGenome}/trackhub/{window}.{file_type}",
         chrom_sizes = "results/{refGenome}/trackhub/chrom.sizes"
     output:
-        "results/{refGenome}/trackhub/{file_type}_{window}.bg"
+        temp("results/{refGenome}/trackhub/{file_type}_{window}.bg")
     script:
         "scripts/vcftools_out_to_bg.py"
 
@@ -77,7 +80,7 @@ rule bedgraph_to_bigwig:
     output:
         "results/{refGenome}/trackhub/{file_type}_{window}.bw"
     conda:
-        "envs/kentUtils.yaml"
+        "envs/trackhub.yml"
     shell:
         "bedGraphToBigWig {input.bg} {input.chrom_sizes} {output}"
 

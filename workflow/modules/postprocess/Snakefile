@@ -97,8 +97,8 @@ rule subset_indels:
     """
     input: 
         vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
-        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi",
-        ref = "results/{refGenome}/data/genome/{refGenome}.fna"
+        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi",
+        # ref = "results/{refGenome}/data/genome/{refGenome}.fna"
     output: 
         "results/{refGenome}/{prefix}_clean_indels.vcf.gz"
     conda:
@@ -117,7 +117,7 @@ rule subset_snps:
     """
     input: 
         vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
-        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.tbi"
+        idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi"
     output: 
         "results/{refGenome}/{prefix}_clean_snps.vcf.gz"
     conda:

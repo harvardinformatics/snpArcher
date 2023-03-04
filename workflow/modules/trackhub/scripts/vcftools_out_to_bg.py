@@ -11,16 +11,18 @@ def chrom_dict(chrom_sizes_file):
 def parse_stat_file(stat_file, out_file, chrom_sizes):
     stat_file = Path(stat_file)
     file_type = stat_file.suffix
-    window = stat_file.stem
-
+    window = int(stat_file.stem)
+    
     with open(out_file, "w") as out:
         results = []
         with open(stat_file, "r") as inp:
             next(inp)
             for line in inp:
+                
                 line = line.strip().split()
                 chrom = line[0]
                 if chrom not in chrom_sizes:
+                    
                     continue
                 else:
                     start = int(line[1])
@@ -28,18 +30,18 @@ def parse_stat_file(stat_file, out_file, chrom_sizes):
                     if end >= chrom_sizes[chrom]:
                         end = chrom_sizes[chrom]-1
                     
-                    if file_type == "Tajima":
+                    if file_type == ".Tajima":
                         value = line[3]
-                    elif file_type == "SNP-Density":
+                    elif file_type == ".SNP-Density":
                         value = line[2]
-                    elif file_type == "Pi":
+                    elif file_type == ".Pi":
                         value = line[4]
                     else:
                         raise(ValueError(f"Unknown file type: {file_type}"))
                     
                     results.append((chrom,start,end,value))
         
-        sorted_results = sorted(results, lambda x: (x[0], x[1]))
+        sorted_results = sorted(results, key=lambda x: (x[0], x[1]))
         
         for chrom, start, end, value in sorted_results:
             print(f"{chrom}\t{start}\t{end}\t{value}\n", file=out)

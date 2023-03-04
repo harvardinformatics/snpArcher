@@ -3,4 +3,5 @@ channels:
   - bioconda
   - defaults
 dependencies:
- - degenotate
+  - vcftools==0.1.16
+  - ucsc-bedgraphtobigwig==377
