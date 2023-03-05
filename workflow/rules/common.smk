@@ -17,6 +17,7 @@ samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_',
 with open(config["resource_config"], "r") as f:
     resources = safe_load(f)
 
+
 def get_output():
     if config["final_prefix"] == "":
         raise(WorkflowError("'final_prefix' is not set in config."))
@@ -35,6 +36,7 @@ def get_output():
             out.append(rules.ccgp_all.input)
         if sample_counts[ref] > 2:
              out.append(rules.qc_all.input)
+        
         if "SampleType" in samples.columns:
             out.append(rules.postprocess_all.input)
             if all(i in samples['SampleType'].tolist() for i in ["ingroup", "outgroup"]):

@@ -18,7 +18,7 @@ rule all:
 
 rule roh:
     input:
-        vcf = "results/{refGenome}/QC/{prefix}_filtered.vcf.gz"
+        vcf = "results/{refGenome}/QC/{prefix}_filteredQC.vcf.gz"
     output:
         roh = "results/{refGenome}/CCGP/{prefix}.roh.gz",
         rg = "results/{refGenome}/CCGP/{prefix}.rg.roh"
@@ -47,7 +47,7 @@ rule froh:
 
 rule pi:
     input:
-        vcf = "results/{refGenome}/QC/{prefix}_filtered.vcf.gz",
+        vcf = "results/{refGenome}/QC/{prefix}_filteredQC.vcf.gz",
         top = "results/{refGenome}/CCGP/{prefix}_top.froh"
     output:
         pi1 = "results/{refGenome}/CCGP/{prefix}.1.windowed.pi",
@@ -71,7 +71,7 @@ rule pi:
 
 rule annotate:
     input:
-        vcf = "results/{refGenome}/QC/{prefix}_filtered.vcf.gz"
+        vcf = "results/{refGenome}/QC/{prefix}_filteredQC.vcf.gz"
     output:
         ann = "results/{refGenome}/CCGP/{prefix}_annotated.vcf.gz"
     conda:
@@ -132,7 +132,7 @@ rule plink:
     Call plink PCA.
     """
     input:
-        vcf = "results/{refGenome}/QC/{prefix}_filtered.vcf.gz",
+        vcf = "results/{refGenome}/QC/{prefix}_filteredQC.vcf.gz",
         pruned3 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.vcf.gz",
         pruned6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz"     
     params:
@@ -166,7 +166,7 @@ rule plink:
 
 # rule ld:
 #     input:
-#         vcf = "results/{refGenome}/QC/{prefix}_filtered.vcf.gz"
+#         vcf = "results/{refGenome}/QC/{prefix}_filteredQC.vcf.gz"
 #     output:
 #         decay = "results/{refGenome}/CCGP/{prefix}.stat.gz",
 #         decayplot = "results/{refGenome}/CCGP/{prefix}.LD_decay.png"
