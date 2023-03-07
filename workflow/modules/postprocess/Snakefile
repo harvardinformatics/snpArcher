@@ -51,7 +51,7 @@ rule update_bed:
         bed = "results/{refGenome}/{prefix}_callable_sites.bed",
         fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai"
     output:
-        "results/{refGenome}/postprocess/{prefix}_exclude_sites.bed"
+        bed = "results/{refGenome}/postprocess/{prefix}_exclude_sites.bed"
     conda:
         "envs/bed.yml"
     params:
@@ -60,7 +60,7 @@ rule update_bed:
     shell:
         """
         awk 'BEGIN{{OFS="\\t"}}{{if ($2<{params.size_filter}) {{print $1,0,$2}}}}' {input.fai} > {params.tmp_bed}
-        cat {params.tmp_bed} {input.bed} | bedtools sort -i - | bedtools merge -i - > {output}
+        cat {params.tmp_bed} {input.bed} | bedtools sort -i - | bedtools merge -i - > {output.bed}
         """
 
 rule strict_filter:  
@@ -98,17 +98,17 @@ rule subset_indels:
     input: 
         vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
         idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi",
-        # ref = "results/{refGenome}/data/genome/{refGenome}.fna"
     output: 
-        "results/{refGenome}/{prefix}_clean_indels.vcf.gz"
+        vcf = "results/{refGenome}/{prefix}_clean_indels.vcf.gz",
+        idx = "results/{refGenome}/{prefix}_clean_indels.vcf.gz.tbi"
     conda:
         "envs/filter.yml"
     log:
         "logs/{refGenome}/postprocess/{prefix}_subset_indels.txt"
     shell:
         """
-        bcftools view -v indels -O z -o {output} {input.vcf}
-        bcftools index -t {output}
+        bcftools view -v indels -O z -o {output.vcf} {input.vcf}
+        bcftools index -t {output.vcf}
         """
 
 rule subset_snps:
@@ -119,13 +119,14 @@ rule subset_snps:
         vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
         idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi"
     output: 
-        "results/{refGenome}/{prefix}_clean_snps.vcf.gz"
+        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
+        idx = "results/{refGenome}/{prefix}_clean_snps.vcf.gz.tbi"
     conda:
         "envs/filter.yml"    
     log:
         "logs/{refGenome}/postprocess/{prefix}_subset_snps.txt"
     shell:
         """
-        bcftools view -v snps -e 'TYPE ~ "indel"' -O z -o {output} {input.vcf}
-        bcftools index -t {output}
+        bcftools view -v snps -e 'TYPE ~ "indel"' -O z -o {output.vcf} {input.vcf}
+        bcftools index -t {output.vcf}
         """
