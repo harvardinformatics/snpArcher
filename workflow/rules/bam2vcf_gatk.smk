@@ -187,8 +187,8 @@ rule sort_gatherVcfs:
     benchmark:
         "benchmarks/{refGenome}/sort_gather_vcfs/{prefix}_benchmark.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * config['gatherVcfs']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (config['gatherVcfs']['mem'] - 2000)  # this is the maximum amount given to java
+        mem_mb = lambda wildcards, attempt: attempt * resources['gatherVcfs']['mem'],   # this is the overall memory requested
+        reduced = lambda wildcards, attempt: attempt * (resources['gatherVcfs']['mem'] - 2000)  # this is the maximum amount given to java
     shell:
         """
         bcftools sort -Oz -o {output.vcfFinal} {input.vcf} 2>> {log}

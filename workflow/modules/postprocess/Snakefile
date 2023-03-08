@@ -98,7 +98,6 @@ rule subset_indels:
     input: 
         vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
         idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi",
-        ref = "results/{refGenome}/data/genome/{refGenome}.fna"
     output: 
         vcf = "results/{refGenome}/{prefix}_clean_indels.vcf.gz",
         idx = "results/{refGenome}/{prefix}_clean_indels.vcf.gz.tbi"
