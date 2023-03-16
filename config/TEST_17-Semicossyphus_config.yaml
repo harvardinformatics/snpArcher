@@ -17,7 +17,7 @@ minD: 1
 minNmer: 500
 minP: 1
 min_depth: 2
-nClusters: 3
+nClusters: 2
 num_gvcf_intervals: 1
 remote_reads: true
 remote_reads_prefix: ccgp-raw-reads/17-Semicossyphus
