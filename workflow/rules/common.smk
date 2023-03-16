@@ -117,21 +117,22 @@ def sentieon_combine_gvcf_input(wc):
 
 def get_reads(wc):
     """Returns local read files if present. Defaults to SRR if no local reads in sample sheet."""
-    if config['remote_reads']:
-        return get_remote_reads(wc)
-    else:
-        row = samples.loc[samples['Run'] == wc.run]
-        if 'fq1' in samples.columns and 'fq2' in samples.columns:
-            if os.path.exists(row.fq1.item()) and os.path.exists(row.fq2.item()):
+
+    
+    row = samples.loc[samples['Run'] == wc.run]
+    R1=f"results/data/fastq/{wc.refGenome}/{wc.sample}/{wc.run}_1.fastq.gz"
+    R2=f"results/data/fastq/{wc.refGenome}/{wc.sample}/{wc.run}_2.fastq.gz"
+
+    if 'fq1' in samples.columns and 'fq2' in samples.columns:
+        if not pd.isnull(row.fq1.item()):
+            if not pd.isnull(row.fq1.item()) and not pd.isnull(row.fq2.item()):
+                if config['remote_reads']:
+                    return get_remote_reads(wc)
                 r1 = row.fq1.item()
                 r2 = row.fq2.item()
                 return {"r1": r1, "r2": r2}
-            else:
-                raise WorkflowError(f"fq1 and fq2 specified for {wc.sample}, but files were not found.")
-        else:
-            r1 = f"results/data/fastq/{wc.refGenome}/{wc.sample}/{wc.run}_1.fastq.gz",
-            r2 = f"results/data/fastq/{wc.refGenome}/{wc.sample}/{wc.run}_2.fastq.gz"
-            return {"r1": r1, "r2": r2}
+    #if columns fq1 and fq2 are present, itll look for these files, if these columns are missing or NaN, this returns the SRR/ERR string 
+    return {"r1": R1, "r2": R2}
 
 def get_remote_reads(wildcards):
     """Use this for reads on a different remote bucket than the default."""
