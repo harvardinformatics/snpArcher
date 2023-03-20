@@ -72,9 +72,11 @@ def main() -> None:
         samples = read_sample_list(f)
 
     sample_dict, cant_find = find_sample_fastqs(samples, fastq_dir)
+    ncbi_ref = True
 
     if (args.ref):
         ref = Path(args.ref)
+        ncbi_ref = False
         if args.copyref:
             ref_name = copy_reference(ref)
             ref_path = "../data/genome/" + ref_name + ".fna"
@@ -85,7 +87,7 @@ def main() -> None:
         ref_name = args.acc
         ref_path = ""
 
-    write_sample_sheet(sample_dict, ref_name, ref_path, organism)
+    write_sample_sheet(sample_dict, ref_name, ref_path, organism, ncbi_ref)
     if cant_find:
         print("Couldnt' find fastqs for these files:")
         for name in cant_find:
