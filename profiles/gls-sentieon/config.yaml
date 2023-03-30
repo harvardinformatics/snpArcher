@@ -2,7 +2,7 @@ google-lifesciences: True
 google-lifesciences-region : 'us-central1'
 use-conda: True
 jobs: 150
-preemption-default: 5
-preemptible-rules: ["fastp=5", "sentieon_map=5","merge_bams=5","sentieon_dedup=5","sentieon_haplotyper=10","sentieon_combine_gvcf=5","qc_check_fai=5","qc_vcftools_individuals=5","qc_subsample_snps=5","qc_plink=5","qc_admixture=5","qc_generate_coords_file=5","qc_qc_plots=5", "collect_sumstats=2"]
+nolock: True
+preemptible-rules: ["fastp=5", "sentieon_map=5","merge_bams=5","sentieon_dedup=5","sentieon_haplotyper=10","qc_check_fai=5","qc_vcftools_individuals=5","qc_subsample_snps=5","qc_plink=5","qc_admixture=5","qc_generate_coords_file=5","qc_qc_plots=5", "collect_sumstats=2", "compute_d4=5", "merge_d4=5", "callable_bed=5", "get_fastq_pe=5", "genmap=5", "mappability_bed=5", "download_reference=5", "index_reference=5", "bam_sumstats=5", "sentieon_bam_stats=5", "ccgp_roh=5", "ccgp_froh=5", "ccgp_pi=5", ccgp_qc_plots=5, ccgp_annotate=5,ccgp_plinkld=5, "ccgp_prunevcf=5", ccgp_plink=5]
 default-resources: ["machine_type=n2-standard", "disk_mb=512000"]
 

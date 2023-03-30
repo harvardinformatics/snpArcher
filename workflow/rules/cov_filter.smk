@@ -23,7 +23,7 @@ rule compute_d4:
 
 rule merge_d4:
     input:
-        unpack(get_input_for_coverage)
+        ancient(unpack(get_input_for_coverage))
     output:
         "results/{refGenome}/callable_sites/all_samples.d4"
     conda:
@@ -33,13 +33,15 @@ rule merge_d4:
     benchmark:
         "benchmarks/{refGenome}/merge_d4/benchmark.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['merge_d4']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['merge_d4']['mem'],
+        machine_type = resources['sentieon_combine_gvcf']['machine_type'],
+        disk_mb = resources['sentieon_combine_gvcf']['disk_mb']
     shell:
         "d4tools merge {input.d4files} {output} &> {log}"
 
 rule collect_covstats:
     input:
-        unpack(get_input_covstats)
+        ancient(unpack(get_input_covstats))
     output:
         "results/{refGenome}/summary_stats/all_cov_sumstats.txt"  
     run:
@@ -69,7 +71,7 @@ rule create_cov_bed:
 
 rule callable_bed:
     input:
-        cov = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed",
+        # cov = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed",
         map = "results/{refGenome}/callable_sites/{prefix}_callable_sites_map.bed"
     output:
         callable_sites = "results/{refGenome}/{prefix}_callable_sites.bed",

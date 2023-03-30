@@ -145,7 +145,9 @@ rule filter_vcf:
     conda:
         "../envs/bam2vcf.yml"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['filterVcfs']['mem'],   # this is the overall memory requested
+        mem_mb = lambda wildcards, attempt: attempt * resources['sentieon_combine_gvcf']['mem'], #will need as much disk space and memory as the combine job
+        machine_type = resources['sentieon_combine_gvcf']['machine_type'],
+        disk_mb = resources['sentieon_combine_gvcf']['disk_mb']
     log:
         "logs/{refGenome}/sentieon_combine_gvcf/{prefix}_log.txt"
     benchmark:
