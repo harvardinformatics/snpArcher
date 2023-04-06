@@ -18,10 +18,8 @@ def append_col(sample_list, excl_list):
     
     # add a column for exclude
     tab_file['SampleType'] = 'exclude'
-    print(tab_file)
     # Merge the two dataframes on the 'BioSample' column
     merged_df = pd.merge(csv_file, tab_file, on='BioSample', how='left')
-    print(merged_df)
     # Save the updated CSV file
     merged_df.to_csv(sample_list, index=False)
 

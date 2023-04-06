@@ -20,11 +20,13 @@ pd.options.mode.chained_assignment = None
 
 def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """Processes dataframe from MongoDB to be turned into workflow sheet or SRA sheet."""
+    
     list_of_dicts = []
     for _, row in df.iterrows():
         record = row.to_dict()
         # print(record.get("*sample_name"))
         # print(record.get("files"))
+        
         if record.get(f"run1_read1") is not None:
             pairs = {f"run{i}": None for i in range(1,107)}
             for run in pairs.keys():
@@ -75,6 +77,8 @@ def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                     ] = f"Whole genome sequencing of {record_copy['*organism']}"
                     list_of_dicts.append(record_copy)
             continue
+            
+
         '''
         if record.get("files") is not None:
             files = record["files"]
@@ -124,7 +128,8 @@ def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                             "title"
                         ] = f"Whole genome sequencing of {record_copy['*organism']}"
                         list_of_dicts.append(record_copy)
-            
+         
+        #THIS IS A COMMENTED OUT SECTION FOR PEROMYSCUS
             
     out_df = pd.DataFrame(list_of_dicts)
     return out_df

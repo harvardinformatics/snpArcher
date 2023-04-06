@@ -17,11 +17,14 @@ import os
 def check_for_reads(project_id: str, db_client: pymongo.MongoClient) -> None:
     db = db_client["ccgp_dev"]
     ccgp_samples = db["sample_metadata"]
+    
     docs = list(
         ccgp_samples.find(
             {"ccgp-project-id": project_id}, {"*sample_name": 1, "files": 1}
         )
     )  # get all docs for given project-id, and only get files and sample field
+    
+
     filenames = []
     for d in docs:
         try:
@@ -106,6 +109,10 @@ def create_snakemake_config(project_id: str, sheet: Path):
         "remote_reads": True,
         "remote_reads_prefix": f"ccgp-raw-reads/{project_id}",
         "cov_filter":True,
+        "CCGP":False,
+        "cov_threshold_stdev": 2,
+        #"cov_threshold_lower": ,
+        #"cov_threshold_upper": ,
     }
     for k in d.keys():
         config[k] = d[k]
@@ -202,7 +209,7 @@ def main():
     opts = create_snakemake_opts(
         args.project_id, config, args.dry_run, args.qc_only, args.upload_only
     )
-    copy_license(args.project_id)
+    #copy_license(args.project_id) #no longer needed
 
     o = [f"--{k} {v}" for k, v in opts.items()]
     print("snakemake", *o, sep=" ")

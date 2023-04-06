@@ -6,7 +6,7 @@ dependencies:
   - python==3.10.8
   - bedtools==2.30.0
   - mosdepth==0.3.3
-  - d4tools==0.3.4
+  - d4tools==0.3.8
   - pip==22.3.1
   - rust==1.65
   - gcc==12.2.0
