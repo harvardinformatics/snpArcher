@@ -73,7 +73,7 @@ rule create_cov_bed:
 
 rule callable_bed:
     input:
-        # cov = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed",
+        cov = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed",
         map = "results/{refGenome}/callable_sites/{prefix}_callable_sites_map.bed"
     output:
         callable_sites = "results/{refGenome}/{prefix}_callable_sites.bed",

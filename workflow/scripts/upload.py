@@ -10,29 +10,29 @@ def create_readme(project_folder, prefix, project_name, outfile):
     erik = f"https://erikenbody.github.io/ccgp/{prefix + '_qc.html'}"
 
     html = f"""
-<img src="https://raw.githubusercontent.com/cademirch/ccgp_workflow/main/docs/CCGPhorizontalblue.jpeg" width=auto height=100>
-<p>As part of the planned CCGP workflow, we've finished generating genotype data from your whole-genome resequencing data on your project: {project_name}  Below we include the information needed to access the data. As a first step, we suggest you view the quality control dashboard for your variant data:
-{erik}:</p>
-<p>The idea is to use these outputs in the QC dashboard to identify if there are any clear outliers in your data and to help direct your filtering and downstream analysis plans. Keep in mind these plots are not final analyses, they are just there to give you a sense of the data. In the accompanying email with the data delivery, our bioinformatics team describes anything they noticed in particular with your dataset. Please see the figure descriptions for a general idea of how to use them to identify problematic samples.</p>
-<p>We have hosted your data on Google Drive in:
-{link}</p>
-<p>This folder structure looks like this:</p>
-<pre><code>Project-folder
-    ├── QC-Outputs
-    ├── Project.filtered.vcf.gz
-    └── Project.final.vcf.gz
-</code></pre>
-<p>You can find two VCFs in the top level folder, as well as all the data that was used to generate the QC plots. The small VCF file in the QC folder was used to generate the QC plots, and this dataset has basic quality filters applied and has been coarsely pruned to eliminate linked variants. This file may be a good starting point for exploring your data.</p>
-<p>The &quot;final&quot; VCF corresponds to the raw output of our variant calling pipeline with some basic GATK filters annotated. The &quot;filtered&quot; VCF has removed variants not passing that filter and also samples less than 2x sequencing depth.</p>
-<p>To download the outputs directly to your server we recommend using <a href="https://github.com/prasmussen/gdrive">gDrive</a>. Below you will find the command to download your project results folder. Alternatively, you can download the files to your local machine and then move them to your server using a tool such as rsync or scp.</p>
-<p><code>{cmd}</code></p>
-<p>For a detailed description of the pipeline, please refer to our GitHub README and associated code:
-<a href="https://github.com/cademirch/ccgp_workflow">https://github.com/cademirch/ccgp_workflow</a></p>
-<p>Please do not hesitate to contact members of the bioinformatics team if you have any questions:
-<br>Erik Enbody (<a href="mailto:erik.enbody@gmail.com">erik.enbody@gmail.com</a>)
-<br>Mara Baylis (<a href="mailto:mbaylis@ucsc.edu">mbaylis@ucsc.edu</a>)
-<br>Cade Mirchandani (<a href="mailto:cmirchan@ucsc.edu">cmirchan@ucsc.edu</a>)</p>
-"""
+    <img src="https://raw.githubusercontent.com/cademirch/ccgp_workflow/main/docs/CCGPhorizontalblue.jpeg" width=auto height=100>
+    <p>As part of the planned CCGP workflow, we've finished generating genotype data from your whole-genome resequencing data on your project: {project_name}  Below we include the information needed to access the data. As a first step, we suggest you view the quality control dashboard for your variant data:
+    {erik}:</p>
+    <p>The idea is to use these outputs in the QC dashboard to identify if there are any clear outliers in your data and to help direct your filtering and downstream analysis plans. Keep in mind these plots are not final analyses, they are just there to give you a sense of the data. In the accompanying email with the data delivery, our bioinformatics team describes anything they noticed in particular with your dataset. Please see the figure descriptions for a general idea of how to use them to identify problematic samples.</p>
+    <p>We have hosted your data on Google Drive in:
+    {link}</p>
+    <p>This folder structure looks like this:</p>
+    <pre><code>Project-folder
+        ├── QC-Outputs
+        ├── Project.filtered.vcf.gz
+        └── Project.final.vcf.gz
+    </code></pre>
+    <p>You can find two VCFs in the top level folder, as well as all the data that was used to generate the QC plots. The small VCF file in the QC folder was used to generate the QC plots, and this dataset has basic quality filters applied and has been coarsely pruned to eliminate linked variants. This file may be a good starting point for exploring your data.</p>
+    <p>The &quot;final&quot; VCF corresponds to the raw output of our variant calling pipeline with some basic GATK filters annotated. The &quot;filtered&quot; VCF has removed variants not passing that filter and also samples less than 2x sequencing depth.</p>
+    <p>To download the outputs directly to your server we recommend using <a href="https://github.com/prasmussen/gdrive">gDrive</a>. Below you will find the command to download your project results folder. Alternatively, you can download the files to your local machine and then move them to your server using a tool such as rsync or scp.</p>
+    <p><code>{cmd}</code></p>
+    <p>For a detailed description of the pipeline, please refer to our GitHub README and associated code:
+    <a href="https://github.com/cademirch/ccgp_workflow">https://github.com/cademirch/ccgp_workflow</a></p>
+    <p>Please do not hesitate to contact members of the bioinformatics team if you have any questions:
+    <br>Erik Enbody (<a href="mailto:erik.enbody@gmail.com">erik.enbody@gmail.com</a>)
+    <br>Mara Baylis (<a href="mailto:mbaylis@ucsc.edu">mbaylis@ucsc.edu</a>)
+    <br>Cade Mirchandani (<a href="mailto:cmirchan@ucsc.edu">cmirchan@ucsc.edu</a>)</p>
+    """
 
     html_header = """
     <!DOCTYPE html>

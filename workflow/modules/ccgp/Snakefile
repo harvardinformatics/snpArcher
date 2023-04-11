@@ -9,11 +9,13 @@ REFGENOME = samples['refGenome'].unique().tolist()
 
 rule all:
     input:
-        expand("results/{refGenome}/CCGP/{prefix}.froh", refGenome=REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}_filtered.froh", refGenome=REFGENOME, prefix=config['final_prefix']),
         expand("results/{refGenome}/CCGP/{prefix}.1.windowed.pi", refGenome=REFGENOME, prefix=config['final_prefix']),
         expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.vcf.gz",refGenome=REFGENOME, prefix=config['final_prefix']),
         expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.dist", refGenome=REFGENOME, prefix=config['final_prefix']),
-        expand("results/{refGenome}/CCGP/{prefix}_roh_pi_ridges.pdf", refGenome=REFGENOME, prefix=config['final_prefix'])
+        expand("results/{refGenome}/CCGP/{prefix}_roh_pi_ridges.pdf", refGenome=REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3_dosage.txt.gz", refGenome = REFGENOME, prefix=config['final_prefix'])
+
 
         #expand("results/{refGenome}/CCGP/{prefix}.stat.gz", refGenome=REFGENOME, prefix=config['final_prefix']),
         #expand("results/{refGenome}/CCGP/{prefix}.LD_decay.png", refGenome=REFGENOME, prefix=config['final_prefix'])
@@ -40,8 +42,8 @@ rule froh:
         roh = "results/{refGenome}/CCGP/{prefix}.rg.roh",
         fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
     output:
-        froh = "results/{refGenome}/CCGP/{prefix}.froh",
-        top = "results/{refGenome}/CCGP/{prefix}_top.froh"
+        froh = "results/{refGenome}/CCGP/{prefix}_filtered.froh",
+        top = "results/{refGenome}/CCGP/{prefix}_filtered_top.froh"
     run:
         calc_roh(input.roh, input.fai, output.froh)
 
@@ -141,6 +143,7 @@ rule plinkld:
         plink2 --vcf {input.vcf} --make-bed --indep-pairwise 50 5 0.3 --out {params.prefix2} --allow-extra-chr --autosome-num 95 --const-fid --bad-freqs 
         """
 
+
 #outname = lambda wc, input: input.vcf.replace("_annotated.vcf.gz", "_pruned")
 #plink2 --extract {output.ld} --bfile {params.prefix} --make-bed --out {params.outname} --allow-extra-chr --autosome-num 95 --const-fid --bad-freqs
 
@@ -182,6 +185,8 @@ rule plink:
         distid3 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.dist.id",
         dist6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.dist",
         distid6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.dist.id"
+    resources:
+       mem_mb = 64000
     conda:
         "envs/plink.yml"
     shell:
@@ -191,6 +196,14 @@ rule plink:
         plink --vcf {input.pruned3} --out {params.prefix3} --allow-extra-chr --autosome-num 95 --distance square --const-fid
         plink --vcf {input.pruned6} --out {params.prefix6} --allow-extra-chr --autosome-num 95 --distance square --const-fid
         """
+
+rule vcf2dosage:
+    input:
+        pruned3 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.vcf.gz",
+    output:
+        dosage = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3_dosage.txt.gz",
+    run:
+        vcf2dosage(input.pruned3, output.dosage)
 
 #generally here are the problems with running lddecay:
 #can run with a singularity docker file, but this is not allowed by google life sciences

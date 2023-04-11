@@ -37,6 +37,10 @@ rule basic_filter:
         filtidx = "results/{refGenome}/{prefix}_filtered.vcf.gz.csi"
     conda:
         "envs/filter.yml"
+    resources:
+        mem = 20000,
+        machine_type = "n2d-standard-32",
+        disk_mb = 2000000
     shell:
         """
         bcftools view -S {input.include} -f .,PASS {input.vcf} -a -U -O u | bcftools +fill-tags -Ou |
