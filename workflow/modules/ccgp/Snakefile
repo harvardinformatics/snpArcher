@@ -14,9 +14,9 @@ rule all:
         expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.vcf.gz",refGenome=REFGENOME, prefix=config['final_prefix']),
         expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.dist", refGenome=REFGENOME, prefix=config['final_prefix']),
         expand("results/{refGenome}/CCGP/{prefix}_roh_pi_ridges.pdf", refGenome=REFGENOME, prefix=config['final_prefix']),
-        expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3_dosage.txt.gz", refGenome = REFGENOME, prefix=config['final_prefix'])
-
-
+        expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3_dosage.txt.gz", refGenome = REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6_dosage.txt.gz", refGenome = REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}_dosage.txt.gz", refGenome = REFGENOME, prefix=config['final_prefix'])
         #expand("results/{refGenome}/CCGP/{prefix}.stat.gz", refGenome=REFGENOME, prefix=config['final_prefix']),
         #expand("results/{refGenome}/CCGP/{prefix}.LD_decay.png", refGenome=REFGENOME, prefix=config['final_prefix'])
 
@@ -199,11 +199,27 @@ rule plink:
 
 rule vcf2dosage:
     input:
+        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
+    output:
+        dosage = "results/{refGenome}/CCGP/{prefix}_dosage.txt.gz",
+    run:
+        vcf2dosage(input.vcf, output.dosage)
+
+rule vcf2dosage03:
+    input:
         pruned3 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.vcf.gz",
     output:
         dosage = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3_dosage.txt.gz",
     run:
         vcf2dosage(input.pruned3, output.dosage)
+
+rule vcf2dosage06:
+    input:
+        pruned6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz",
+    output:
+        dosage = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6_dosage.txt.gz",
+    run:
+        vcf2dosage(input.pruned6, output.dosage)
 
 #generally here are the problems with running lddecay:
 #can run with a singularity docker file, but this is not allowed by google life sciences
