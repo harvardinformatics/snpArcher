@@ -2,21 +2,38 @@ import pandas as pd
 import os
 
 configfile: "config/config.yaml"
-
+wildcard_constraints:
+    window="\d+"
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
 REFGENOME = samples['refGenome'].unique().tolist()
 WINDOWS = config["trackhub_windows"]
-FILE_TYPES = ["Tajima", "SNP-Density", "Pi"]
+FILE_TYPES = ["Tajima", "SNP-Density", "Pi"] # dont change this unless you add rules to generate more stats.
 
 rule all:
     input:
-        expand("results/{refGenome}/trackhub/{file_type}_{window}.bw", refGenome=REFGENOME, file_type=FILE_TYPES, window=WINDOWS),
-        # expand("results/{refGenome}/trackhub/trackDb.txt")
+        trackhub_file = expand("results/{refGenome}/trackhub/trackDb.txt", refGenome=REFGENOME),
+
+rule write_hub_files:
+    input:
+        window_stat_files = expand("results/{{refGenome}}/trackhub/{file_type}_{window}.bw", file_type=FILE_TYPES, window=WINDOWS),
+        vcf = expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config['final_prefix']),
+        callable_sites = "results/{refGenome}/trackhub/callable_sites.bb",
+        allele_freq = "results/{refGenome}/trackhub/allele_freq.bw",
+        depth = "results/{refGenome}/trackhub/depth.bw"
+    output:
+        trackhub_file = "results/{refGenome}/trackhub/trackDb.txt",
+        
+    params:
+        refGenome = "{refGenome}",
+        file_types = FILE_TYPES,
+        windows = WINDOWS,
+    script:
+        "scripts/write_hub_files.py"
 
 
 rule calc_tajima:
     input:
-        expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config["final_prefix"])
+        vcf = expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config['final_prefix']),
     output:
         temp("results/{refGenome}/trackhub/{window}.Tajima")
     log:
@@ -30,7 +47,7 @@ rule calc_tajima:
 
 rule calc_snpden:
     input:
-        expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config["final_prefix"])
+        vcf = expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config['final_prefix']),
     output:
         temp("results/{refGenome}/trackhub/{window}.SNP-Density")
     log:
@@ -44,9 +61,9 @@ rule calc_snpden:
 
 rule calc_pi:
     input:
-        expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config["final_prefix"])
+        vcf = expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config['final_prefix']),
     output:
-       temp( "results/{refGenome}/trackhub/{window}.Pi")
+        temp( "results/{refGenome}/trackhub/{window}.Pi")
     log:
         "logs/{refGenome}/trackhub/Pi/{window}.log"
     conda:
@@ -64,6 +81,38 @@ rule chrom_sizes:
     shell:
         "cut -f1,2 {input} > {output}"
 
+rule bcftools_depth:
+    input:
+        vcf = expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config['final_prefix']),
+        chrom_sizes = "results/{refGenome}/trackhub/chrom.sizes"
+    output:
+        bg = temp("results/{refGenome}/trackhub/depth.bg"),
+        bw = "results/{refGenome}/trackhub/depth.bw"
+        
+    conda:
+        "envs/trackhub.yml"
+    shell:
+        """
+        bcftools query -f '%CHROM\t%POS\t%POS\t%DP\n' {input.vcf} | awk -v OFS='\t' '{{print $1,$2-1,$2,$4}}' > {output.bg}
+        bedGraphToBigWig {output.bg} {input.chrom_sizes} {output.bw}
+        """
+
+rule vcftools_freq:
+    input:
+        vcf = expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config['final_prefix']),
+        chrom_sizes = "results/{refGenome}/trackhub/chrom.sizes"
+    output:
+        bg = temp("results/{refGenome}/trackhub/allele_freq.bg"),
+        bw = "results/{refGenome}/trackhub/allele_freq.bw"
+    
+    conda:
+        "envs/trackhub.yml"
+    shell:
+        """
+        vcftools --gzvcf {input.vcf} --freq2 --stdout | cut -f 1,2,6 | tail -n +2 | awk -v OFS='\t' '{{print $1,$2-1,$2,$3}}' > {output.bg}
+        bedGraphToBigWig {output.bg} {input.chrom_sizes} {output.bw}
+        """
+        
 rule convert_to_bedgraph:
     input:
         stat_file = "results/{refGenome}/trackhub/{window}.{file_type}",
@@ -75,8 +124,8 @@ rule convert_to_bedgraph:
 
 rule bedgraph_to_bigwig:
     input:
-       bg = "results/{refGenome}/trackhub/{file_type}_{window}.bg",
-       chrom_sizes = "results/{refGenome}/trackhub/chrom.sizes"
+        bg = "results/{refGenome}/trackhub/{file_type}_{window}.bg",
+        chrom_sizes = "results/{refGenome}/trackhub/chrom.sizes"
     output:
         "results/{refGenome}/trackhub/{file_type}_{window}.bw"
     conda:
@@ -84,5 +133,13 @@ rule bedgraph_to_bigwig:
     shell:
         "bedGraphToBigWig {input.bg} {input.chrom_sizes} {output}"
 
-
-    
+rule bed_to_bigbed:
+    input:
+        callable_sites = expand("results/{{refGenome}}/{prefix}_callable_sites.bed", prefix=config['final_prefix']),
+        chrom_sizes = "results/{refGenome}/trackhub/chrom.sizes"
+    output:
+        callable_sites = "results/{refGenome}/trackhub/callable_sites.bb"
+    conda:
+        "envs/trackhub.yml"
+    shell:
+        "bedToBigBed {input.callable_sites} {input.chrom_sizes} {output.callable_sites}"

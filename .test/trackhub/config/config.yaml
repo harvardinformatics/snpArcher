@@ -90,4 +90,4 @@ cov_threshold_rel:
 
 
 ###TRACKHUB###
-trackhub_windows: [100000]
+trackhub_windows: [1000, 10000, 100000]
