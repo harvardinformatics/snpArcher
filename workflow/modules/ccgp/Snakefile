@@ -50,7 +50,7 @@ rule froh:
 rule pi:
     input:
         vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
-        top = "results/{refGenome}/CCGP/{prefix}_top.froh"
+        top = "results/{refGenome}/CCGP/{prefix}_filtered_top.froh"
     output:
         pi1 = "results/{refGenome}/CCGP/{prefix}.1.windowed.pi",
         pi2 = "results/{refGenome}/CCGP/{prefix}.2.windowed.pi",
@@ -65,7 +65,7 @@ rule pi:
     conda:
         "envs/vcftools_individuals.yml"
     params:
-        prefix = lambda wc, input: input.top.replace("_top.froh", ""),
+        prefix = lambda wc, input: input.top.replace("_filtered_top.froh", ""),
     shell:
         """
         
@@ -83,7 +83,7 @@ rule qc_plots:
     Call plotting script
     """
     input:
-        top = ancient("results/{refGenome}/CCGP/{prefix}_top.froh"),
+        top = ancient("results/{refGenome}/CCGP/{prefix}_filtered_top.froh"),
         roh = "results/{refGenome}/CCGP/{prefix}.rg.roh",
         pi1 = "results/{refGenome}/CCGP/{prefix}.1.windowed.pi",
         pi2 = "results/{refGenome}/CCGP/{prefix}.2.windowed.pi",
