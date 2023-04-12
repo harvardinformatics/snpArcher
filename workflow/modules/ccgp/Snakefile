@@ -3,7 +3,6 @@ import os
 include: "common.smk"
 
 configfile: "config/config.yaml"
-
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
 REFGENOME = samples['refGenome'].unique().tolist()
 
@@ -16,7 +15,7 @@ rule all:
         expand("results/{refGenome}/CCGP/{prefix}_roh_pi_ridges.pdf", refGenome=REFGENOME, prefix=config['final_prefix']),
         expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3_dosage.txt.gz", refGenome = REFGENOME, prefix=config['final_prefix']),
         expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6_dosage.txt.gz", refGenome = REFGENOME, prefix=config['final_prefix']),
-        expand("results/{refGenome}/CCGP/{prefix}_dosage.txt.gz", refGenome = REFGENOME, prefix=config['final_prefix'])
+        expand("results/{refGenome}/CCGP/{prefix}_annotated_no_pruning_dosage.txt.gz", refGenome = REFGENOME, prefix=config['final_prefix'])
         #expand("results/{refGenome}/CCGP/{prefix}.stat.gz", refGenome=REFGENOME, prefix=config['final_prefix']),
         #expand("results/{refGenome}/CCGP/{prefix}.LD_decay.png", refGenome=REFGENOME, prefix=config['final_prefix'])
 
@@ -201,7 +200,7 @@ rule vcf2dosage:
     input:
         vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
     output:
-        dosage = "results/{refGenome}/CCGP/{prefix}_dosage.txt.gz",
+        dosage = "results/{refGenome}/CCGP/{prefix}_annotated_no_pruning_dosage.txt.gz",
     run:
         vcf2dosage(input.vcf, output.dosage)
 
