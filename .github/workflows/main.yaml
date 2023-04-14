@@ -18,7 +18,7 @@ jobs:
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
-        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba --config config_file=config/config.yaml"
   Testing_QC:
     runs-on: ubuntu-latest
     steps:
