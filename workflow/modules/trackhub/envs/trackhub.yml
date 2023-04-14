@@ -7,3 +7,4 @@ dependencies:
   - bcftools==1.12
   - vcftools==0.1.16
   - ucsc-bedgraphtobigwig==377
+  - ucsc-bedtobigbed==377
