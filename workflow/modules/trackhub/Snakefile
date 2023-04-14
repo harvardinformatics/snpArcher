@@ -4,9 +4,10 @@ import os
 configfile: "config/config.yaml"
 wildcard_constraints:
     window="\d+"
+
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
 REFGENOME = samples['refGenome'].unique().tolist()
-WINDOWS = config["trackhub_windows"]
+WINDOWS = [1000, 10000, 100000]
 FILE_TYPES = ["Tajima", "SNP-Density", "Pi"] # dont change this unless you add rules to generate more stats.
 
 rule all:
@@ -17,7 +18,7 @@ rule write_hub_files:
     input:
         window_stat_files = expand("results/{{refGenome}}/trackhub/{file_type}_{window}.bw", file_type=FILE_TYPES, window=WINDOWS),
         vcf = expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config['final_prefix']),
-        callable_sites = "results/{refGenome}/trackhub/callable_sites.bb",
+        callable_sites = "results/{refGenome}/trackhub/non_callable_sites.bb",
         allele_freq = "results/{refGenome}/trackhub/allele_freq.bw",
         depth = "results/{refGenome}/trackhub/depth.bw"
     output:
@@ -27,8 +28,28 @@ rule write_hub_files:
         refGenome = "{refGenome}",
         file_types = FILE_TYPES,
         windows = WINDOWS,
+        email = config["trackhub_email"]
     script:
         "scripts/write_hub_files.py"
+
+rule strip_vcf:
+    """
+    Strips vcf of all info/filters to reduce size
+    """
+    input:
+        vcf = expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config['final_prefix']),
+    output:
+        vcf = "results/{refGenome}/trackhub/info_stripped_snps.vcf.gz",
+        tbi = "results/{refGenome}/trackhub/info_stripped_snps.vcf.gz.tbi"
+    log:
+        "logs/{refGenome}/trackhub/strip_vcf.log"
+    conda:
+        "envs/trackhub.yml"
+    shell:
+        """
+        bcftools annotate -x INFO,FORMAT/DP,FORMAT/GQ,FORMAT/PL {input.vcf} -O z -o {output.vcf}
+        tabix -p vcf {output.vcf}
+        """
 
 
 rule calc_tajima:
@@ -133,13 +154,21 @@ rule bedgraph_to_bigwig:
     shell:
         "bedGraphToBigWig {input.bg} {input.chrom_sizes} {output}"
 
-rule bed_to_bigbed:
+rule non_callable_sites:
+    """
+    Calculates complement of callable sites to make 'non-callable sites' this makes visualzing on browser easier.
+    """
     input:
         callable_sites = expand("results/{{refGenome}}/{prefix}_callable_sites.bed", prefix=config['final_prefix']),
-        chrom_sizes = "results/{refGenome}/trackhub/chrom.sizes"
+        chrom_sizes = "results/{refGenome}/trackhub/chrom.sizes",
+        
     output:
-        callable_sites = "results/{refGenome}/trackhub/callable_sites.bb"
+        bed = temp("results/{refGenome}/trackhub/non_callable_sites.bed"),
+        bb = "results/{refGenome}/trackhub/non_callable_sites.bb"
     conda:
         "envs/trackhub.yml"
     shell:
-        "bedToBigBed {input.callable_sites} {input.chrom_sizes} {output.callable_sites}"
+        """
+        bedtools complement -i {input.callable_sites} -g {input.chrom_sizes} > {output.bed}
+        bedToBigBed {output.bed} {input.chrom_sizes} {output.bb}
+        """
