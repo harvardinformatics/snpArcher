@@ -59,6 +59,14 @@ module postprocess:
 
 use rule * from postprocess as postprocess_*
 
+module trackhub:
+    snakefile:
+        "modules/trackhub/Snakefile"
+    config:
+        config
+
+use rule * from trackhub as trackhub_*
+
 rule all:
     input:
         get_output()

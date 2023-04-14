@@ -98,19 +98,19 @@ callable_bed:
 
 # gatk HaplotypeCaller
 bam2gvcf:
-  mem: 9000
+  mem: 4000
 # gatk GenomicsDBImport
 gvcf2DB:
-  mem: 32000
+  mem: 4000
 # gatk GenotypeGVCFs
 DB2vcf:
-  mem: 32000
+  mem: 4000
 # gatk filterVcfs
 filterVcfs:
   mem: 4000
 # gatk GatherVcfs
 gatherVcfs:
-  mem: 9000
+  mem: 4000
 # vcftools program
 vcftools:
   mem: 8000

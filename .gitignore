@@ -1,10 +1,9 @@
+.DS_Store
 data_preparation/
 .snakemake*
 template_slurm.sh
 slurm_logs/*
 # indexing and creating a sequence dictionary gets done within pipeline
-data/ccgpWorkflow/utils/orphan_reads_result
-data/archive/ccgp_workflow/.env
 data/zebraFinch/genome/*.sa
 data/zebraFinch/genome/*.pac
 data/zebraFinch/genome/*.bwt
@@ -40,7 +39,6 @@ tmp/
 .test/ecoli/results/
 .test/ecoli/data/
 *.lic
-ccgp-workflow-results/*
-.env
-desktop_creds.json
-token.json
+.test/ci/results
+.test/ci/benchmarks
+.test/ci/logs

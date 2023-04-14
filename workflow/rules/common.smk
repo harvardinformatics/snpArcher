@@ -41,6 +41,10 @@ def get_output():
             out.append(rules.ccgp_all.input) #CCGP WORKFLOW UNIQUE
             if all(i in samples['SampleType'].tolist() for i in ["ingroup", "outgroup"]):
                 out.append(rules.mk_all.input)
+            if config["generate_trackhub"]:
+                if not config["trackhub_email"]:
+                    raise(WorkflowError("If generating trackhub, you must provide an email in the config file."))
+                out.append(rules.trackhub_all.input)
     return out
 
 def merge_bams_input(wc):

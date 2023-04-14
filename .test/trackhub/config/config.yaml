@@ -4,7 +4,7 @@
 
 samples: "config/test_coords.csv"            # name of the sample metadata CSV
 resource_config: "config/resources.yaml"  # path to resources yaml config
-final_prefix: "test_qc" # prefix for final output files
+final_prefix: "test_postprocess" # prefix for final output files
 intervals: True    #Set to True if you want to perform variant calling using interval approach. 
 sentieon: False  #set to True if you want to use sentieon, False if you want GATK
 sentieon_lic: "" #set to path of sentieon license
@@ -51,3 +51,44 @@ callable_merge: 100   #merge callable regions separated by this or fewer bp into
 ## QC options ##
 nClusters: 3
 GoogleAPIKey:
+min_depth: 2
+
+## Filtering options ##
+
+contig_size: 10000 # snps on contigs this size or smaller will be filtered from the final clean vcfs. Set to 0 to disable.
+maf: 0.01 #snps with MAF below this value will be filtered from the final clean vcfs. Set to 0 to disable.
+missingness: 0.75 #snps with missingness greater than this value will be filtered from the final clean vcfs. Set to 1 to disable.
+scaffolds_to_exclude: "mtDNA,Y" #comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
+
+########################################
+## coverage thresholds ##
+########################################
+
+## If cov_filter is True, use these parameters to control how coverage filtering is done
+## Three options are provided for coverage-based filtering. The default option is to just filter
+## regions of the genome with mean coverage below a minimal threshold (default = 1), with a very large upper limit
+## To use this option, set the variables below to the lower absolute mean coverage limit and upper absolute mean coverage limit, 
+## and make sure all other coverage variables are empty
+
+cov_threshold_lower: 1
+cov_threshold_upper: 10000
+ 
+## Alternatively, filtering can be done based on standard deviations 
+## (assumes a Poisson distribution, so stdev_cov equals the square root of the mean coverage),
+## where regions of the genome with mean coverage < X standard deviations or > X standard deviations are removed.
+## To use this option, set the variables below to the desired X
+## and make sure all other coverage variables are empty
+
+cov_threshold_stdev: 
+
+## Finally, filtering can be done based on absolute scaling of the mean, 
+## where regions of the genome with mean coverage < (global mean coverge / X) or > (global mean coverge * X) are removed.
+## To use this option, set the variable below to the desired X
+## and make sure all other coverage variables are empty
+
+cov_threshold_rel: 
+
+
+
+###TRACKHUB###
+trackhub_windows: [1000, 10000, 100000]
