@@ -169,6 +169,7 @@ rule non_callable_sites:
         "envs/trackhub.yml"
     shell:
         """
-        bedtools complement -i {input.callable_sites} -g {input.chrom_sizes} > {output.bed}
+        sort -k1,1 {input.chrom_sizes} > sorted.chrom.sizes
+        bedtools complement -i {input.callable_sites} -g sorted.chrom.sizes > {output.bed}
         bedToBigBed {output.bed} {input.chrom_sizes} {output.bb}
         """
