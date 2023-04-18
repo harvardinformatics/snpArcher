@@ -4,5 +4,4 @@
 
 samples: "config/samples.csv" # path to the sample metadata CSV
 final_prefix: "" # prefix for final output files
-trackhub_windows: [1000, 10000, 100000]
-
+trackhub_email: "email@website.com"

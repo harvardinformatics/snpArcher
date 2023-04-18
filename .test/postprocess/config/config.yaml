@@ -10,7 +10,8 @@ sentieon: False  #set to True if you want to use sentieon, False if you want GAT
 sentieon_lic: "" #set to path of sentieon license
 remote_reads: False # Set True if reads are in a Google Bucket seperate from --default-remote-prefix. 
 remote_reads_prefix: "" # set to google bucket prefix where reads live
-
+generate_trackhub: True #Set to true if you want to generate a Genome Browser Trackhub. Dependent on postprocessing module.
+trackhub_email: "hi@website.com"
 ##############################
 # Variables you *might* need to change
 ##############################
