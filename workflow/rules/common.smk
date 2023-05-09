@@ -62,11 +62,17 @@ def sentieon_combine_gvcf_cmd_line(wc):
 
 def get_interval_gvcfs(wc):
     checkpoint_output = checkpoints.create_gvcf_intervals.get(**wc).output[0]
-    list_files = [os.path.basename(x) for x in glob.glob(os.path.join(checkpoint_output, "*.interval_list"))]
+    with checkpoint_output.open() as f:
+        lines = [l.strip() for l in f.readlines()]
+    list_files = [os.path.basename(x) for x in lines]
     list_numbers = [f.replace("-scattered.interval_list", "") for f in list_files]
     gvcfs = expand("results/{{refGenome}}/interval_gvcfs/{{sample}}/{l}.raw.g.vcf.gz", l=list_numbers)
-    tbis = expand("results/{{refGenome}}/interval_gvcfs/{{sample}}/{l}.raw.g.vcf.gz.tbi", l=list_numbers)
-    return {"gvcfs": gvcfs, "tbis": tbis}
+    
+    return gvcfs
+
+def get_interval_gvcfs_idx(wc):
+    tbis = [f+".tbi" for f in get_interval_gvcfs(wc)]
+    return tbis
 
 def get_db_interval_count(wc):
     _samples = samples.loc[(samples['refGenome'] == wc.refGenome)]['BioSample'].unique().tolist()
@@ -75,18 +81,17 @@ def get_db_interval_count(wc):
 
 def get_interval_vcfs(wc):
     checkpoint_output = checkpoints.create_db_intervals.get(**wc).output[0]
-    list_files = [os.path.basename(x) for x in glob.glob(os.path.join(checkpoint_output, "*.interval_list"))]
+    with checkpoint_output.open() as f:
+        lines = [l.strip() for l in f.readlines()]
+    list_files = [os.path.basename(x) for x in lines]
+    
     list_numbers = [f.replace("-scattered.interval_list", "") for f in list_files]
     vcfs = expand("results/{{refGenome}}/vcfs/intervals/filtered_L{l}.vcf.gz", l=list_numbers)
-    tbis = expand("results/{{refGenome}}/vcfs/intervals/filtered_L{l}.vcf.gz.tbi", l=list_numbers)
+    
     return vcfs
 
-def get_interval_vcf_tbis(wc):
-    checkpoint_output = checkpoints.create_db_intervals.get(**wc).output[0]
-    list_files = [os.path.basename(x) for x in glob.glob(os.path.join(checkpoint_output, "*.interval_list"))]
-    list_numbers = [f.replace("-scattered.interval_list", "") for f in list_files]
-    vcfs = expand("results/{{refGenome}}/vcfs/intervals/filtered_L{l}.vcf.gz", l=list_numbers)
-    tbis = expand("results/{{refGenome}}/vcfs/intervals/filtered_L{l}.vcf.gz.tbi", l=list_numbers)
+def get_interval_vcfs_idx(wc):
+    tbis = [f+".tbi" for f in get_interval_vcfs(wc)]
     return tbis
     
 def get_gvcfs_db(wc):
