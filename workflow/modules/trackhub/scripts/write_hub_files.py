@@ -5,7 +5,8 @@ hub_text = """hub {genome}
 shortLabel {genome} snpArcher Track Hub
 longLabel {genome} snpArcher Track Hub
 useOneFile on
-email {email}\n"""
+email {email}\n
+genome {genome}\n"""
 
 vcf_track_txt = """track VCF
 bigDataUrl {vcf_file}
@@ -18,7 +19,7 @@ window_parent_txt = """track {track_type}
 compositeTrack on
 shortLabel {track_type}
 longLabel {track_type}
-color 200,100,0
+color {color}
 altColor 0,102,204
 autoScale on
 type bigWig
@@ -29,13 +30,14 @@ window_track_txt = """track {track_name}
 parent {parent} on
 bigDataUrl {data_url}
 type bigWig
+visibility {vis}
 shortLabel {label}
 longLabel {label}\n"""
 
 allele_freq_txt = """track MinorAlleleFrequency
 bigDataUrl {data_url}
 type bigWig
-color 200,100,0
+color 88,85,120
 altColor 0,102,204
 autoScale on
 visibility full
@@ -45,7 +47,7 @@ longLabel Minor Allele Frequency\n"""
 snp_depth_txt = """track SNPDepth
 bigDataUrl {data_url}
 type bigWig
-color 200,100,0
+color 120,172,145
 altColor 0,102,204
 autoScale on
 visibility full
@@ -57,9 +59,10 @@ bigDataUrl {cov_file}
 shortLabel Non Callable Sites
 type bigBed
 longLabel Non Callable Sites
-color 0,0,255
+color 0,0,0
 visibility dense\n"""
 
+COLORS = {"Tajima": "(70,130,180)", "SNP-Density":"(186,85,211)", "Pi": "(248,174,51)",}
 
 def human_format(num):
     num = float("{:.3g}".format(num))
@@ -85,20 +88,21 @@ def main():
 
     with open(trackhub_file, "w") as out:
         print(hub_text.format(genome=genome, email=email), file=out)
-        print(f"genome {genome}\n", file=out)
         print(vcf_track_txt.format(vcf_file=vcf_file), file=out)
         print(coverage_track_txt.format(cov_file=cov_file), file=out)
         print(allele_freq_txt.format(data_url=freq_file), file=out)
         print(snp_depth_txt.format(data_url=depth_file), file=out)
 
         for file in file_types:
-            print(window_parent_txt.format(track_type=file), file=out)
+            print(window_parent_txt.format(track_type=file, color=COLORS[file]), file=out)
             for window in trackhub_windows:
                 track_name = f"{file}_{human_format(window)}_bp_bins"
-                label = f"{file} {human_format(window)} bp bins"
+                label = f"{file}_{human_format(window)}_bp bins"
                 url = f"{file}_{window}.bw"
+                if window == 1000: vis = "True"
+                else: vis = "False"
                 print(
-                    window_track_txt.format(track_name=track_name, label=label, parent=file, data_url=url),
+                    window_track_txt.format(track_name=track_name, label=label, parent=file, data_url=url, vis=vis),
                     file=out,
                 )
 

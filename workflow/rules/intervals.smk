@@ -36,8 +36,11 @@ rule format_interval_list:
 checkpoint create_db_intervals:
     input:
         ref = "results/{refGenome}/data/genome/{refGenome}.fna",
+        fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
+        dictf = "results/{refGenome}/data/genome/{refGenome}.dict",
         intervals = "results/{refGenome}/intervals/master_interval_list.list"
     output:
+        fof = "results/{refGenome}/intervals/db_intervals/intervals.txt",
         out_dir = directory("results/{refGenome}/intervals/db_intervals"),
     params:
         max_intervals = get_db_interval_count
@@ -50,16 +53,20 @@ checkpoint create_db_intervals:
     shell:
         """
         gatk SplitIntervals -L {input.intervals} \
-        -O {output} -R {input.ref} -scatter {params} \
+        -O {output.out_dir} -R {input.ref} -scatter {params} \
         -mode INTERVAL_SUBDIVISION \
         --interval-merging-rule OVERLAPPING_ONLY &> {log}
+        ls -l {output.out_dir}/*scattered.interval_list > {output.fof}
         """
 
 checkpoint create_gvcf_intervals:
     input:
         ref = "results/{refGenome}/data/genome/{refGenome}.fna",
+        fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
+        dictf = "results/{refGenome}/data/genome/{refGenome}.dict",
         intervals = "results/{refGenome}/intervals/master_interval_list.list"
     output:
+        fof = "results/{refGenome}/intervals/gvcf_intervals/intervals.txt",
         out_dir = directory("results/{refGenome}/intervals/gvcf_intervals"),
     params:
         max_intervals = config["num_gvcf_intervals"]
@@ -72,7 +79,8 @@ checkpoint create_gvcf_intervals:
     shell:
         """
         gatk SplitIntervals -L {input.intervals} \
-        -O {output} -R {input.ref} -scatter {params} \
+        -O {output.out_dir} -R {input.ref} -scatter {params} \
         -mode BALANCING_WITHOUT_INTERVAL_SUBDIVISION \
         --interval-merging-rule OVERLAPPING_ONLY  &> {log}
+        ls -l {output.out_dir}/*scattered.interval_list > {output.fof}
         """

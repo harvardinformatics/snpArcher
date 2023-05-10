@@ -33,7 +33,8 @@ rule basic_filter:
         vcf = "results/{refGenome}/{prefix}_raw.vcf.gz",
         include = "results/{refGenome}/postprocess/{prefix}_samps.txt"
     output:
-        filtered = "results/{refGenome}/{prefix}_filtered.vcf.gz"
+        filtered = "results/{refGenome}/{prefix}_filtered.vcf.gz",
+        filtered_idx = "results/{refGenome}/{prefix}_filtered.vcf.gz.csi"
     conda:
         "envs/filter.yml"
     shell:
@@ -51,22 +52,24 @@ rule update_bed:
         bed = "results/{refGenome}/{prefix}_callable_sites.bed",
         fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai"
     output:
-        bed = "results/{refGenome}/postprocess/{prefix}_exclude_sites.bed"
+        bed = "results/{refGenome}/postprocess/{prefix}_exclude_sites.bed",
+        tmp_bed = temp("results/{refGenome}/postprocess/{prefix}_tmp.bed")
     conda:
         "envs/bed.yml"
     params:
         size_filter = config["contig_size"],
-        tmp_bed = "results/{refGenome}/postprocess/tmp.bed"
+        
     shell:
         """
-        awk 'BEGIN{{OFS="\\t"}}{{if ($2<{params.size_filter}) {{print $1,0,$2}}}}' {input.fai} > {params.tmp_bed}
-        cat {params.tmp_bed} {input.bed} | bedtools sort -i - | bedtools merge -i - > {output.bed}
+        awk 'BEGIN{{OFS="\\t"}}{{if ($2<{params.size_filter}) {{print $1,0,$2}}}}' {input.fai} > {output.tmp_bed}
+        cat {output.tmp_bed} {input.bed} | bedtools sort -i - | bedtools merge -i - > {output.bed}
         """
 
 rule strict_filter:  
     input: 
         bed = "results/{refGenome}/postprocess/{prefix}_exclude_sites.bed",
-        vcf = "results/{refGenome}/{prefix}_filtered.vcf.gz"
+        vcf = "results/{refGenome}/{prefix}_filtered.vcf.gz",
+        filtered_idx = "results/{refGenome}/{prefix}_filtered.vcf.gz.csi"
     output: 
         vcf = temp("results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz"),
         idx = temp("results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi")
