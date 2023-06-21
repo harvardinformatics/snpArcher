@@ -1,4 +1,4 @@
-# :rocket: snpArcher
+# 🚀 snpArcher
 
 <img src="./img/logo.png" alt="snpArcher logo" height="300"/>
 
