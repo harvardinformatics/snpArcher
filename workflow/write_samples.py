@@ -39,17 +39,17 @@ def copy_reference(ref: Path) -> str:
         shutil.copyfile(ref, Path('data', 'genome', ref_name + ".fna"))
     return ref_name
 
-def write_sample_sheet(sample_dict: dict, ref_name: str, ref_path: str, organism: str, ncbi_ref: bool) -> None:
+def write_sample_sheet(sample_dict: dict, ref_name: str, ref_path: str, ncbi_ref: bool) -> None:
     """Writes the sample sheet"""
     with open(Path("../config", "samples.csv"), "w") as out:
         if (ncbi_ref):
-            out.write("BioSample,LibraryName,refGenome,Run,Organism,BioProject,fq1,fq2\n")
+            out.write("BioSample,LibraryName,refGenome,Run,BioProject,fq1,fq2\n")
             for i, (k, v) in enumerate(sample_dict.items()):
-                out.write(f"{k},lib_{k},{ref_name},{i},{organism},NaN,{v[0]},{v[1]}\n")
+                out.write(f"{k},lib_{k},{ref_name},{i},NaN,{v[0]},{v[1]}\n")
         else:
-            out.write("BioSample,LibraryName,refGenome,refPath,Run,Organism,BioProject,fq1,fq2\n")
+            out.write("BioSample,LibraryName,refGenome,refPath,Run,BioProject,fq1,fq2\n")
             for i, (k, v) in enumerate(sample_dict.items()):
-                out.write(f"{k},lib_{k},{ref_name},{ref_path}{i},{organism},NaN,{v[0]},{v[1]}\n")
+                out.write(f"{k},lib_{k},{ref_name},{ref_path}{i},NaN,{v[0]},{v[1]}\n")
 
 
 def main() -> None:
@@ -58,7 +58,7 @@ def main() -> None:
     parser.add_argument('-s', '--sample_list', dest='samp', required=True, help="Specify path to sample list")
     parser.add_argument('-f', '--fastq_dir', dest='fastq', required=True, help="Specify path to fastq dir")
     parser.add_argument('-c', '--copy', dest='copyref', required=False, default=False, help="Copy reference genome to data/genome dir and unzip.")
-    parser.add_argument('-o', '--org', dest='org', required=True, help="Specify organism name")
+    
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-r', '--ref', dest='ref', help="Specify path to reference genome. Mutually exclusive with -a/--acc.")
     group.add_argument('-a', '--acc', dest='acc', help="Specify reference genome accession. Mutually exclusive with -r/--ref")
@@ -66,7 +66,7 @@ def main() -> None:
 
     sample_list = args.samp
     fastq_dir = Path(args.fastq)
-    organism = args.org
+    
 
     with open(sample_list, "r") as f:
         samples = read_sample_list(f)
@@ -87,7 +87,9 @@ def main() -> None:
         ref_name = args.acc
         ref_path = ""
 
-    write_sample_sheet(sample_dict, ref_name, ref_path, organism, ncbi_ref)
+
+    write_sample_sheet(sample_dict, ref_name, ref_path, ncbi_ref)
+
     if cant_find:
         print("Couldnt' find fastqs for these files:")
         for name in cant_find:
