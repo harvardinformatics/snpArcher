@@ -39,7 +39,8 @@ rule bam2gvcf:
 
 rule concat_gvcfs:
     input:
-        unpack(get_interval_gvcfs)
+        gvcfs = get_interval_gvcfs,
+        tbis = get_interval_gvcfs_idx
     output:
         gvcf = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz",
         tbi = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz.tbi"
@@ -120,6 +121,8 @@ rule DB2vcf:
     input:
         db = "results/{refGenome}/genomics_db_import/DB_L{l}.tar",
         ref = "results/{refGenome}/data/genome/{refGenome}.fna",
+        fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
+        dictf = "results/{refGenome}/data/genome/{refGenome}.dict",
     output:
         vcf = temp("results/{refGenome}/vcfs/intervals/L{l}.vcf.gz"),
         vcfidx = temp("results/{refGenome}/vcfs/intervals/L{l}.vcf.gz.tbi"),
@@ -156,7 +159,9 @@ rule filterVcfs:
     input:
         vcf = "results/{refGenome}/vcfs/intervals/L{l}.vcf.gz",
         vcfidx = "results/{refGenome}/vcfs/intervals/L{l}.vcf.gz.tbi",
-        ref = "results/{refGenome}/data/genome/{refGenome}.fna"
+        ref = "results/{refGenome}/data/genome/{refGenome}.fna",
+        fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
+        dictf = "results/{refGenome}/data/genome/{refGenome}.dict",
     output:
         vcf = temp("results/{refGenome}/vcfs/intervals/filtered_L{l}.vcf.gz"),
         vcfidx = temp("results/{refGenome}/vcfs/intervals/filtered_L{l}.vcf.gz.tbi")
@@ -187,7 +192,7 @@ rule filterVcfs:
 rule sort_gatherVcfs:
     input:
         vcfs = get_interval_vcfs,
-        tbis = get_interval_vcf_tbis
+        tbis = get_interval_vcfs_idx
     output:
         vcfFinal = "results/{refGenome}/{prefix}_raw.vcf.gz",
         vcfFinalidx = "results/{refGenome}/{prefix}_raw.vcf.gz.tbi"

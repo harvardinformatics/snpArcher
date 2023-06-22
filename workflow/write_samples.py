@@ -87,7 +87,9 @@ def main() -> None:
         ref_name = args.acc
         ref_path = ""
 
+
     write_sample_sheet(sample_dict, ref_name, ref_path, ncbi_ref)
+
     if cant_find:
         print("Couldnt' find fastqs for these files:")
         for name in cant_find:
