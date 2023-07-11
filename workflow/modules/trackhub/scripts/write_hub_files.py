@@ -99,7 +99,7 @@ def main():
     trackhub_file = snakemake.output["trackhub_file"]  # noqa: F821
     html_file = snakemake.output["html"]  # noqa: F821
 
-    shutil.copyfile("./html/hub_description", html_file)
+    shutil.copyfile("../html/hub_description", html_file)
 
     with open(trackhub_file, "w") as out:
         print(hub_text.format(genome=genome, email=email), file=out)
