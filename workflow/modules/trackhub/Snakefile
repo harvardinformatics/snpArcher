@@ -24,7 +24,7 @@ rule write_hub_files:
         depth = "results/{refGenome}/trackhub/depth.bw",
         
     output:
-        trackhub_file = "results/{refGenome}/trackhub/trackDb.txt",
+        trackhub_file = "results/{refGenome}/trackhub/hub.txt",
         html = "results/{refGenome}/trackhub/index.html"
     params:
         refGenome = "{refGenome}",
