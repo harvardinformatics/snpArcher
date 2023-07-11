@@ -22,10 +22,10 @@ rule write_hub_files:
         callable_sites = "results/{refGenome}/trackhub/non_callable_sites.bb",
         allele_freq = "results/{refGenome}/trackhub/allele_freq.bw",
         depth = "results/{refGenome}/trackhub/depth.bw",
-        html = "results/{refGenome}/trackhub/index.html"
+        
     output:
         trackhub_file = "results/{refGenome}/trackhub/trackDb.txt",
-        
+        html = "results/{refGenome}/trackhub/index.html"
     params:
         refGenome = "{refGenome}",
         file_types = FILE_TYPES,
