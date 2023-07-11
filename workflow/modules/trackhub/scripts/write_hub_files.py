@@ -1,4 +1,5 @@
 from os.path import basename
+import shutil
 
 # https://genome.ucsc.edu/goldenPath/help/hgTracksHelp.html#UseOneFile
 hub_text = """hub {genome}
@@ -68,7 +69,12 @@ color 0,0,0
 html index.html
 visibility dense\n"""
 
-COLORS = {"Tajima": "(70,130,180)", "SNP-Density":"(186,85,211)", "Pi": "(248,174,51)",}
+COLORS = {
+    "Tajima": "(70,130,180)",
+    "SNP-Density": "(186,85,211)",
+    "Pi": "(248,174,51)",
+}
+
 
 def human_format(num):
     num = float("{:.3g}".format(num))
@@ -87,10 +93,13 @@ def main():
     trackhub_windows = snakemake.params["windows"]  # noqa: F821
     vcf_file = basename(snakemake.input["vcf"][0])  # noqa: F821
     cov_file = basename(snakemake.input["callable_sites"][0])  # noqa: F821
-    freq_file = basename(snakemake.input["allele_freq"][0]) # noqa: F821
+    freq_file = basename(snakemake.input["allele_freq"][0])  # noqa: F821
     depth_file = basename(snakemake.input["depth"][0])  # noqa: F821
     genome = snakemake.params["refGenome"]  # noqa: F821
     trackhub_file = snakemake.output["trackhub_file"]  # noqa: F821
+    html_file = snakemake.output["html"]  # noqa: F821
+
+    shutil.copyfile("./html/hub_description", html_file)
 
     with open(trackhub_file, "w") as out:
         print(hub_text.format(genome=genome, email=email), file=out)
@@ -100,17 +109,28 @@ def main():
         print(snp_depth_txt.format(data_url=depth_file), file=out)
 
         for file in file_types:
-            print(window_parent_txt.format(track_type=file, color=COLORS[file]), file=out)
+            print(
+                window_parent_txt.format(track_type=file, color=COLORS[file]), file=out
+            )
             for window in trackhub_windows:
                 track_name = f"{file}_{human_format(window)}_bp_bins"
                 label = f"{file}_{human_format(window)}_bp bins"
                 url = f"{file}_{window}.bw"
-                if window == 1000: vis = "True"
-                else: vis = "False"
+                if window == 1000:
+                    vis = "True"
+                else:
+                    vis = "False"
                 print(
-                    window_track_txt.format(track_name=track_name, label=label, parent=file, data_url=url, vis=vis),
+                    window_track_txt.format(
+                        track_name=track_name,
+                        label=label,
+                        parent=file,
+                        data_url=url,
+                        vis=vis,
+                    ),
                     file=out,
                 )
+
 
 if __name__ == "__main__":
     main()

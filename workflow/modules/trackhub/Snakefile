@@ -15,26 +15,14 @@ rule all:
         trackhub_file = expand("results/{refGenome}/trackhub/hub.txt", refGenome=REFGENOME),
         trackhub_html = expand("results/{refGenome}/trackhub/index.html", refGenome=REFGENOME),
 
-
-rule copy_html:
-    input:
-        "html/hub_description.html"
-    output:
-        "results/{refGenome}/trackhub/index.html"
-    shell:
-        """
-        cp {input} {output}
-        """
-
-
-
 rule write_hub_files:
     input:
         window_stat_files = expand("results/{{refGenome}}/trackhub/{file_type}_{window}.bw", file_type=FILE_TYPES, window=WINDOWS),
         vcf = expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config['final_prefix']),
         callable_sites = "results/{refGenome}/trackhub/non_callable_sites.bb",
         allele_freq = "results/{refGenome}/trackhub/allele_freq.bw",
-        depth = "results/{refGenome}/trackhub/depth.bw"
+        depth = "results/{refGenome}/trackhub/depth.bw",
+        html = "results/{refGenome}/trackhub/index.html"
     output:
         trackhub_file = "results/{refGenome}/trackhub/trackDb.txt",
         
