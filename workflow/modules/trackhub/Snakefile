@@ -12,7 +12,21 @@ FILE_TYPES = ["Tajima", "SNP-Density", "Pi"] # dont change this unless you add r
 
 rule all:
     input:
-        trackhub_file = expand("results/{refGenome}/trackhub/trackDb.txt", refGenome=REFGENOME),
+        trackhub_file = expand("results/{refGenome}/trackhub/hub.txt", refGenome=REFGENOME),
+        trackhub_html = expand("results/{refGenome}/trackhub/hubDescription.html", refGenome=REFGENOME),
+
+
+rule copy_html:
+    input:
+        "html/hub_description.html"
+    output:
+        "results/{refGenome}/trackhub/hubDescription.html"
+    shell:
+        """
+        cp {input} {output}
+        """
+
+
 
 rule write_hub_files:
     input:
