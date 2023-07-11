@@ -5,7 +5,8 @@ hub_text = """hub {genome}
 shortLabel {genome} snpArcher Track Hub
 longLabel {genome} snpArcher Track Hub
 useOneFile on
-email {email}\n
+descriptionUrl index.html
+email {email}
 genome {genome}\n"""
 
 vcf_track_txt = """track VCF
@@ -13,6 +14,7 @@ bigDataUrl {vcf_file}
 shortLabel VCF
 longLabel VCF
 visibility squish
+html index.html
 type vcfTabix\n"""
 
 window_parent_txt = """track {track_type}
@@ -24,6 +26,7 @@ altColor 0,102,204
 autoScale on
 type bigWig
 allButtonPair on
+html index.html
 visibility full\n"""
 
 window_track_txt = """track {track_name}
@@ -42,6 +45,7 @@ altColor 0,102,204
 autoScale on
 visibility full
 shortLabel Minor Allele Frequency
+html index.html
 longLabel Minor Allele Frequency\n"""
 
 snp_depth_txt = """track SNPDepth
@@ -52,6 +56,7 @@ altColor 0,102,204
 autoScale on
 visibility full
 shortLabel SNP Depth
+html index.html
 longLabel SNP Depth\n"""
 
 coverage_track_txt = """track NonCallableSites
@@ -60,6 +65,7 @@ shortLabel Non Callable Sites
 type bigBed
 longLabel Non Callable Sites
 color 0,0,0
+html index.html
 visibility dense\n"""
 
 COLORS = {"Tajima": "(70,130,180)", "SNP-Density":"(186,85,211)", "Pi": "(248,174,51)",}
