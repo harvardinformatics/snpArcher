@@ -12,7 +12,8 @@ FILE_TYPES = ["Tajima", "SNP-Density", "Pi"] # dont change this unless you add r
 
 rule all:
     input:
-        trackhub_file = expand("results/{refGenome}/trackhub/trackDb.txt", refGenome=REFGENOME),
+        trackhub_file = expand("results/{refGenome}/trackhub/hub.txt", refGenome=REFGENOME),
+        trackhub_html = expand("results/{refGenome}/trackhub/index.html", refGenome=REFGENOME),
 
 rule write_hub_files:
     input:
@@ -20,10 +21,11 @@ rule write_hub_files:
         vcf = expand("results/{{refGenome}}/{prefix}_clean_snps.vcf.gz", prefix=config['final_prefix']),
         callable_sites = "results/{refGenome}/trackhub/non_callable_sites.bb",
         allele_freq = "results/{refGenome}/trackhub/allele_freq.bw",
-        depth = "results/{refGenome}/trackhub/depth.bw"
-    output:
-        trackhub_file = "results/{refGenome}/trackhub/trackDb.txt",
+        depth = "results/{refGenome}/trackhub/depth.bw",
         
+    output:
+        trackhub_file = "results/{refGenome}/trackhub/hub.txt",
+        html = "results/{refGenome}/trackhub/index.html"
     params:
         refGenome = "{refGenome}",
         file_types = FILE_TYPES,
