@@ -48,6 +48,8 @@ checkpoint create_db_intervals:
         "logs/{refGenome}/db_intervals/log.txt"
     benchmark:
         "benchmarks/{refGenome}/db_intervals/benchmark.txt"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * resources['create_db_intervals']['mem']
     conda:
         '../envs/bam2vcf.yml'
     shell:
@@ -74,6 +76,8 @@ checkpoint create_gvcf_intervals:
         "logs/{refGenome}/gvcf_intervals/log.txt"
     benchmark:
         "benchmarks/{refGenome}/gvcf_intervals/benchmark.txt"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * resources['create_gvcf_intervals']['mem']
     conda:
         '../envs/bam2vcf.yml'
     shell:

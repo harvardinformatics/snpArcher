@@ -76,6 +76,9 @@ process_ref:
 create_db_intervals:
   mem: 5000
 
+create_gvcf_intervals:
+  mem: 5000
+
 ## Callable sites workflow
 
 # genmap map
