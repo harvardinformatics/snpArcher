@@ -4,7 +4,7 @@ channels:
   - defaults
 dependencies:
   - bedtools==2.30.0
-  - mosdepth>=0.3.3
+  - mosdepth==0.3.3
   - d4tools>=0.3.4
   - pip
   - rust
