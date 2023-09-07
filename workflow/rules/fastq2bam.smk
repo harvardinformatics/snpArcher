@@ -49,10 +49,11 @@ rule dedup:
         "../envs/sambamba.yml"
     resources:
         threads = resources['dedup']['threads'],
-        mem_mb = lambda wildcards, attempt: attempt * resources['dedup']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['dedup']['mem'],
+        tmpdir = get_big_temp
     log:
         "logs/{refGenome}/sambamba_dedup/{sample}.txt"
     benchmark:
         "benchmarks/{refGenome}/sambamba_dedup/{sample}.txt"
     shell:
-        "sambamba markdup -t {threads} {input.bam} {output.dedupBam} 2> {log}"
+        "sambamba markdup --tmpdir={resources.tmpdir} -t {threads} {input.bam} {output.dedupBam} 2> {log}"
