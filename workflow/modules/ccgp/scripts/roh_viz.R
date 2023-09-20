@@ -24,7 +24,7 @@ render_rohplots <- function(project){
   pi1 <- paste0(project, ".1.windowed.pi")
   pi2 <- paste0(project, ".2.windowed.pi")
   
-  topF <- paste0(project, "_top.froh")
+  topF <- paste0(project, "_filtered_top.froh")
   
   # Define a function to load each file into a data frame
   load_file <- function(filename) {

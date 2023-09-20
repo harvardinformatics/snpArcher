@@ -32,7 +32,7 @@ def get_output():
 
         # #if config["CCGP"]:
             #out.append(expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz", refGenome=ref, prefix=config["final_prefix"]))
-            
+        
         if sample_counts[ref] > 2:
               out.append(rules.qc_all.input)
         
@@ -151,11 +151,11 @@ def collect_fastp_stats_input(wc):
 
 def get_read_group(wc):
     """Denote sample name and library_id in read group."""
-    return r"'@RG\tID:{lib}\tSM:{sample}\tPL:ILLUMINA'".format(
+    libname = samples.loc[samples['Run'] == wc.run]["LibraryName"].tolist()
+    return r"'@RG\tID:{lib}\tSM:{sample}\tLB:{lib}\tPL:ILLUMINA'".format(
         sample=wc.sample,
-        lib=wc.run
+        lib=libname
     )
-
 def get_input_sumstats(wildcards):
     _samples = samples.loc[(samples['refGenome'] == wildcards.refGenome)]['BioSample'].unique().tolist()
     aln = expand("results/{{refGenome}}/summary_stats/{sample}_AlnSumMets.txt", sample=_samples)

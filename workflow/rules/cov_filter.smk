@@ -60,7 +60,8 @@ rule create_cov_bed:
     benchmark:
         "benchmarks/{refGenome}/covbed/{prefix}_benchmark.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['callable_bed']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['callable_bed']['mem'],
+        disk_mb = resources['callable_bed']['disk_mb']  
     params:
         cov_threshold_stdev = config["cov_threshold_stdev"],
         cov_threshold_lower = config["cov_threshold_lower"],
@@ -83,7 +84,8 @@ rule callable_bed:
     benchmark:
         "benchmarks/{refGenome}/callable_bed/{prefix}_benchmark.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['callable_bed']['mem']
+        mem_mb = lambda wildcards, attempt: attempt * resources['callable_bed']['mem'],
+        disk_mb = resources['callable_bed']['disk_mb']
     params:
         merge = config['cov_merge']
     shell:

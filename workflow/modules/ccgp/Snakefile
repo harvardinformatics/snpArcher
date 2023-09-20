@@ -97,7 +97,7 @@ rule qc_plots:
     params:
         prefix = lambda wc, input: input.roh[:-7]
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * 2000
+        mem_mb = 10000
     output: 
         roh1 = "results/{refGenome}/CCGP/{prefix}_all_indiv_roh.pdf",
         roh2 = "results/{refGenome}/CCGP/{prefix}_pi_roh_top.pdf",
@@ -106,7 +106,6 @@ rule qc_plots:
         "envs/rplots.yml"
     script:
         "scripts/roh_viz.R"
-
 
 rule annotate:
     input:
@@ -157,6 +156,8 @@ rule prunevcf:
     output:
         pruned3 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.vcf.gz",
         pruned6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz",
+    resources:
+       mem_mb = 64000,
     conda:
         "envs/roh.yml"
     shell:
@@ -185,15 +186,15 @@ rule plink:
         dist6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.dist",
         distid6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.dist.id"
     resources:
-       mem_mb = 64000
+       mem_mb = 128000
     conda:
         "envs/plink.yml"
     shell:
         #plink 1.9 for distance matrix
         """
-        plink --vcf {input.vcf} --out {params.prefix} --allow-extra-chr --autosome-num 95 --distance square --const-fid
-        plink --vcf {input.pruned3} --out {params.prefix3} --allow-extra-chr --autosome-num 95 --distance square --const-fid
-        plink --vcf {input.pruned6} --out {params.prefix6} --allow-extra-chr --autosome-num 95 --distance square --const-fid
+        plink --vcf {input.vcf} --out {params.prefix} --allow-extra-chr --autosome-num 95 --distance square --const-fid --memory 128000
+        plink --vcf {input.pruned3} --out {params.prefix3} --allow-extra-chr --autosome-num 95 --distance square --const-fid --memory 128000
+        plink --vcf {input.pruned6} --out {params.prefix6} --allow-extra-chr --autosome-num 95 --distance square --const-fid --memory 128000
         """
 
 rule vcf2dosage:
@@ -201,24 +202,39 @@ rule vcf2dosage:
         vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
     output:
         dosage = "results/{refGenome}/CCGP/{prefix}_annotated_no_pruning_dosage.txt.gz",
+    resources:
+       mem_mb = 64000,
     run:
+        initial_memory = get_memory_usage()
         vcf2dosage(input.vcf, output.dosage)
+        final_memory = get_memory_usage()
+        print(f"Memory used by vcf2dosage function: {final_memory - initial_memory} bytes")
 
 rule vcf2dosage03:
     input:
         pruned3 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.vcf.gz",
     output:
         dosage = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3_dosage.txt.gz",
+    resources:
+       mem_mb = 64000,
     run:
+        initial_memory = get_memory_usage()
         vcf2dosage(input.pruned3, output.dosage)
+        final_memory = get_memory_usage()
+        print(f"Memory used by vcf2dosage function: {final_memory - initial_memory} bytes")
 
 rule vcf2dosage06:
     input:
         pruned6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz",
     output:
         dosage = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6_dosage.txt.gz",
+    resources:
+       mem_mb = 64000,
     run:
+        initial_memory = get_memory_usage()
         vcf2dosage(input.pruned6, output.dosage)
+        final_memory = get_memory_usage()
+        print(f"Memory used by vcf2dosage function: {final_memory - initial_memory} bytes")
 
 #generally here are the problems with running lddecay:
 #can run with a singularity docker file, but this is not allowed by google life sciences

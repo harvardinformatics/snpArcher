@@ -12,8 +12,10 @@ from pathlib import Path
 from datetime import datetime
 import argparse
 from itertools import chain
+import sys
 from utils.gsheets import WGSTracking
 from utils.gdrive import CCGPDrive
+import numpy as np
 
 pd.options.mode.chained_assignment = None
 
@@ -26,113 +28,165 @@ def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         record = row.to_dict()
         # print(record.get("*sample_name"))
         # print(record.get("files"))
+
+        #TODO: 7/3/23CM maybe check "project type" col for minicore/non to determine which read cols to check.
+
+        #has_runX_col = record.get(f"run1_read1", False) #non minicore has this
+        #has_filename1_col= record.get(f"filename1", False)
+        has_files_col = record.get(f"files", False) #minicore and non minicore have this
+
+        # if not isinstance(has_runX_col, str):
+        #     if math.isnan(has_runX_col):
+        #         has_runX_col = False
         
-        if record.get(f"run1_read1") is not None:
-            pairs = {f"run{i}": None for i in range(1,107)}
-            for run in pairs.keys():
-                f1, f2 = record.get(f"{run}_read1"), record.get(f"{run}_read2")
-                if f1 is None and f2 is None:
-                    break
-                if not isinstance(f1, str) and not isinstance(f2, str):
-                    if math.isnan(f1) and math.isnan(f2):
-                        print(f"Found nan file for sample {record.get('*sample_name')}")
-                        break
+        # print(has_runX_col, has_filename1_col, has_files_col)
+
+        # check if sample metadta has "runX_read1/2 columns ie was nonminicore
+        # if has_runX_col:
+        #     pairs = {f"run{i}": None for i in range(1, 107)}
+        #     for run in pairs.keys():
+        #         f1, f2 = record.get(f"{run}_read1"), record.get(f"{run}_read2")
+        #         if f1 is None and f2 is None:
+        #             break
+        #         if not isinstance(f1, str) and not isinstance(f2, str):
+        #             if math.isnan(f1) and math.isnan(f2):
+        #                 # print(f"Found nan file for sample {record.get('*sample_name')}")
+        #                 continue
                 
-                if (f1 is None and f2 is not None) or (f1 is not None and f2 is None):
-                    raise ValueError(f"Sample {record['*sample_name']} has missing read pair ({run}): fq1: {f1}, fq2: {f2}")
-                if not isinstance(f1, str) or not isinstance(f2, str):
-                    raise ValueError(f"Sample {record['*sample_name']} has non string read names ({run}): fq1: {f1}, fq2: {f2}")
-                if not f1 or not f2:
-                    raise ValueError(f"Sample {record['*sample_name']} has missing read pair ({run}): fq1: {f1}, fq2: {f2}")
-                f1, f2 = f1.strip(), f2.strip()
-                record_copy = copy.deepcopy(record)
-                record_copy["fq1"] = f1
-                record_copy["fq2"] = f2
-                record_copy["library_ID"] = str(record_copy["*sample_name"]) + f"_{run}"
-                record_copy[
-                    "title"
-                ] = f"Whole genome sequencing of {record_copy['*organism']}"
-                list_of_dicts.append(record_copy)
-            # continue
-                
-        if record.get(f"filename1") is not None:
-            pairs = {}
-            for i in range(1,107,2):
-                pairs[i] = [record.get(f"filename{i}"), record.get(f"filename{i+1}")]
-            for key, pair in pairs.items():
-                f1, f2 = pair
-                if f1 is None or f2 is None:
-                    continue
-                elif not isinstance(f1, str) or not isinstance(f2, str):
-                    continue
-                elif not f1 or not f2:
-                    continue
-                else:
+        #         if (f1 is None and f2 is not None) or (f1 is not None and f2 is None):
+        #             raise ValueError(
+        #                 f"Sample {record['*sample_name']} has missing read pair ({run}): fq1: {f1}, fq2: {f2}"
+        #             )
+        #         if not isinstance(f1, str) or not isinstance(f2, str):
+        #             raise ValueError(
+        #                 f"Sample {record['*sample_name']} has non string read names ({run}): fq1: {f1}, fq2: {f2}"
+        #             )
+        #         if not f1 or not f2:
+        #             raise ValueError(
+        #                 f"Sample {record['*sample_name']} has missing read pair ({run}): fq1: {f1}, fq2: {f2}"
+        #             )
+        #         f1, f2 = f1.strip(), f2.strip()
+        #         record_copy = copy.deepcopy(record)
+        #         record_copy["fq1"] = f1
+        #         record_copy["fq2"] = f2
+        #         record_copy["library_ID"] = str(record_copy["*sample_name"]) + f"_{run}"
+        #         record_copy[
+        #             "title"
+        #         ] = f"Whole genome sequencing of {record_copy['*organism']}"
+        #         list_of_dicts.append(record_copy)
+        #     # we continue here to move to next sample in iteration bc if we got here the sample has runX_read1 and runX_read2 fields and we dont want to apply the following logic.
+        #     continue
+
+
+        # if has_filename1_col:
+        #     pairs = {}
+        #     for i in range(1, 107, 2):
+        #         pairs[i] = [record.get(f"filename{i}"), record.get(f"filename{i+1}")]
+        #     for key, pair in pairs.items():
+        #         f1, f2 = pair
+        #         if f1 is None or f2 is None:
+        #             continue
+        #         elif not isinstance(f1, str) or not isinstance(f2, str):
+        #             continue
+        #         elif not f1 or not f2:
+        #             continue
+        #         else:
+        #             record_copy = copy.deepcopy(record)
+        #             record_copy["fq1"] = f1
+        #             record_copy["fq2"] = f2
+        #             record_copy["library_ID"] = (
+        #                 str(record_copy["*sample_name"]) + f"_{key}"
+        #             )
+        #             record_copy[
+        #                 "title"
+        #             ] = f"Whole genome sequencing of {record_copy['*organism']}"
+        #             list_of_dicts.append(record_copy)
+
+        #     # if we got here move to next sample in iteration bc if we got here the sample has filename1 and filename2 fields and we dont want to apply the following logic.
+        #     continue
+
+        # """
+        # if record.get("files") is not None:
+        #     files = record["files"]
+        #     if isinstance(record.get(f"files"), list):
+        #         for i in record[f"files"]:
+        #             record.append(i.strip())
+        #             print(i)
+        # """
+
+
+        if has_files_col:
+            files = sorted(record["files"])
+            #files = record["files"]
+
+            if len(files) % 2 == 0:
+                for j in range(0, len(files), 2):
+                    # Create a new record for each pair of files
                     record_copy = copy.deepcopy(record)
-                    record_copy["fq1"] = f1
-                    record_copy["fq2"] = f2
-                    record_copy["library_ID"] = str(record_copy["*sample_name"]) + f"_{key}"
-                    record_copy[
-                        "title"
-                    ] = f"Whole genome sequencing of {record_copy['*organism']}"
+                    record_copy["fq1"] = files[j]
+                    record_copy["fq2"] = files[j + 1]
+                    record_copy["library_ID"] = files[j].split("_R1")[0]
+                    record_copy["title"] = f"Whole genome sequencing of {record_copy['*organism']}"
                     list_of_dicts.append(record_copy)
-            continue
-            
+   
 
-        '''
-        if record.get("files") is not None:
-            files = record["files"]
-            if isinstance(record.get(f"files"), list):
-                for i in record[f"files"]:
-                    record.append(i.strip())
-                    print(i)
-        '''
+            else:
+                raise ValueError(
+                    f"Sample {record['*sample_name']} has an odd number of files"
+                )
                 
-        if record.get("files") is not None:
-            
-            files = record["files"]
-            if isinstance(record.get(f"files"), list):
-                files = record[f"files"]
-            
-                if len(files) == 2:
-
-                    record["fq1"] = files[0]
-                    record["fq2"] = files[1]
-                    record["library_ID"] = record["fq1"].split("_R1")[0]
-                    record["title"] = f"Whole genome sequencing of {record['*organism']}"
-                    list_of_dicts.append(record)
-            
-                elif len(files) >= 4:
-
-                    prefixes = set()
-                    for file in files:
-                        prefixes.add(
-                            re.split("_R\d[._]", file)[0]
-                        )  # this splits on the _R1/R2 of the filename
-
-                # Using fuzzy matching here for the following example case:
-                # sample has two sets of reads: samp_a1_R1.fq.gz and samp_a1_L001_R1.fq.gz
-                # Splitting on R1 gives two prefixes, samp_a1_R1 and samp_a1_L001, the former is a substring of the latter,
-                # So something like [f for f in files if p in f for p in prefixes] doesn't work to find pairs of reads.
-                    pairs = []
-                    for p in prefixes:
-                        matches = process.extract(p, files, limit=2)
-                        pairs.append([matches[0][0], matches[1][0]])
-
-                    for pair in pairs:
-                        record_copy = copy.deepcopy(record)
-                        record_copy["fq1"] = pair[0]
-                        record_copy["fq2"] = pair[1]
-                        record_copy["library_ID"] = record_copy["fq1"].split("_R1")[0]
-                        record_copy[
-                            "title"
-                        ] = f"Whole genome sequencing of {record_copy['*organism']}"
-                        list_of_dicts.append(record_copy)
-         
-        #THIS IS A COMMENTED OUT SECTION FOR PEROMYSCUS
-            
     out_df = pd.DataFrame(list_of_dicts)
     return out_df
+
+
+
+    #     if has_files_col:
+    #         files = record["files"]
+    #         if isinstance(record.get(f"files"), list):
+    #             files = record[f"files"]
+
+    #             if len(files) == 2:
+    #                 record["fq1"] = files[0]
+    #                 record["fq2"] = files[1]
+    #                 record["library_ID"] = record["fq1"].split("_R1")[0]
+    #                 record[
+    #                     "title"
+    #                 ] = f"Whole genome sequencing of {record['*organism']}"
+    #                 list_of_dicts.append(record)
+
+    #             elif len(files) >= 4:
+    #                 prefixes = set()
+    #                 for file in files:
+    #                     prefixes.add(
+    #                         re.split("_R\d[._]", file)[0]
+    #                     )  # this splits on the _R1/R2 of the filename
+
+    #                 # Using fuzzy matching here for the following example case:
+    #                 # sample has two sets of reads: samp_a1_R1.fq.gz and samp_a1_L001_R1.fq.gz
+    #                 # Splitting on R1 gives two prefixes, samp_a1_R1 and samp_a1_L001, the former is a substring of the latter,
+    #                 # So something like [f for f in files if p in f for p in prefixes] doesn't work to find pairs of reads.
+    #                 pairs = []
+    #                 for p in prefixes:
+    #                     matches = process.extract(p, files, limit=2)
+    #                     pairs.append([matches[0][0], matches[1][0]])
+
+    #                 for pair in pairs:
+    #                     record_copy = copy.deepcopy(record)
+    #                     record_copy["fq1"] = pair[0]
+    #                     record_copy["fq2"] = pair[1]
+    #                     record_copy["library_ID"] = record_copy["fq1"].split("_R1")[0]
+    #                     record_copy[
+    #                         "title"
+    #                     ] = f"Whole genome sequencing of {record_copy['*organism']}"
+    #                     list_of_dicts.append(record_copy)
+
+    #             else:
+    #                 raise ValueError(
+    #                     f"Sample {record['*sample_name']} has less than 2 files in files field"
+    #                 )
+                
+    # out_df = pd.DataFrame(list_of_dicts)
+    # return out_df
 
 
 def create_workflow_sheet(
@@ -147,12 +201,12 @@ def create_workflow_sheet(
     )
     num_samples = len(list(ccgp_samples.find({"ccgp-project-id": project_id})))
     print(f"Created sheet for {num_samples} from project: {project_id}")
-    
-    
+    # print(df)
+
     try:
         workflow_df = df[
             [
-                "*sample_name",
+                "minicore_seq_id",
                 "library_ID",
                 "ref_genome_accession",
                 "*organism",
@@ -163,10 +217,12 @@ def create_workflow_sheet(
                 "ccgp-project-id",
             ]
         ]
+
     except KeyError:
         workflow_df = df[
             [
                 "*sample_name",
+                #"minicore_seq_id",
                 "library_ID",
                 "*organism",
                 "fq1",
@@ -176,30 +232,72 @@ def create_workflow_sheet(
                 "ccgp-project-id",
             ]
         ]
+
         workflow_df["ref_genome_accession"] = "refGenomePlaceholder"
+
+    #workflow_df["minicore_seq_id"] = workflow_df["minicore_seq_id"].replace("NaN", np.nan)
+    
+
+    # Use numpy.where to select the appropriate value based on conditions
+    # workflow_df["selected_field"] = np.where(
+    #     workflow_df["minicore_seq_id"].notna(),
+    #     workflow_df["minicore_seq_id"],
+    #     workflow_df["*sample_name"]
+    # )
+
+    # workflow_df.drop(["minicore_seq_id", "*sample_name"], axis=1, inplace=True)
+    # workflow_df.rename(columns={"selected_field": "BioSample"}, inplace=True)
+
 
     workflow_df["ref_genome_accession"] = workflow_df["ref_genome_accession"].replace(
         "NaN", "refGenomePlaceholder"
     )
 
+    # for i, row in df.iterrows():
+    #     if pd.isnull(row["sample_title"]) or row["sample_title"] == "":
+    #         df.at[i, "sample_title"] = row["minicore_seq_id"]
+
     workflow_df["lat"] = workflow_df["lat"].astype(str).str.replace('"', "")
     workflow_df["long"] = workflow_df["long"].astype(str).str.replace('"', "")
     workflow_df["lat"] = workflow_df["lat"].astype(str).str.strip()
     workflow_df["long"] = workflow_df["long"].astype(str).str.strip()
+    #workflow_df.rename(columns={"selected_field": "BioSample"}, inplace=True)
+    
     rename_col_dict = {
-        "*sample_name": "BioSample",
+       #"*sample_name": "BioSample",
+        #"minicore_seq_id": "BioSample",
         "library_ID": "LibraryName",
         "ref_genome_accession": "refGenome",
         "ccgp-project-id": "Organism",  # using project-id here to coerce organism to be the same for all samps in a project.
         "lat": "lat",
         "long": "long",
     }
+
+
     workflow_df = workflow_df.rename(columns=rename_col_dict).drop(
         columns=["*organism"]
     )
+
+    for col_name in workflow_df.columns:
+        
+        if col_name == 'minicore_seq_id' or col_name == '*sample_name':
+            workflow_df.rename(columns={col_name: 'BioSample'}, inplace=True)
+    
+    print(workflow_df.columns)
+            
+
     workflow_df["Run"] = workflow_df["LibraryName"]
     workflow_df["BioProject"] = workflow_df["Organism"]
     workflow_df = workflow_df.drop_duplicates()
+    workflow_df["LibraryName"] = workflow_df["BioSample"]
+
+    # if 'minicore_seq_id' in df.columns:
+    #     df.drop('minicore_seq_id', axis=1, inplace=True)
+
+    columns = workflow_df.columns.tolist()
+    columns = ["BioSample"] + [col for col in columns if col != "BioSample"]
+    workflow_df = workflow_df[columns]
+
     filename = f"{project_id}_workflow.csv"
     if out_path is not None:
         file_path = Path(out_path, filename)
@@ -259,7 +357,6 @@ def create_sra_sheet(project_id: str, db_client: pymongo.MongoClient) -> None:
 
 
 def create_biosample_sheet(project_id: str, db_client: pymongo.MongoClient) -> None:
-
     wgs_sheet = WGSTracking()
 
     taxon_group = wgs_sheet.project_type()[project_id]
@@ -387,6 +484,9 @@ def create_biosample_sheet(project_id: str, db_client: pymongo.MongoClient) -> N
         "description",
         "library_prep_method",
     ]
+    ## Do the private coordinates thing
+
+    
     file_path = Path("biosample_sheets", f"{project_id}_biosample.tsv")
     if taxon_group == "Vertebrate":
         df = df[df.columns.intersection(animals_cols)]
@@ -400,8 +500,8 @@ def create_biosample_sheet(project_id: str, db_client: pymongo.MongoClient) -> N
     else:
         raise ValueError(f"Unexpected taxon group: {taxon_group}")
 
-    drive = CCGPDrive()
-    drive.upload_file(file_path, folder_name="BioSample Submission Sheets")
+    # drive = CCGPDrive()
+    # drive.upload_file(file_path, folder_name="BioSample Submission Sheets")
 
 
 def main():

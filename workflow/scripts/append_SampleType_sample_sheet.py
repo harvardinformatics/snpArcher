@@ -9,13 +9,13 @@ import argparse
 def append_col(sample_list, excl_list):
     # Load the CSV file
     csv_file = pd.read_csv(sample_list)
+    #csv_file=csv_file.drop(['SampleType'], axis = 1)
     print(csv_file)
     # copy the original as backup
     shutil.copy2(sample_list, sample_list+'.bak')
 
     # Load the tab-delimited file
     tab_file = pd.read_csv(excl_list, sep='\t', header=None, names=['BioSample'])
-    
     # add a column for exclude
     tab_file['SampleType'] = 'exclude'
     # Merge the two dataframes on the 'BioSample' column

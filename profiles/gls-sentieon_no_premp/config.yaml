@@ -1,6 +1,6 @@
 google-lifesciences: True
 google-lifesciences-region : 'us-central1'
 use-conda: True
-jobs: 150
+jobs: 1000
 default-resources: ["machine_type=n2-standard", "disk_mb=512000"]
 nolock: True

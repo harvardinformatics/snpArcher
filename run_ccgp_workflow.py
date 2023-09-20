@@ -17,13 +17,12 @@ import os
 def check_for_reads(project_id: str, db_client: pymongo.MongoClient) -> None:
     db = db_client["ccgp_dev"]
     ccgp_samples = db["sample_metadata"]
-    
+
     docs = list(
         ccgp_samples.find(
             {"ccgp-project-id": project_id}, {"*sample_name": 1, "files": 1}
         )
     )  # get all docs for given project-id, and only get files and sample field
-    
 
     filenames = []
     for d in docs:
@@ -71,15 +70,14 @@ def create_sheet(project_id: str, db_client) -> Path:
             for line in f:
                 if "refGenomePlaceholder" in line:
                     print(
-                        f"'refGenomePlaceholder' found in existing workflow sheet: '{path}'. You can correct this by running the following command:\n sed -i 's|refGenomePlaceholder|<accession>|g' f{path}. Make sure to 'git add -f {path}' after the sed command."
+                        f"'refGenomePlaceholder' found in existing workflow sheet: '{path}'. You can correct this by running the following command:\n sed -i 's|refGenomePlaceholder|<accession>|g' {path} Make sure to 'git add -f {path}' after the sed command."
                     )
                     break
-        
+
         print(f"Make sure to run 'git add {str(path)}'")
         return path
     sheet = create_workflow_sheet(project_id, db_client, "sample_sheets")
-    
-    
+
     # check if 'refGenomePlaceholder' in sheet
     with open(sheet, "r") as f:
         for line in f:
@@ -88,9 +86,9 @@ def create_sheet(project_id: str, db_client) -> Path:
                     f"'refGenomePlaceholder' found in workflow sheet: '{sheet}'. You can correct this by running the following command:\n sed -i 's|refGenomePlaceholder|<accession>|g' f{sheet}."
                 )
                 break
-    
+
     print(f"Make sure to run 'git add {str(sheet)}'")
-    
+
     return sheet
 
 
@@ -108,11 +106,13 @@ def create_snakemake_config(project_id: str, sheet: Path):
         "sentieon_lic": "10.128.0.63:8990",
         "remote_reads": True,
         "remote_reads_prefix": f"ccgp-raw-reads/{project_id}",
-        "cov_filter":True,
-        "CCGP":False,
+        "cov_filter": True,
+        "CCGP": False,
         "cov_threshold_stdev": 2,
-        #"cov_threshold_lower": ,
-        #"cov_threshold_upper": ,
+        "trackhub_email": "erik.enbody@gmail.com",
+        "GoogleAPIKey": "AIzaSyBO5KwerGn-ATJeYRuqimOm70TH0YfVkLY"
+        # "cov_threshold_lower": ,
+        # "cov_threshold_upper": ,
     }
     for k in d.keys():
         config[k] = d[k]
@@ -138,7 +138,6 @@ def create_snakemake_opts(
     qc_only=False,
     upload_only=False,
 ) -> dict:
-
     if qc_only:
         snakefile = "workflow/modules/qc/Snakefile"
         profile = "profiles/gls-sentieon"
@@ -209,7 +208,7 @@ def main():
     opts = create_snakemake_opts(
         args.project_id, config, args.dry_run, args.qc_only, args.upload_only
     )
-    #copy_license(args.project_id) #no longer needed
+    # copy_license(args.project_id) #no longer needed
 
     o = [f"--{k} {v}" for k, v in opts.items()]
     print("snakemake", *o, sep=" ")
