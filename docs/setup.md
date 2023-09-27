@@ -1,11 +1,16 @@
 # Setting Up snpArcher
 ## Environment Setup
-First, we recommend installing Snakemake in a fresh [Mamba](https://github.com/mamba-org/mamba) environment:
+First, you will need to have [Mamba](https://mamba.readthedocs.io/en/latest/mamba-installation.html#mamba-install) installed. Follow the link and use the "Fresh Install (recommended)" directions. 
+
+Mamba is a faster version of conda. Conda is a package manager that makes it easy to create local environments with pre-configured versioning for your favorite packages. 
+
+Once Mamba is installed, create a conda environment with snakemake. These are the only two dependencies you need for the pipeline to work, the workflow will create mamba environments for each rule, and there is no need to install each package separately. 
+
 ```
 mamba create -c conda-forge -c bioconda -n snparcher snakemake
 mamba activate snparcher
 ```
-Please see the [Snakemake docs](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html) for detailed installation instructions.
+If you encounter issues, please see the [Snakemake docs](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html) for detailed installation instructions.
 
 Next, clone the [snpArcher github repo](https://github.com/harvardinformatics/snpArcher) to your machine:
 ```
@@ -14,23 +19,23 @@ cd snpArcher
 ```
 
 ## Creating a sample sheet
-In order to determine what outputs to create, snpArcher requires sample sheet file. This comma separated file contains the required sample metadata about the your samples in order to run the workflow. At a minimum, the snpArcher pipeline requires that each sample have a unique sample name, a reference genome accession or a path to a fasta file, and a SRA accession, or path to two paired end fastq files. 
+In order to determine what outputs to create, snpArcher requires sample sheet file. This comma-separated file contains the required sample metadata about your samples in order to run the workflow. At a minimum, the snpArcher pipeline requires that each sample have a unique sample name, a reference genome accession or a path to a fasta file, and an SRA accession, or path to two paired end fastq files. 
 
 Below are all of the accepted fields for a sample sheet:
 | Field | Description |
 | ---- | -------------|
-| BioSample | The name of the sample. |
-| LibraryName | LibraryID for sample, **must be unique.** |
-| Run | The SRR for the sample, if applicable. If not, must be some **unique** value. |
+| BioSample | The name of the sample. This will be the sample name in the final VCF |
+| LibraryName | LibraryID for sample, this can be the same or different than BioSample |
+| Run | The SRR for the sample, if applicable. If not, must be some **unique** value. It is often the lane number if samples are sequenced on multiple lanes. |
 | refGenome | Reference genome accession, if applicable. *See note* |
 | refPath | Path to local reference genome, if applicable. *See note* |
 | BioProject | If applicable. Otherwise any value is acceptable. |
-| fq1 | Optional. Path to read 1 for sample |
-| fq2 | Optional. Path to read 2 for sample |
+| fq1 | Optional if no SRR value in Run. Path to read 1 for sample |
+| fq2 | Optional if no SRR value in Run. Path to read 2 for sample |
 | SampleType | Optional. Triggers postproccesing module. Accepted values are 'include' or 'exclude' |
 
 ```{note}
-refGenome is always required. refPath is optional, but when specified, a name for the assembly (in refGenome) must also be included. 
+refGenome is always required. refPath specifying the path to a reference fasta file is optional, but when specified, a name for the assembly (in refGenome) must also be included. 
 ```
 
 It is important to note that samples are proccessed together based on their `refGenome` metadata, so **all BioSamples that share a reference genome will ultimately end up in the same final vcf file.** If you are mapping multiple populations / species to a single reference genome, and want separate VCF files for each population / species, you will need to split your final vcf after the pipeline completes, or run multiiple indpendent sample sheets in different results directories. 
