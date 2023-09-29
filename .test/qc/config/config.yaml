@@ -51,3 +51,6 @@ callable_merge: 100   #merge callable regions separated by this or fewer bp into
 ## QC options ##
 nClusters: 3
 GoogleAPIKey:
+
+## Filtering options ##
+scaffolds_to_exclude: "mtDNA,Y" #comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.
