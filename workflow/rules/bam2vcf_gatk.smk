@@ -26,6 +26,7 @@ rule bam2gvcf:
     params:
         minPrun = config['minP'],
         minDang = config['minD'],
+        ploidy = config['ploidy']
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -34,6 +35,7 @@ rule bam2gvcf:
         "-R {input.ref} "
         "-I {input.bam} "
         "-O {output.gvcf} "
+        "-ploidy {params.ploidy} "
         "--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang} &> {log}"
 
 rule create_db_mapfile:

@@ -26,6 +26,7 @@ rule bam2gvcf:
     params:
         minPrun = config['minP'],
         minDang = config['minD'],
+        ploidy = config['ploidy'],
     conda:
         "../envs/bam2vcf.yml"
     shell:
@@ -35,6 +36,7 @@ rule bam2gvcf:
         "-I {input.bam} "
         "-O {output.gvcf} "
         "-L {input.l} "
+        "-ploidy {params.ploidy} "
         "--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang} &> {log}"
 
 rule concat_gvcfs:

@@ -100,6 +100,7 @@ The following options can be adjusted based on your needs and your dataset.
 |`db_scatter_factor` | Used to calculate number of DB intervals to create. `num_db_intervals = (scatter_factor * num_samples * num_gvcf_intervals)`. Recommend <1 | `float`|
 | `minP` | Controls `--min-pruning` in GATK HaplotypeCaller. Recommend 1 for low coverage (<10x), 2 for high coverage (>10x) | `int` |
 | `minD` | Controls `--min-dangling-branch-length` in GATK HaplotypeCaller. Recommend 1 for low coverage (<10x), 4 for high coverage (>10x) | `int` |
+| `ploidy` | Ploidy for variant calling step. | `int` |
 
 #### Callable Sites Options
 | Option | Description | Type |
