@@ -80,7 +80,8 @@ rule sentieon_haplotyper:
         bam = "results/{refGenome}/bams/{sample}_final.bam",
         bai = "results/{refGenome}/bams/{sample}_final.bam.bai"
     params:
-        lic = config['sentieon_lic']
+        lic = config['sentieon_lic'],
+        ploidy = config['ploidy']
     output:
         gvcf = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz",
         gvcf_idx = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz.tbi",
@@ -97,7 +98,7 @@ rule sentieon_haplotyper:
     shell:
         """
         export SENTIEON_LICENSE={params.lic}
-        sentieon driver -r {input.ref} -t {threads} -i {input.bam} --algo Haplotyper --genotype_model multinomial --emit_mode gvcf --emit_conf 30 --call_conf 30 {output.gvcf} 2> {log}
+        sentieon driver -r {input.ref} -t {threads} -i {input.bam} --algo Haplotyper --genotype_model multinomial --emit_mode gvcf --emit_conf 30 --call_conf 30 {output.gvcf} --ploidy {params.ploidy} 2> {log}
         """
 
 rule sentieon_combine_gvcf:
