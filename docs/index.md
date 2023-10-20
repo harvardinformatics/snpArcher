@@ -23,6 +23,10 @@ Remember to examine the config.yaml file to edit options for each step. We have 
 - To get started quickly, check out the quick start tutorial!
 - Otherwise start [here](./setup.md).
 
+## Citing
+- Please cite our preprint [here](https://www.biorxiv.org/content/10.1101/2023.06.22.546168v1)
+- Also, make sure to cite the tools you used within snpArcher.
+
 ## Contributing to snpArcher
 - If you encounter a bug or want to request a feature, please open a issue on our [github page](https://github.com/harvardinformatics/snpArcher).
 - If you'd like to contribute a module, check out our [module contribution guidelines](./modules.md#module-contribution-guidelines).
@@ -32,4 +36,5 @@ Remember to examine the config.yaml file to edit options for each step. We have 
 ./setup.md
 ./executing.md
 ./modules.md
+./datasets.md
 ```
