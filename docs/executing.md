@@ -10,10 +10,39 @@ If this runs without errors, you are ready to go!
 ## Using the Dry-run option
 Snakemake offers the `--dry-run (-n)` CLI option to perform a dry-run of the workflow to show what jobs would be run. We recommend doing this before executing snpArcher to ensure that the sample sheet was setup correctly, and Snakemake has correctly built the workflow DAG.
 ## Local Execution
-Executing snpArcher on your local machine is as simple as running the Snakemake command with the number of cores you would like to use. For example, to use 8 cores you would run:
+Once you have setup the requisite configuration files and sample sheet, executing snpArcher on your local machine is as simple as running the Snakemake command with the number of cores you would like to use. For example, to use 8 cores you would run:
 ```
-snakemake --cores 8
+snakemake --cores 8 --use-conda
 ```
+
+### Optional directory setup 
+To maintain organization across many different projects, you may consider creating a new directory for each project you run using snpArcher. This way, each of your project directories will contain the configuration files used for that run. Below is an example directory structure:
+
+```
+.
+├── snpArcher
+├── project_1/
+│   ├── config/
+│   │   ├── config.yaml
+│   │   ├── resources.yaml
+│   │   └── samples.csv
+│   ├── data
+│   └── results
+└── project_2/
+    ├── config/
+    │   ├── config.yaml
+    │   ├── resources.yaml
+    │   └── samples.csv
+    └── data
+```
+
+When creating a new directory for an analysis, ensure that you copy the `config` directory from the snpArcher directory to your new directory.
+
+Then, to run snpArcher on `project_2` from our example, we would execute the command:
+```
+snakemake -s ./snpArcher/workflow/Snakefile -d ./project_2 --cores <num cores to use> --use-conda
+```
+
 ## Cluster Execution
 Snakemake [supports most cluster schedulers](https://snakemake.readthedocs.io/en/stable/executing/cluster.html). Here, we provide documentation for SLURM, however please refer to Snakemake's documentation for further details on using other schedulers.
 ### SLURM
