@@ -9,6 +9,86 @@ snakemake -d .test/ecoli --cores 1 --use-conda
 If this runs without errors, you are ready to go!
 ## Using the Dry-run option
 Snakemake offers the `--dry-run (-n)` CLI option to perform a dry-run of the workflow to show what jobs would be run. We recommend doing this before executing snpArcher to ensure that the sample sheet was setup correctly, and Snakemake has correctly built the workflow DAG.
+
+## Starting with intermediate files
+
+If you already have BAMs or gVCFs, snpArcher can start from these files. In order to do so, you must still [setup](./setup.md) a sample sheet and configuration file. 
+
+We will use the following example sample sheet and directory structure to demonstrate how to setup snpArcher to use your existing files.
+
+`samples.csv`:
+| BioSample | LibraryName | refGenome   | Run |
+|-----------|-------------|-------------|-----|
+| sample_A  | lib_A       | GCA_12345.6 | 1   |
+| sample_B  | lib_B       | GCA_12345.6 | 2   |
+| sample_C  | lib_C       | GCA_12345.6 | 3   |
+
+Starting directory structure:
+```
+.
+├── snpArcher
+└── project_1/
+    ├── config/
+    │   ├── config.yaml
+    │   ├── resources.yaml
+    │   └── samples.csv
+    └── data
+```
+
+### Starting with BAMs
+In order to use your alignments, you should ensure the following:
+1. You have one BAM per sample in your sample sheet.
+2. BAMs are sorted and indexed.
+3. Determine if your BAMs have had duplicates marked
+
+With those conditions met, we can setup our directory structure. We will use the example setup from above. 
+
+The directory structure is dependent on if duplicates have been marked or not. Examples for both cases are below.
+
+Duplicates marked:
+```
+.
+├── snpArcher
+└── project_1/
+    ├── config/
+    │   ├── config.yaml
+    │   ├── resources.yaml
+    │   └── samples.csv
+    ├── results/
+    │   └── GCA_12345.6/
+    │       └── bams/
+    │           ├── sample_A_final.bam
+    │           ├── sample_A_final.bam.bai
+    │           ├── sample_B_final.bam
+    │           ├── sample_B_final.bam.bai
+    │           ├── sample_C_final.bam
+    │           └── sample_C_final.bam.bai
+    └── data
+```
+Duplicates **not** marked:
+```
+.
+├── snpArcher
+└── project_1/
+    ├── config/
+    │   ├── config.yaml
+    │   ├── resources.yaml
+    │   └── samples.csv
+    ├── results/
+    │   └── GCA_12345.6/
+    │       └── bams/
+    │           └── postMerge/
+    │               ├── sample_A.bam
+    │               ├── sample_A.bam.bai
+    │               ├── sample_B.bam
+    │               ├── sample_B.bam.bai
+    │               ├── sample_C.bam
+    │               └── sample_C.bam.bai
+    └── data
+```
+
+With the BAMs in place, you can now execute Snakemake as outlined below, but you must be sure to include the CLI option `--rerun-triggers mtime`.
+
 ## Local Execution
 Once you have setup the requisite configuration files and sample sheet, executing snpArcher on your local machine is as simple as running the Snakemake command with the number of cores you would like to use. For example, to use 8 cores you would run:
 ```
