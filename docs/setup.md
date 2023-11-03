@@ -75,7 +75,7 @@ Usage details:
 In order to specify samples that were sequenced multiple times in your sample sheet, you must:
 1. Create a duplicate row for each unit of sequencing
 2. Ensure the `BioSample` value is the same across all rows for the sample.
-3. Give each row a unique `Run` value. This allows snpArcher to collect all alignments for a `BioSample`.
+3. Give each row a unique `Run` value. This allows snpArcher to collect all read pairs for a `BioSample`. All runs for a sample will be mapped separately to the genome and subsequently merged.
 4. Give each row a unique `LibraryName` value, if applicable. Used for marking duplicates, `LibraryName` should be the same in cases where the same library prep was sequenced across multiple lanes. See [here](https://gatk.broadinstitute.org/hc/en-us/articles/360035890671-Read-groups) for more info. 
 
 For example, consider we have 2 samples: `A` and `B`. `Sample A` was sequenced 3 times, 2 of which were derived from the same library prep, and the other was a unique library. `Sample B `was only sequenced once. Below is how the sample sheet would look in order to define these relationships. Note, only the relevant fields have been included.
