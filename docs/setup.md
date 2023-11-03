@@ -57,6 +57,10 @@ If you'd like to reanalyze an existing NCBI SRA BioProject, please follow these 
 ### Using local data
 A python script `workflow/write_samples.py` is included to help write the sample sheet for you. In order to use this script, you must have organized all of your fastq files in to one directory. The script requies you provide a file with one sample per name that maps uniquely to a pair of fastq files in the afformentioned directory. The script also requires either a reference genome accession or path to reference fasta. 
 
+```{note}
+This script cannot currently handle multiple sequencing runs per sample. Please see below for how to handle this case.
+```
+
 Usage details: 
 
 |Argument| Description|
@@ -65,6 +69,24 @@ Usage details:
 | `-f / --fastq_dir` | Path to directory containing ALL fastq files. It is assumed that each fastq file will contain the sample name uniquely. |
 | `-r / --ref` | Path to reference fasta. Mutually exclusive with -a|
 | `-a / --acc` | NCBI accession of reference. Mutually exclusive with -r|
+
+#### Handling samples with more than one pair of reads
+
+In order to specify samples that were sequenced multiple times in your sample sheet, you must:
+1. Create a duplicate row for each unit of sequencing
+2. Ensure the `BioSample` value is the same across all rows for the sample.
+3. Give each row a unique `Run` value. This allows snpArcher to collect all read pairs for a `BioSample`. All runs for a sample will be mapped separately to the genome and subsequently merged.
+4. Give each row a unique `LibraryName` value, if applicable. Used for marking duplicates, `LibraryName` should be the same in cases where the same library was sequenced multiple times. If a sample had multiple libraries prepared for it, then `LibraryName` should be unique for each library.  See [here](https://gatk.broadinstitute.org/hc/en-us/articles/360035890671-Read-groups) for more info. 
+
+For example, consider we have 2 samples: `A` and `B`. `Sample A` was sequenced 3 times, 2 of which were derived from the same library prep, and the other was a unique library. `Sample B `was only sequenced once. Below is how the sample sheet would look in order to define these relationships. Note, only the relevant fields have been included.
+
+| BioSample | LibraryName | Run |
+| --------- | ----------- | --- |
+| sample_A | lib_A_1 | 1 |
+| sample_A | lib_A_1 | 2 |
+| sample_A | lib_A_2 | 3 |
+| sample_B | lib_B_1 | 4 |
+
 
 ## Configuring snpArcher
 
