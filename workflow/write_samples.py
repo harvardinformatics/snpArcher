@@ -49,7 +49,7 @@ def write_sample_sheet(sample_dict: dict, ref_name: str, ref_path: str, ncbi_ref
         else:
             out.write("BioSample,LibraryName,refGenome,refPath,Run,BioProject,fq1,fq2\n")
             for i, (k, v) in enumerate(sample_dict.items()):
-                out.write(f"{k},lib_{k},{ref_name},{ref_path}{i},NaN,{v[0]},{v[1]}\n")
+                out.write(f"{k},lib_{k},{ref_name},{ref_path},{i},NaN,{v[0]},{v[1]}\n")
 
 
 def main() -> None:
