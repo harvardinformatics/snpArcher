@@ -3,6 +3,7 @@ channels:
   - bioconda
   - defaults  
 dependencies:
+  - python==3.11.4
   - ucsc-fatotwobit==377
   - ucsc-twobitinfo==377
 
