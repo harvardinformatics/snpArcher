@@ -7,7 +7,7 @@ Mamba is a faster version of conda. Conda is a package manager that makes it eas
 Once Mamba is installed, create a conda environment with snakemake. These are the only two dependencies you need for the pipeline to work, the workflow will create mamba environments for each rule, and there is no need to install each package separately. 
 
 ```
-mamba create -c conda-forge -c bioconda -n snparcher snakemake
+mamba create -c conda-forge -c bioconda -n snparcher "snakemake==7.32.4" "python==3.11.4"
 mamba activate snparcher
 ```
 If you encounter issues, please see the [Snakemake docs](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html) for detailed installation instructions.
