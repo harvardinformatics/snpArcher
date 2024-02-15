@@ -20,6 +20,8 @@ rule check_fai:
         fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
     output:
         faiResult = "results/{refGenome}/QC/{prefix}_fai_tmp.txt"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 1000
     run:
         check_contig_names(input.fai, output.faiResult)
 
@@ -37,6 +39,8 @@ rule vcftools_individuals:
     params:
         prefix = lambda wc, input: os.path.join(input.vcf.rsplit("/", 1)[0], "QC", wc.prefix),
         min_depth = config["min_depth"]
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 4000
     shell:
         """
         vcftools --gzvcf {input.vcf} --FILTER-summary --out {params.prefix}
@@ -63,6 +67,8 @@ rule subsample_snps:
         "envs/subsample_snps.yml"
     params:
         chr_ex = config["scaffolds_to_exclude"]
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 4000
     shell:
         """
         ##first remove filtered sites and retain only biallelic SNPs

@@ -64,6 +64,8 @@ rule create_cov_bed:
         cov_threshold_rel = config["cov_threshold_rel"]
     conda:
         "../envs/cov_filter.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * resources['callable_bed']['mem']
     script:
         "../scripts/create_coverage_bed.py"
 
