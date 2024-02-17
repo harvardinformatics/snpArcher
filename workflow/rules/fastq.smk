@@ -55,3 +55,30 @@ rule fastp:
         "--detect_adapter_for_pe "
         "-j /dev/null -h /dev/null "
         "2> {output.summ} > {log}"
+
+#optional with sorting reads
+# rule fastp:
+#     input:
+#         unpack(get_reads)
+#     output:
+#         r1 = "results/{refGenome}/filtered_fastqs/{sample}/{run}_1.fastq.gz",
+#         r2 = "results/{refGenome}/filtered_fastqs/{sample}/{run}_2.fastq.gz",
+#         summ = "results/{refGenome}/summary_stats/{sample}/{run}.fastp.out"
+#     conda:
+#         "../envs/fastq2bam.yml"
+#     threads:
+#         resources['fastp']['threads']
+#     resources:
+#         mem_mb = lambda wildcards, attempt: attempt * resources['fastp']['mem'],
+#     log:
+#         "logs/{refGenome}/fastp/{sample}/{run}.txt"
+#     benchmark:
+#         "benchmarks/{refGenome}/fastp/{sample}_{run}.txt"
+#     shell:
+#         """
+    
+#         sortbyname.sh in={input.r1} out={wildcards.run}_sorted_R1.fastq.gz
+#         sortbyname.sh in={input.r2} out={wildcards.run}_sorted_R2.fastq.gz
+
+#         fastp --in1 {wildcards.run}_sorted_R1.fastq.gz --in2 {wildcards.run}_sorted_R2.fastq.gz --out1 {output.r1} --out2 {output.r2} --thread {threads} --detect_adapter_for_pe -j /dev/null -h /dev/null 2> {output.summ} > {log}
+#         """

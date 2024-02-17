@@ -264,7 +264,7 @@ df.depth.miss <- df.depth.miss %>%
 ```{r, fig.width = 5, fig.height = 5}
 # bamstat plot --------------------------------------------------------------
 bamstat.path <- paste0(prefix, "_bam_sumstats.txt")
-df.bamstat <- read.table(bamstat.path, header =T)
+df.bamstat <- read.table(bamstat.path, header =T, na = "N/A")
 
 df.depth.miss.bamstat <- inner_join(df.depth.miss, df.bamstat, by = c("INDV" = "Sample"))
 df.depth.miss.bamstat <- df.depth.miss.bamstat %>% 
