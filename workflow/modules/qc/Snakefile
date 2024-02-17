@@ -72,7 +72,7 @@ rule subsample_snps:
         """
         ##first remove filtered sites and retain only biallelic SNPs
         ##Also remove sites with MAF < 0.01 and those with > 75% missing data
-        bcftools view -S {input.samps} -t ^mtDNA -v snps -m2 -M2 -f .,PASS -e 'AF==1 | AF==0 | AF<0.01 | ALT="*" | F_MISSING > 0.75 | TYPE~"indel" | ref="N"' {input.vcf} -O z -o {output.filtered}
+        bcftools view -S {input.samps} -t ^mtDNA -v snps -m2 -M2 -f .,PASS -e 'AF==1 | AF==0 | AF<0.05 | ALT="*" | F_MISSING > 0.75 | TYPE~"indel" | ref="N"' {input.vcf} -O z -o {output.filtered}
         bcftools index {output.filtered}
 
         #figure out how many SNPs are left, then identify how big of SNP window size to get down to between 100 and 150k snps        
