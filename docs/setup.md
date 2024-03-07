@@ -33,6 +33,8 @@ Below are all of the accepted fields for a sample sheet:
 | fq1 | Optional if no SRR value in Run. Path to read 1 for sample |
 | fq2 | Optional if no SRR value in Run. Path to read 2 for sample |
 | SampleType | Optional. Triggers postproccesing module. Accepted values are 'include' or 'exclude' |
+| lat | Optional. Decimal latitude for sample, required to generate map in QC dashboard. |
+| long | Optional. Decimal longitude for sample, required to generate map in QC dashboard. |
 
 ```{note}
 refGenome is always required. refPath specifying the path to a reference fasta file is optional, but when specified, a name for the assembly (in refGenome) must also be included. 
