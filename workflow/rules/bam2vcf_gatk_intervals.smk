@@ -77,7 +77,7 @@ rule create_db_mapfile:
 
 rule gvcf2DB:
     """
-    todo
+    Create GenomicsDB.
     """
     input:
         unpack(get_gvcfs_db),
@@ -112,7 +112,7 @@ rule gvcf2DB:
             --tmp-dir {resources.tmpdir} \
             --sample-name-map {input.db_mapfile} &> {log}
         
-        tar --overwrite -cf {output.tar} {output.db}
+        tar -cf {output.tar} {output.db}
         """
 
 rule DB2vcf:
