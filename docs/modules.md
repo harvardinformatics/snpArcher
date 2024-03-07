@@ -3,6 +3,9 @@ A key goal in the design of the snpArcher pipeline is to allow seamless extensib
 ## Quality Control
 The quality control module aggregates various statistics from the workflow and produces preliminary analyses and plots in an interactive HTML file, offering visualizations of summary statistics related to population structure, batch effects, sequencing depth, genetic relatedness, geography, and admixture. Most summaries are based on a random sample of 100,000 SNPs, while others provide high-level summaries of the full variant dataset. These visualizations help identify outliers, potential biases, and sequencing artifacts, such as cryptic genetic variation, batch effects, and reference bias. Additionally, an interactive heatmap aids in quickly identifying close relatives within the dataset, and spatial maps provide a visualization of PCA clusters in space.
 ```{note}
+To generate the QC dashboard, you must have at least 2 samples specified in your sample sheet.
+```
+```{note}
 The output of the QC module should not be considered a final analysis and is solely intended to direct quality control of the dataset.
 ```
 ## Postprocessing
