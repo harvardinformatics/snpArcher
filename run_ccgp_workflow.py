@@ -110,7 +110,8 @@ def create_snakemake_config(project_id: str, sheet: Path):
         "CCGP": False,
         "cov_threshold_stdev": 2,
         "trackhub_email": "erik.enbody@gmail.com",
-        "GoogleAPIKey": "AIzaSyBO5KwerGn-ATJeYRuqimOm70TH0YfVkLY"
+        "GoogleAPIKey": "",
+        "missingness": 0.25
         # "cov_threshold_lower": ,
         # "cov_threshold_upper": ,
     }
