@@ -135,7 +135,7 @@ rule setup_admixture:
     """
     input:
         bim = "results/{refGenome}/QC/{prefix}.bim",
-        fai = "results/{refGenome}/QC/{prefix}.fna.fai"
+        fai = "results/{refGenome}/QC/{prefix}.QC.fai",
     output:
         bim = "results/{refGenome}/QC/{prefix}.bim_fixed",
         bim_back = "results/{refGenome}/QC/{prefix}.bim.orig"
