@@ -129,6 +129,19 @@ rule plink:
         plink --vcf {input.vcf} --out {params.prefix} --allow-extra-chr --autosome-num 95 --distance square --const-fid
         """
 
+rule setup_admixture:
+    """
+    admixture requires all chromosome names to be integers, this sets them to be 1:n
+    """
+    input:
+        bim = "results/{refGenome}/QC/{prefix}.bim",
+        fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
+    output:
+        bim = "results/{refGenome}/QC/{prefix}.bim_fixed",
+        bim_back = "results/{refGenome}/QC/{prefix}.bim.orig"
+    script:
+        "scripts/contigs4admixture.py"
+
 rule admixture:
     """
     Call Admixture. First, make a bim file that has no charecters in the chromosomes
@@ -137,6 +150,8 @@ rule admixture:
         bed = "results/{refGenome}/QC/{prefix}.bed",
         bim = "results/{refGenome}/QC/{prefix}.bim",
         fam = "results/{refGenome}/QC/{prefix}.fam",
+        bim_fixed = "results/{refGenome}/QC/{prefix}.bim_fixed",
+        bim_back = "results/{refGenome}/QC/{prefix}.bim.orig"
     output:
         admix = "results/{refGenome}/QC/{prefix}.3.Q",
         admix2 = "results/{refGenome}/QC/{prefix}.2.Q"
@@ -148,8 +163,7 @@ rule admixture:
         "envs/admixture.yml"
     shell:
         """
-        mv {input.bim} {input.bim}.orig
-        paste <(cut -f 1 {input.bim}.orig | sed 's/[^0-9]//g') <(cut -f 2,3,4,5,6 {input.bim}.orig) >  {input.bim}
+        mv {input.bim_fixed} {input.bim}
 
         admixture {input.bed} 2
         admixture {input.bed} 3
