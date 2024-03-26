@@ -17,7 +17,7 @@ rule compute_d4:
     threads:
         resources['compute_d4']['threads']
     params:
-        prefix = os.path.join(workflow.default_remote_prefix, "results/{refGenome}/callable_sites/{sample}")
+        prefix = os.path.join(DEFAULT_STORAGE_PREFIX, "results/{refGenome}/callable_sites/{sample}")
     shell:
         "mosdepth --d4 -t {threads} {params.prefix} {input.bam} &> {log}"
 

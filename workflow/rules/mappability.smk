@@ -5,8 +5,8 @@ rule genmap:
         bg = temp("results/{refGenome}/genmap/{refGenome}.genmap.bedgraph"),
         sorted_bg = "results/{refGenome}/genmap/sorted_mappability.bg"
     params:
-        indir = os.path.join(workflow.default_remote_prefix, "results/{refGenome}/genmap_index"),
-        outdir = os.path.join(workflow.default_remote_prefix, "results/{refGenome}/genmap"),
+        indir = os.path.join(DEFAULT_STORAGE_PREFIX, "results/{refGenome}/genmap_index"),
+        outdir = os.path.join(DEFAULT_STORAGE_PREFIX, "results/{refGenome}/genmap"),
         kmer = config['mappability_k']
     log:
         "logs/{refGenome}/genmap/log.txt"
