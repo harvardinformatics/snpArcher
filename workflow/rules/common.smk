@@ -11,11 +11,29 @@ from urllib.request import urlopen
 import pandas as pd
 from yaml import safe_load
 from collections import defaultdict, deque
-from snakemake.exceptions import WorkflowError
+# from snakemake.exceptions import MissingInputException
+# from snakemake_interface_common.exceptions import WorkflowError
+
+
+DEFAULT_STORAGE_PREFIX = StorageSettings.default_storage_prefix if StorageSettings.default_storage_prefix is not None else ""
 
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(
     " ", "_", regex=True
 )
+
+def check_ref_paths(sample_sheet):
+    """
+    Raising exception doesnt work in get_refs bc snakemake 'ignores' it because of reference rule order
+    Since output of download and copy ref is the same, download can satisfy output even if exception
+    is raised in get_refs when called from copy_ref.
+    """
+    if "refPath" in sample_sheet.columns:
+        for ref in sample_sheet["refPath"].dropna().tolist():
+            if not os.path.exists(ref):
+                raise WorkflowError(f"refPath: '{ref}' was specified in sample sheet, but could not be found.")
+
+check_ref_paths(samples)
+
 with open(config["resource_config"], "r") as f:
     resources = safe_load(f)
 
@@ -30,8 +48,11 @@ def get_output():
     ).value_counts(
         subset=["refGenome"]
     )  # get BioSample for each refGenome
-    out.extend
+    
     for ref in genomes:
+        # Workaround for Snakemake issue 2762. There is problem with running nested checkpoints in snakemake8. Adding mapfile in rule all forces gvcf interval checkpoint to run.
+        # This is actually kind of a good thing to do since it makes dryrun more clear (shows all bam>gvcf jobs now).
+        out.extend(expand("results/{refGenome}/genomics_db_import/DB_mapfile.txt", refGenome=ref))
         out.extend(
             expand( "results/{refGenome}/{prefix}_raw.vcf.gz",refGenome=ref, prefix=config["final_prefix"]))
         out.extend(
@@ -63,27 +84,19 @@ def merge_bams_input(wc):
         run=samples.loc[samples["BioSample"] == wc.sample]["Run"].tolist(),
     )
 
-
 def get_ref(wildcards):
+    
     if "refPath" in samples.columns:
         _refs = (
             samples.loc[(samples["refGenome"] == wildcards.refGenome)]["refPath"]
             .dropna()
             .unique()
             .tolist()
-        )
-        for ref in _refs:
-            if workflow.default_remote_prefix == "":
-                if not os.path.exists(ref):
-                    raise WorkflowError(f"Reference genome {ref} does not exist")
-                elif ref.rsplit(".", 1)[1] == ".gz":
-                    raise WorkflowError(
-                        f"Reference genome {ref} must be unzipped first."
-                    )
-        return _refs
-    else:
-        return []
-
+        )             
+        if _refs:
+            return _refs
+    # if not user-specified refpath, force MissingInputError in copy_ref with dummyfile, which allows download_ref to run b/c of ruleorder.
+    return "Need to Download"
 
 def sentieon_combine_gvcf_cmd_line(wc):
     gvcfs = sentieon_combine_gvcf_input(wc)["gvcfs"]
@@ -165,37 +178,28 @@ def sentieon_combine_gvcf_input(wc):
 
 def get_reads(wc):
     """Returns local read files if present. Defaults to SRR if no local reads in sample sheet."""
-    if config["remote_reads"]:
-        return get_remote_reads(wc)
-    else:
-        row = samples.loc[samples["Run"] == wc.run]
-        r1 = f"results/data/fastq/{wc.refGenome}/{wc.sample}/{wc.run}_1.fastq.gz"
-        r2 = f"results/data/fastq/{wc.refGenome}/{wc.sample}/{wc.run}_2.fastq.gz"
-        if "fq1" in samples.columns and "fq2" in samples.columns:
-            if row["fq1"].notnull().any() and row["fq2"].notnull().any():
-                if os.path.exists(row.fq1.item()) and os.path.exists(row.fq2.item()):
-                    r1 = row.fq1.item()
-                    r2 = row.fq2.item()
-
-                    return {"r1": r1, "r2": r2}
-                else:
-                    raise WorkflowError(
-                        f"fq1 and fq2 specified for {wc.sample}, but files were not found."
-                    )
-            else:
+    row = samples.loc[samples["Run"] == wc.run]
+    r1 = f"results/data/fastq/{wc.refGenome}/{wc.sample}/{wc.run}_1.fastq.gz"
+    r2 = f"results/data/fastq/{wc.refGenome}/{wc.sample}/{wc.run}_2.fastq.gz"
+    if "fq1" in samples.columns and "fq2" in samples.columns:
+        if row["fq1"].notnull().any() and row["fq2"].notnull().any():
+            r1 = row.fq1.item()
+            r2 = row.fq2.item()
+            if config["remote_reads"]:
+                # remote read path must have full remote prefix, eg: gs://reads_bucket/sample1/...
+                # depends on snakemake>8 to figure out proper remote provider from prefix using storage()
+                return {"r1": storage(r1), "r2": storage(r2)}
+            if os.path.exists(row.fq1.item()) and os.path.exists(row.fq2.item()):
                 return {"r1": r1, "r2": r2}
+            else:
+                raise WorkflowError(
+                    f"fq1 and fq2 specified for {wc.sample}, but files were not found."
+                )
         else:
+            # this allows mixed srr and user-specified paths for reads
             return {"r1": r1, "r2": r2}
-
-
-def get_remote_reads(wildcards):
-    """Use this for reads on a different remote bucket than the default."""
-    # print(wildcards)
-    row = samples.loc[samples["Run"] == wildcards.run]
-    r1 = GS.remote(os.path.join(GS_READS_PREFIX, row.fq1.item()))
-    r2 = GS.remote(os.path.join(GS_READS_PREFIX, row.fq2.item()))
-    return {"r1": r1, "r2": r2}
-
+    else:
+        return {"r1": r1, "r2": r2}
 
 def collect_fastp_stats_input(wc):
     return expand(
