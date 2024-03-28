@@ -7,18 +7,14 @@ import statistics
 from pathlib import Path
 from collections import defaultdict
 
-# Get utils. This is not great, but we can move to setup.py and install later if want
-utils_path = (Path(__file__).parent / "../snparcher_utils").resolve()
-if str(utils_path) not in sys.path:
-    sys.path.append(str(utils_path))
-
 import pandas as pd
+import snparcher_utils
 from yaml import safe_load
-from snparcher_utils import utils
+
 
 DEFAULT_STORAGE_PREFIX = StorageSettings.default_storage_prefix if StorageSettings.default_storage_prefix is not None else ""
 
-samples = utils.parse_sample_sheet(config)
+samples = snparcher_utils.parse_sample_sheet(config)
 
 with open(config["resource_config"], "r") as f:
     resources = safe_load(f)
