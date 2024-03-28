@@ -5,6 +5,10 @@ from pathlib import Path
 def parse_sample_sheet(config: dict) -> pd.DataFrame:
     samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
     config_genomes = get_config_genomes(config, samples)
+    refGenome = 'refGenome' in samples.columns and samples['refGenome'].notna().any()
+    refPath = 'refPath' in samples.columns and samples['refPath'].notna().any()
+    if not any([config_genomes, refGenome, refPath]):
+        raise WorkflowError("No 'refGenome' or 'refPath' found in config or sample sheet.")
     if config_genomes is not None:
         config_refGenome, config_refPath = config_genomes
         samples["refGenome"] = config_refGenome
