@@ -1,11 +1,18 @@
 import glob
 import re
-import os
 import sys
-import pandas as pd
-from snakemake.exceptions import WorkflowError
+import os
+from pathlib import Path
 
-samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+# Get utils. This is not great, but we can move to setup.py and install via pip later if want
+utils_path = (Path(workflow.main_snakefile).parent.parent.parent).resolve()
+if str(utils_path) not in sys.path:
+    sys.path.append(str(utils_path))
+
+import pandas as pd
+import snparcher_utils
+
+samples = snparcher_utils.parse_sample_sheet(config)
 
 def get_ref(wildcards):
     if 'refPath' in samples.columns:
