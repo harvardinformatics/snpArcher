@@ -2,6 +2,10 @@ name: Tests
 
 on: 
   push:
+    paths:
+      - "*/Snakefile"
+      - "*.smk"
+      - "*.py"
     paths-ignore:
       - "config/**"
       - "**.md"
