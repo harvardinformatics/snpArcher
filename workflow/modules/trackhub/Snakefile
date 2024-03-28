@@ -1,11 +1,20 @@
-import pandas as pd
+import sys
 import os
+from pathlib import Path
+
+# Get utils. This is not great, but we can move to setup.py and install via pip later if want
+utils_path = (Path(workflow.main_snakefile).parent.parent.parent).resolve()
+if str(utils_path) not in sys.path:
+    sys.path.append(str(utils_path))
+
+import pandas as pd
+import snparcher_utils
 
 configfile: "config/config.yaml"
 wildcard_constraints:
     window="\d+"
 
-samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+samples = snparcher_utils.parse_sample_sheet(config)
 REFGENOME = samples['refGenome'].unique().tolist()
 WINDOWS = [1000, 10000, 100000]
 FILE_TYPES = ["Tajima", "SNP-Density", "Pi"] # dont change this unless you add rules to generate more stats.
