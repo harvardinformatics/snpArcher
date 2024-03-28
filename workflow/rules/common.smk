@@ -1,48 +1,44 @@
-import glob
-import re
-import os
 import sys
+import os
 import tempfile
 import random
 import string
 import statistics
+from pathlib import Path
 from collections import defaultdict
-from urllib.request import urlopen
+
+# Get utils. This is not great, but we can move to setup.py and install later if want
+utils_path = (Path(__file__).parent / "../snparcher_utils").resolve()
+if str(utils_path) not in sys.path:
+    sys.path.append(str(utils_path))
+
 import pandas as pd
 from yaml import safe_load
-from collections import defaultdict, deque
-# from snakemake.exceptions import MissingInputException
-# from snakemake_interface_common.exceptions import WorkflowError
-
+from snparcher_utils import utils
 
 DEFAULT_STORAGE_PREFIX = StorageSettings.default_storage_prefix if StorageSettings.default_storage_prefix is not None else ""
 
-samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(
-    " ", "_", regex=True
-)
-
-def check_ref_paths(sample_sheet):
-    """
-    Raising exception doesnt work in get_refs bc snakemake 'ignores' it because of reference rule order
-    Since output of download and copy ref is the same, download can satisfy output even if exception
-    is raised in get_refs when called from copy_ref.
-    """
-    if "refPath" in sample_sheet.columns:
-        for ref in sample_sheet["refPath"].dropna().tolist():
-            if not os.path.exists(ref):
-                raise WorkflowError(f"refPath: '{ref}' was specified in sample sheet, but could not be found.")
-
-check_ref_paths(samples)
+samples = utils.parse_sample_sheet(config)
 
 with open(config["resource_config"], "r") as f:
     resources = safe_load(f)
 
-
 def get_output():
+    
     if config["final_prefix"] == "":
         raise (WorkflowError("'final_prefix' is not set in config."))
     out = []
     genomes = samples["refGenome"].unique().tolist()
+    sample_counts = samples.drop_duplicates(
+        subset=["BioSample", "refGenome"]
+    ).value_counts(
+        subset=["refGenome"]
+    )  # get BioSample for each refGenome
+    out.extend
+    if config["final_prefix"] == "":
+        raise (WorkflowError("'final_prefix' is not set in config."))
+    out = []
+    
     sample_counts = samples.drop_duplicates(
         subset=["BioSample", "refGenome"]
     ).value_counts(
@@ -96,6 +92,8 @@ def get_ref(wildcards):
         if _refs:
             return _refs
     # if not user-specified refpath, force MissingInputError in copy_ref with dummyfile, which allows download_ref to run b/c of ruleorder.
+    logger.info(f"refPath specified in sample sheet header, but no path provided for refGenome '{wildcards.refGenome}'\n" + 
+                    f"Will try to download '{wildcards.refGenome}' from NCBI. If this is a genome accession, you can ignore this warning.")
     return "Need to Download"
 
 def sentieon_combine_gvcf_cmd_line(wc):
