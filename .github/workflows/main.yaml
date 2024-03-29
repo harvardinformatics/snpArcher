@@ -4,8 +4,8 @@ on:
   push:
     paths:
       - "*/Snakefile"
-      - "*.smk"
-      - "*.py"
+      - "*/*.smk"
+      - "*/*.py"
       - ".github/workflows/*"
     
 
