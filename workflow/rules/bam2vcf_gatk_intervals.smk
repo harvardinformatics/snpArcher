@@ -136,7 +136,7 @@ rule DB2vcf:
         """
         tar -xf {input.db}
         gatk GenotypeGVCFs \
-            --java-options '-Xmx{resources.reduced}m -Xms{resources.reduced}m' \
+            --java-options '-Xmx{resources.mem_mb_reduced}m -Xms{resources.mem_mb_reduced}m' \
             -R {input.ref} \
             --heterozygosity {params.het} \
             --genomicsdb-shared-posixfs-optimizations true \

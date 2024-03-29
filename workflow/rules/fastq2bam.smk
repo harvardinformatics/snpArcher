@@ -11,10 +11,6 @@ rule bwa_map:
         rg = get_read_group
     conda:
         "../envs/fastq2bam.yml"
-    threads:
-        resources['bwa_map']['threads']
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['bwa_map']['mem']
     log:
         "logs/{refGenome}/bwa_mem/{sample}/{run}.txt"
     benchmark:
@@ -34,8 +30,6 @@ rule merge_bams:
         "logs/{refGenome}/merge_bams/{sample}.txt"
     benchmark:
         "benchmarks/{refGenome}/merge_bams/{sample}.txt"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['merge_bams']['mem']
     shell:
         "samtools merge {output.bam} {input} && samtools index {output.bam} > {log}"
 
@@ -47,9 +41,6 @@ rule dedup:
         dedupBai = "results/{refGenome}/bams/{sample}_final.bam.bai",
     conda:
         "../envs/sambamba.yml"
-    resources:
-        threads = resources['dedup']['threads'],
-        mem_mb = lambda wildcards, attempt: attempt * resources['dedup']['mem']
     log:
         "logs/{refGenome}/sambamba_dedup/{sample}.txt"
     benchmark:

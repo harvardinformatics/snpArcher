@@ -1,6 +1,5 @@
 use-conda: True
 
-
 set-threads:
   # Reference Genome Processing
   copy_reference: 1
