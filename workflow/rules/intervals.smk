@@ -13,8 +13,6 @@ rule picard_intervals:
         "logs/{refGenome}/picard_intervals/log.txt"
     benchmark:
         "benchmarks/{refGenome}/picard_intervals/benchmark.txt"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['process_ref']['mem']
     shell:
         "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} OUTPUT_TYPE=ACGT &> {log}\n"
 
@@ -48,8 +46,6 @@ checkpoint create_db_intervals:
         "logs/{refGenome}/db_intervals/log.txt"
     benchmark:
         "benchmarks/{refGenome}/db_intervals/benchmark.txt"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['create_db_intervals']['mem']
     conda:
         '../envs/bam2vcf.yml'
     shell:
@@ -76,8 +72,6 @@ checkpoint create_gvcf_intervals:
         "logs/{refGenome}/gvcf_intervals/log.txt"
     benchmark:
         "benchmarks/{refGenome}/gvcf_intervals/benchmark.txt"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['create_gvcf_intervals']['mem']
     conda:
         '../envs/bam2vcf.yml'
     shell:

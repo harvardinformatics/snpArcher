@@ -6,12 +6,9 @@ rule get_fastq_pe:
         outdir = os.path.join(DEFAULT_STORAGE_PREFIX, "results/data/fastq/{refGenome}/{sample}/")
     conda:
         "../envs/fastq2bam.yml"
-    threads:
-        resources['get_fastq_pe']['threads']
     benchmark:
         "benchmarks/{refGenome}/getfastq/{sample}_{run}.txt"
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['get_fastq_pe']['mem'],
         tmpdir = get_big_temp
     shell:
         """
@@ -40,10 +37,6 @@ rule fastp:
         summ = "results/{refGenome}/summary_stats/{sample}/{run}.fastp.out"
     conda:
         "../envs/fastq2bam.yml"
-    threads:
-        resources['fastp']['threads']
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['fastp']['mem'],
     log:
         "logs/{refGenome}/fastp/{sample}/{run}.txt"
     benchmark:

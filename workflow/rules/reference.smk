@@ -44,8 +44,6 @@ rule index_reference:
         dictf = "results/{refGenome}/data/genome/{refGenome}.dict"
     conda:
         "../envs/fastq2bam.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['index_ref']['mem']
     log:
         "logs/{refGenome}/index_ref/log.txt"
     benchmark:
