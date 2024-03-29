@@ -3,9 +3,9 @@ name: Tests
 on: 
   push:
     paths:
-      - "*/Snakefile"
-      - "*/*.smk"
-      - "*/*.py"
+      - "**/Snakefile"
+      - "**/*.smk"
+      - "**/*.py"
       - ".github/workflows/*"
     
 
