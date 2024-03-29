@@ -1,5 +1,6 @@
 use-conda: True
 
+# Control number of threads each rule will use.
 set-threads:
   # Reference Genome Processing
   copy_reference: 1
@@ -76,6 +77,7 @@ set-threads:
   sentieon_combine_gvcf: 1
   sentieon_bam_stats: 1
 
+# Control other resources used by each rule.
 set-resources:
   # Reference Genome Processing
   copy_reference:

@@ -1,8 +1,0 @@
-google-lifesciences: True
-google-lifesciences-region : 'us-central1'
-use-conda: True
-jobs: 150
-preemption-default: 5
-preemptible-rules: ["fastp=5", "sentieon_map=5","merge_bams=5","sentieon_dedup=5","sentieon_haplotyper=10","sentieon_combine_gvcf=5","qc_check_fai=5","qc_vcftools_individuals=5","qc_subsample_snps=5","qc_plink=5","qc_admixture=5","qc_generate_coords_file=5","qc_qc_plots=5", "collect_sumstats=2"]
-default-resources: ["machine_type=n2-standard", "disk_mb=512000"]
-
