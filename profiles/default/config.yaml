@@ -1,5 +1,10 @@
 use-conda: True
 
+# These resources will be applied to all rules. Can be overriden on a per-rule basis below.
+default-resources:
+  mem_mb: attempt * 2000
+  mem_mb_reduced: (attempt * 2000) * 0.9 # Mem allocated to java for GATK rules (tries to prevent OOM errors)
+
 # Control number of threads each rule will use.
 set-threads:
   # Reference Genome Processing
@@ -77,155 +82,155 @@ set-threads:
   sentieon_combine_gvcf: 1
   sentieon_bam_stats: 1
 
-# Control other resources used by each rule.
-set-resources:
-  # Reference Genome Processing
-  copy_reference:
-    mem_mb: attempt * 200
-  download_reference:
-    mem_mb: attempt * 200
-  index_reference:
-    mem_mb: attempt * 200
+# # Control other resources used by each rule.
+# set-resources:
+#   # Reference Genome Processing
+#   copy_reference:
+#     mem_mb: attempt * 200
+#   download_reference:
+#     mem_mb: attempt * 200
+#   index_reference:
+#     mem_mb: attempt * 200
 
-  # Interval Generation
-  format_interval_list:
-    mem_mb: attempt * 200
-  create_gvcf_intervals:
-    mem_mb: attempt * 200
-  create_db_intervals:
-    mem_mb: attempt * 200
-  picard_intervals:
-    mem_mb: attempt * 200
+#   # Interval Generation
+#   format_interval_list:
+#     mem_mb: attempt * 200
+#   create_gvcf_intervals:
+#     mem_mb: attempt * 200
+#   create_db_intervals:
+#     mem_mb: attempt * 200
+#   picard_intervals:
+#     mem_mb: attempt * 200
 
-  # Mappability
-  genmap:
-    mem_mb: attempt * 200
-  mappability_bed:
-    mem_mb: attempt * 200
+#   # Mappability
+#   genmap:
+#     mem_mb: attempt * 200
+#   mappability_bed:
+#     mem_mb: attempt * 200
   
-  # Fastq Processing
-  get_fastq_pe:
-    mem_mb: attempt * 200
-  fastp:
-    mem_mb: attempt * 200
+#   # Fastq Processing
+#   get_fastq_pe:
+#     mem_mb: attempt * 200
+#   fastp:
+#     mem_mb: attempt * 200
 
-  # Alignment  
-  bwa_map:
-    mem_mb: attempt * 200
-  dedup:
-    mem_mb: attempt * 200
-  merge_bams:
-    mem_mb: attempt * 200
+#   # Alignment  
+#   bwa_map:
+#     mem_mb: attempt * 200
+#   dedup:
+#     mem_mb: attempt * 200
+#   merge_bams:
+#     mem_mb: attempt * 200
 
-  # GVCF  
-  bam2gvcf: # HaplotypeCaller
-    mem_mb: attempt * 200 # Mem allocated to the snakemake job
-    mem_mb_reduced: (attempt * 200) * 0.9 # Mem allocated to java (tries to prevent OOM errors)
-  concat_gvcfs:
-    mem_mb: attempt * 200
-  create_db_mapfile:
-    mem_mb: attempt * 200
-  gvcf2DB: # GenomicsDBImport
-    mem_mb: attempt * 200
-    mem_mb_reduced: (attempt * 200) * 0.9 # Mem allocated to java (tries to prevent OOM errors)
+#   # GVCF  
+#   bam2gvcf: # HaplotypeCaller
+#     mem_mb: attempt * 200 # Mem allocated to the snakemake job
+#     mem_mb_reduced: (attempt * 200) * 0.9 # Mem allocated to java (tries to prevent OOM errors)
+#   concat_gvcfs:
+#     mem_mb: attempt * 200
+#   create_db_mapfile:
+#     mem_mb: attempt * 200
+#   gvcf2DB: # GenomicsDBImport
+#     mem_mb: attempt * 200
+#     mem_mb_reduced: (attempt * 200) * 0.9 # Mem allocated to java (tries to prevent OOM errors)
   
-  # VCF
-  DB2vcf: # GenotypeGVCFs
-    mem_mb: attempt * 200
-    mem_mb_reduced: (attempt * 200) * 0.9 # Mem allocated to java (tries to prevent OOM errors)
-  filterVcfs:
-    mem_mb: attempt * 200
-  sort_gatherVcfs:
-    mem_mb: attempt * 200
+#   # VCF
+#   DB2vcf: # GenotypeGVCFs
+#     mem_mb: attempt * 200
+#     mem_mb_reduced: (attempt * 200) * 0.9 # Mem allocated to java (tries to prevent OOM errors)
+#   filterVcfs:
+#     mem_mb: attempt * 200
+#   sort_gatherVcfs:
+#     mem_mb: attempt * 200
 
-  # Callable Bed  
-  compute_d4:
-    mem_mb: attempt * 200
-  create_cov_bed:
-    mem_mb: attempt * 200
-  merge_d4:
-    mem_mb: attempt * 200
+#   # Callable Bed  
+#   compute_d4:
+#     mem_mb: attempt * 200
+#   create_cov_bed:
+#     mem_mb: attempt * 200
+#   merge_d4:
+#     mem_mb: attempt * 200
 
-  # Summary Stats
-  bam_sumstats:
-    mem_mb: attempt * 200
-  collect_covstats:
-    mem_mb: attempt * 200
-  collect_fastp_stats:
-    mem_mb: attempt * 200
-  collect_sumstats:
-    mem_mb: attempt * 200
+#   # Summary Stats
+#   bam_sumstats:
+#     mem_mb: attempt * 200
+#   collect_covstats:
+#     mem_mb: attempt * 200
+#   collect_fastp_stats:
+#     mem_mb: attempt * 200
+#   collect_sumstats:
+#     mem_mb: attempt * 200
 
-  # QC Module
-  qc_admixture:
-    mem_mb: attempt * 200
-  qc_check_fai:
-    mem_mb: attempt * 200
-  qc_generate_coords_file:
-    mem_mb: attempt * 200
-  qc_plink:
-    mem_mb: attempt * 200
-  qc_qc_plots:
-    mem_mb: attempt * 200
-  qc_setup_admixture:
-    mem_mb: attempt * 200
-  qc_subsample_snps:
-    mem_mb: attempt * 200
-  qc_vcftools_individuals:
-    mem_mb: attempt * 200
+#   # QC Module
+#   qc_admixture:
+#     mem_mb: attempt * 200
+#   qc_check_fai:
+#     mem_mb: attempt * 200
+#   qc_generate_coords_file:
+#     mem_mb: attempt * 200
+#   qc_plink:
+#     mem_mb: attempt * 200
+#   qc_qc_plots:
+#     mem_mb: attempt * 200
+#   qc_setup_admixture:
+#     mem_mb: attempt * 200
+#   qc_subsample_snps:
+#     mem_mb: attempt * 200
+#   qc_vcftools_individuals:
+#     mem_mb: attempt * 200
 
-  # MK Module
-  mk_degenotate:
-    mem_mb: attempt * 200
-  mk_prep_genome:
-    mem_mb: attempt * 200
-  mk_split_samples:
-    mem_mb: attempt * 200
+#   # MK Module
+#   mk_degenotate:
+#     mem_mb: attempt * 200
+#   mk_prep_genome:
+#     mem_mb: attempt * 200
+#   mk_split_samples:
+#     mem_mb: attempt * 200
 
-  # Postprocess Module
-  postprocess_strict_filter:
-    mem_mb: attempt * 200
-  postprocess_basic_filter:
-    mem_mb: attempt * 200
-  postprocess_filter_individuals:
-    mem_mb: attempt * 200
-  postprocess_subset_indels:
-    mem_mb: attempt * 200
-  postprocess_subset_snps:
-    mem_mb: attempt * 200
-  postprocess_update_bed:
-    mem_mb: attempt * 200
+#   # Postprocess Module
+#   postprocess_strict_filter:
+#     mem_mb: attempt * 200
+#   postprocess_basic_filter:
+#     mem_mb: attempt * 200
+#   postprocess_filter_individuals:
+#     mem_mb: attempt * 200
+#   postprocess_subset_indels:
+#     mem_mb: attempt * 200
+#   postprocess_subset_snps:
+#     mem_mb: attempt * 200
+#   postprocess_update_bed:
+#     mem_mb: attempt * 200
 
-  # Trackhub Module
-  trackhub_bcftools_depth:
-    mem_mb: attempt * 200
-  trackhub_bedgraph_to_bigwig:
-    mem_mb: attempt * 200
-  trackhub_calc_pi:
-    mem_mb: attempt * 200
-  trackhub_calc_snpden:
-    mem_mb: attempt * 200
-  trackhub_calc_tajima:
-    mem_mb: attempt * 200
-  trackhub_chrom_sizes:
-    mem_mb: attempt * 200
-  trackhub_convert_to_bedgraph:
-    mem_mb: attempt * 200
-  trackhub_strip_vcf:
-    mem_mb: attempt * 200
-  trackhub_vcftools_freq:
-    mem_mb: attempt * 200
-  trackhub_write_hub_files:
-    mem_mb: attempt * 200
+#   # Trackhub Module
+#   trackhub_bcftools_depth:
+#     mem_mb: attempt * 200
+#   trackhub_bedgraph_to_bigwig:
+#     mem_mb: attempt * 200
+#   trackhub_calc_pi:
+#     mem_mb: attempt * 200
+#   trackhub_calc_snpden:
+#     mem_mb: attempt * 200
+#   trackhub_calc_tajima:
+#     mem_mb: attempt * 200
+#   trackhub_chrom_sizes:
+#     mem_mb: attempt * 200
+#   trackhub_convert_to_bedgraph:
+#     mem_mb: attempt * 200
+#   trackhub_strip_vcf:
+#     mem_mb: attempt * 200
+#   trackhub_vcftools_freq:
+#     mem_mb: attempt * 200
+#   trackhub_write_hub_files:
+#     mem_mb: attempt * 200
 
-  # Sentieon Tools
-  sentieon_map:
-    mem_mb: attempt * 200
-  sentieon_dedup:
-    mem_mb: attempt * 200
-  sentieon_haplotyper:
-    mem_mb: attempt * 200
-  sentieon_combine_gvcf:
-    mem_mb: attempt * 200
-  sentieon_bam_stats:
-    mem_mb: attempt * 200
+#   # Sentieon Tools
+#   sentieon_map:
+#     mem_mb: attempt * 200
+#   sentieon_dedup:
+#     mem_mb: attempt * 200
+#   sentieon_haplotyper:
+#     mem_mb: attempt * 200
+#   sentieon_combine_gvcf:
+#     mem_mb: attempt * 200
+#   sentieon_bam_stats:
+#     mem_mb: attempt * 200
