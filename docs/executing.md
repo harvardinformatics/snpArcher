@@ -65,8 +65,9 @@ retries: 3 # Retry jobs N times.
 #### Running the workflow
 Once you have modified the SLURM profile appropriately, you can run snpArcher with the following command:
 ```{shell}
-snakemake --workflow-profile profiles/slurm 
+snakemake --workflow-profile profiles/slurm <other options>
 ```
+Depending on your cluster, you can run this command on the head node and Snakemake will submit jobs to the SLURM queue. You can also submit this command via `srun` or `sbatch`.
 
 ## Cloud Execution
 Like cluster execution, Snakemake [supports a number of cloud providers](https://snakemake.readthedocs.io/en/stable/executing/cloud.html). Here we provide documentation for executing using Snakemake's Google Lifesciences integration. Please refer to Snakemake's documentation for details on using other cloud providers.

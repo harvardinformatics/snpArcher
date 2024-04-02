@@ -1,4 +1,4 @@
-# Setting Up snpArcher
+# Setting up snpArcher
 ## Environment Setup
 First, you will need to have [Mamba](https://mamba.readthedocs.io/en/latest/mamba-installation.html#mamba-install) installed. Follow the link and use the "Fresh Install (recommended)" directions. 
 

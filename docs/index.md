@@ -35,6 +35,7 @@ Remember to examine the config.yaml file to edit options for each step. We have 
 :hidden: True
 ./setup.md
 ./executing.md
+./examples.md
 ./modules.md
 ./datasets.md
 ```
