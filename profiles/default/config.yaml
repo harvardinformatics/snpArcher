@@ -11,40 +11,40 @@ set-threads:
   copy_reference: 1
   download_reference: 1
   index_reference: 1
-  # Interval Generation Does NOT use more than 1 thread.
+  # Interval Generation. Does NOT use more than 1 thread.
   format_interval_list: 1
   create_gvcf_intervals: 1
   create_db_intervals: 1
   picard_intervals: 1
   # Mappability
-  genmap: 1
-  mappability_bed: 1
-  # Fastq Processing
-  get_fastq_pe: 1
+  genmap: 1 # Can use more than 1 thread
+  mappability_bed: 1 # Does NOT use more than 1 thread
+  # Fastq Processing. Can use more than 1 thread.
+  get_fastq_pe: 1 
   fastp: 1
-  # Alignment
+  # Alignment. Can use more than 1 thread, except merge_bams.
   bwa_map: 1
   dedup: 1
-  merge_bams: 1
-  # GVCF
-  bam2gvcf: 1
-  concat_gvcfs: 1
-  create_db_mapfile: 1
-  gvcf2DB: 1
+  merge_bams: 1 # Does NOT use more than 1 thread.
+  # GVCF 
+  bam2gvcf: 1 # Should be run with no more than 2 threads.
+  concat_gvcfs: 1 # Does NOT use more than 1 thread.
+  create_db_mapfile: 1 # Does NOT use more than 1 thread.
+  gvcf2DB: 1 # Should be run with no more than 2 threads.
   # VCF
-  DB2vcf: 1
-  filterVcfs: 1
-  sort_gatherVcfs: 1
+  DB2vcf: 1 # Should be run with no more than 2 threads.
+  filterVcfs: 1 # Should be run with no more than 2 threads.
+  sort_gatherVcfs: 1 # Should be run with no more than 2 threads.
   # Callable Bed
-  compute_d4: 1
-  create_cov_bed: 1
-  merge_d4: 1
-  # Summary Stats
+  compute_d4: 1 # Can use more than 1 thread
+  create_cov_bed: 1 # Does NOT use more than 1 thread.
+  merge_d4: 1 # Does NOT use more than 1 thread.
+  # Summary Stats Does NOT use more than 1 thread.
   bam_sumstats: 1
   collect_covstats: 1
   collect_fastp_stats: 1
   collect_sumstats: 1
-  # QC Module
+  # QC Module Does NOT use more than 1 thread.
   qc_admixture: 1
   qc_check_fai: 1
   qc_generate_coords_file: 1
@@ -53,18 +53,18 @@ set-threads:
   qc_setup_admixture: 1
   qc_subsample_snps: 1
   qc_vcftools_individuals: 1
-  # MK Module
+  # MK Module Does NOT use more than 1 thread.
   mk_degenotate: 1
   mk_prep_genome: 1
   mk_split_samples: 1
-  # Postprocess Module
+  # Postprocess Module Does NOT use more than 1 thread.
   postprocess_strict_filter: 1
   postprocess_basic_filter: 1
   postprocess_filter_individuals: 1
   postprocess_subset_indels: 1
   postprocess_subset_snps: 1
   postprocess_update_bed: 1
-  # Trackhub Module
+  # Trackhub Module Does NOT use more than 1 thread.
   trackhub_bcftools_depth: 1
   trackhub_bedgraph_to_bigwig: 1
   trackhub_calc_pi: 1
@@ -75,12 +75,12 @@ set-threads:
   trackhub_strip_vcf: 1
   trackhub_vcftools_freq: 1
   trackhub_write_hub_files: 1
-  # Sentieon Tools
+  # Sentieon Tools. Can use more than 1 thread, except sentieon_bam_stats.
   sentieon_map: 1
   sentieon_dedup: 1
   sentieon_haplotyper: 1
   sentieon_combine_gvcf: 1
-  sentieon_bam_stats: 1
+  sentieon_bam_stats: 1 # Does NOT use more than 1 thread.
 
 # # Control other resources used by each rule.
 # set-resources:
