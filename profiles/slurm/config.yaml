@@ -8,7 +8,7 @@ retries: 3 # Retry jobs N times.
 default-resources:
   mem_mb: attempt * 2000
   mem_mb_reduced: (attempt * 2000) * 0.9 # Mem allocated to java for GATK rules (tries to prevent OOM errors)
-  slurm_partition:
+  slurm_partition: "short"
   slurm_account: # Same as sbatch -A. Not all clusters use this.
   runtime: 10 # In minutes 
 
