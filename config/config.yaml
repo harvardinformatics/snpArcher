@@ -3,7 +3,6 @@
 ##############################
 
 samples: "config/samples.csv" # path to the sample metadata CSV
-resource_config: "config/resources.yaml" # path to resources yaml config
 final_prefix: "" # prefix for final output files
 intervals: True #Set to True if you want to perform variant calling using interval approach.
 sentieon: False #set to True if you want to use sentieon, False if you want GATK
@@ -18,8 +17,8 @@ trackhub_email: ""
 ##############################
 
 # Set reference genome here if you would like to you use the same reference genome for all samples in sample sheet. See docs for more info.
-refGenome:
-refPath:
+# refGenome:
+# refPath:
 
 # Interval approach options, only applicable if intervals is True
 minNmer: 500 # the minimum Nmer used to split up the genome; e.g. a value of 200 means only Nmers 200 or greater are used to define the boundaries of intervals. The minimum is 50.
