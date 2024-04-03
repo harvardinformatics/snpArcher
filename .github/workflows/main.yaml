@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Local Fastq > VCF)
-      uses: snakemake/snakemake-github-action@v1
+      uses: cademirch/snakemake-github-action@v1
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
