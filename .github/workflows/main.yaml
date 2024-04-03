@@ -16,17 +16,18 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Local Fastq > VCF)
-      uses: cademirch/snakemake-github-action@v1.2
+      uses: snakemake/snakemake-github-action@v1
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
         args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
   Testing_config-genomes:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Local Fastq > VCF)
-      uses: cademirch/snakemake-github-action@v1.2
+      uses: snakemake/snakemake-github-action@v1
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
@@ -36,7 +37,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Local Fastq > VCF)
-      uses: cademirch/snakemake-github-action@v1.2
+      uses: snakemake/snakemake-github-action@v1
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
@@ -46,28 +47,31 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (QC rules)
-      uses: cademirch/snakemake-github-action@v1.2
+      uses: snakemake/snakemake-github-action@v1
       with:
         snakefile: workflow/modules/qc/Snakefile
         directory: .test/qc/
         args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
   Testing_Postprocess:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Postprocess)
-      uses: cademirch/snakemake-github-action@v1.2
+      uses: snakemake/snakemake-github-action@v1
       with:
         snakefile: workflow/modules/postprocess/Snakefile
         directory: .test/postprocess/
         args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
   Testing_Trackhub:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Trackhubs)
-      uses: cademirch/snakemake-github-action@v1.2
+      uses: snakemake/snakemake-github-action@v1
       with:
         snakefile: workflow/modules/trackhub/Snakefile
         directory: .test/trackhub/
         args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
