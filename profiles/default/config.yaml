@@ -8,7 +8,6 @@ default-resources:
 # Control number of threads each rule will use.
 set-threads:
   # Reference Genome Processing. Does NOT use more than 1 thread.
-  copy_reference: 1
   download_reference: 1
   index_reference: 1
   # Interval Generation. Does NOT use more than 1 thread.

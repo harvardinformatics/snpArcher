@@ -90,7 +90,7 @@ def get_ref(wildcards):
     # if not user-specified refpath, force MissingInputError in copy_ref with dummyfile, which allows download_ref to run b/c of ruleorder.
     logger.info(f"refPath specified in sample sheet header, but no path provided for refGenome '{wildcards.refGenome}'\n" + 
                     f"Will try to download '{wildcards.refGenome}' from NCBI. If this is a genome accession, you can ignore this warning.")
-    return "Need to Download"
+    return []
 
 def sentieon_combine_gvcf_cmd_line(wc):
     gvcfs = sentieon_combine_gvcf_input(wc)["gvcfs"]
