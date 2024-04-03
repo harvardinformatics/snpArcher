@@ -21,7 +21,7 @@ jobs:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
         args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
-        stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
+        # stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
   Testing_config-genomes:
     runs-on: ubuntu-latest
     steps:
@@ -52,7 +52,7 @@ jobs:
         snakefile: workflow/modules/qc/Snakefile
         directory: .test/qc/
         args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
-        stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
+        # stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
   Testing_Postprocess:
     runs-on: ubuntu-latest
     steps:
@@ -63,7 +63,7 @@ jobs:
         snakefile: workflow/modules/postprocess/Snakefile
         directory: .test/postprocess/
         args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
-        stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
+        # stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
   Testing_Trackhub:
     runs-on: ubuntu-latest
     steps:
@@ -74,4 +74,4 @@ jobs:
         snakefile: workflow/modules/trackhub/Snakefile
         directory: .test/trackhub/
         args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
-        stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
+        # stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
