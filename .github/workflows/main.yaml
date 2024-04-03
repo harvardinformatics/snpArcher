@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Local Fastq > VCF)
-      uses: cademirch/snakemake-github-action@v1
+      uses: cademirch/snakemake-github-action@v1.1
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
@@ -26,7 +26,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Local Fastq > VCF)
-      uses: snakemake/snakemake-github-action@v1
+      uses: cademirch/snakemake-github-action@v1.1
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
@@ -36,7 +36,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Local Fastq > VCF)
-      uses: snakemake/snakemake-github-action@v1
+      uses: cademirch/snakemake-github-action@v1.1
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
@@ -46,7 +46,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (QC rules)
-      uses: snakemake/snakemake-github-action@v1
+      uses: cademirch/snakemake-github-action@v1.1
       with:
         snakefile: workflow/modules/qc/Snakefile
         directory: .test/qc/
@@ -56,7 +56,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Postprocess)
-      uses: snakemake/snakemake-github-action@v1
+      uses: cademirch/snakemake-github-action@v1.1
       with:
         snakefile: workflow/modules/postprocess/Snakefile
         directory: .test/postprocess/
@@ -66,7 +66,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Trackhubs)
-      uses: snakemake/snakemake-github-action@v1
+      uses: cademirch/snakemake-github-action@v1.1
       with:
         snakefile: workflow/modules/trackhub/Snakefile
         directory: .test/trackhub/
