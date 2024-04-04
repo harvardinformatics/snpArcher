@@ -19,4 +19,4 @@ jobs:
         directory: .test/ci/
         snakefile: workflow/Snakefile
         args: "--use-conda --show-failed-logs -j 1 --conda-cleanup-pkgs cache --conda-frontend mamba"
-        # stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
+        stagein: "conda config --set channel_priority strict"

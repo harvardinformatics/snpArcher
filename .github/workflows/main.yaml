@@ -21,7 +21,7 @@ jobs:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
         args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
-        # stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
+        stagein: "conda config --set channel_priority strict"
   Testing_config-genomes:
     runs-on: ubuntu-latest
     steps:
