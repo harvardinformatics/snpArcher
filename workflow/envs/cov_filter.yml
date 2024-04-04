@@ -7,10 +7,10 @@ dependencies:
   - mosdepth==0.3.3
   - d4tools>=0.3.4
   - python=3.10
-  - pip
-  - rust
-  - gcc
+  - pip=24.0
+  - rust==1.77.1
+  - gcc==13.2.0
   - binutils
-  - make
+  - make=4.3
   - pip:
       - pyd4
