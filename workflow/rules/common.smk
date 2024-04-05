@@ -6,6 +6,7 @@ import tempfile
 import random
 import string
 import statistics
+from pathlib import Path
 from collections import defaultdict
 from urllib.request import urlopen
 import pandas as pd
@@ -16,6 +17,38 @@ from snakemake.exceptions import WorkflowError
 samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
 with open(config["resource_config"], "r") as f:
     resources = safe_load(f)
+
+def setup_curlrc():
+    curlrc_path = Path("~/.curlrc").expanduser()
+    marker = "# Added by snpArcher"
+    entry = f"-L {marker}\n"
+    if curlrc_path.exists():
+        with curlrc_path.open("r+") as f:
+            if "-L" not in f.read():
+                f.write(f"\n{entry}\n")
+                logger.info(f"Added -L to {curlrc_path} for pyd4")
+            
+    else:
+        with curlrc_path.open("a+") as f:
+            f.write(f"{entry}\n")
+
+def cleanup_curlrc():
+    curlrc_path = Path("~/.curlrc").expanduser()
+    marker = "# Added by snpArcher"
+    entry = f"-L {marker}\n"
+    logger.info(f"Removing -L we added from {curlrc_path}...")
+    if curlrc_path.exists():
+        with curlrc_path.open("r") as f:
+            lines = f.readlines()
+            # remove entry if its there
+            new_lines = [line for line in lines if line.strip() != entry.strip()]
+            if len(new_lines) == 0:
+                # our entry was only thing there, we can delete .curlrc
+                curlrc_path.unlink()
+            else:
+            # write back any options that were there.
+                with curlrc_path.open("w") as f:
+                    f.writelines(new_lines)
 
 
 def get_output():

@@ -8,6 +8,10 @@ include: "rules/fastq.smk"
 include: "rules/reference.smk"
 include: "rules/mappability.smk"
 
+setup_curlrc()
+onerror: cleanup_curlrc()
+onsuccess: cleanup_curlrc()
+
 if config['sentieon']:
     include: "rules/sentieon.smk"
 else:
