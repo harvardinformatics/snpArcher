@@ -1,6 +1,12 @@
 import pandas as pd
-from snakemake_interface_common.exceptions import WorkflowError
 from pathlib import Path
+
+try:
+    # Snakemake 8.x.x
+    from snakemake_interface_common.exceptions import WorkflowError
+except ImportError:
+    # Snakmake 7.x.x
+    from snakemake.exceptions import WorkflowError
 
 def parse_sample_sheet(config: dict) -> pd.DataFrame:
     samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
