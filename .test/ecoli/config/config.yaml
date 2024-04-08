@@ -27,6 +27,7 @@ minNmer: 500 # the minimum Nmer used to split up the genome; e.g. a value of 200
 num_gvcf_intervals: 3 # The maximum number of intervals to create for GVCF generation. Note: the actual number of intervals may be less than the specified value if the reference genome has very few gaps.
 db_scatter_factor: 0.15 # Scatter factor for calculating number of intervals to create for genomics db generation. (scatter_factor * num_samples * num_gvcf_intervals) gives us number of db intervals to create. Reccomend <1
 ccgp: True
+ploidy: 1
 
 ## Coverage options ##
 ## default pipeline is optimized for low coverage data - if using high coverage data (> 10x), uncomment high coverage options and comment out low coverage options
