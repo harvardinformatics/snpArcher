@@ -1,4 +1,20 @@
 ruleorder: download_reference > index_reference
+# localrules: copy_reference, download_reference
+
+# This does not work with SLURM as of 4/3/24. See here for more info:https://github.com/snakemake/snakemake-executor-plugin-slurm/issues/60
+# rule copy_reference:
+#     """Copies user-specified reference genome path to results dir to maintain refGenome wildcard"""
+#     input:
+#         ref = get_ref
+#     output:
+#         ref = "results/{refGenome}/data/genome/{refGenome}.fna"
+#     log:
+#         "logs/{refGenome}/copy_ref/log.txt"
+#     shell:
+#         #probably don't need to unzip but might as well.
+#         """
+#         gunzip -c {input.ref} 2> {log} > {output.ref} || cp {input.ref} {output.ref} &> {log}
+#         """
 
 rule download_reference:
     input:
@@ -23,9 +39,10 @@ rule download_reference:
             && 7z x {params.dataset} -aoa -o{params.outdir} \
             && cat {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}
         else
-            cp {input.ref} {output.ref}
+            gunzip -c {input.ref} 2> {log} > {output.ref} || cp {input.ref} {output.ref} &> {log}
         fi
         """
+
 rule index_reference:
     input:
         ref = "results/{refGenome}/data/genome/{refGenome}.fna"
@@ -35,8 +52,6 @@ rule index_reference:
         dictf = "results/{refGenome}/data/genome/{refGenome}.dict"
     conda:
         "../envs/fastq2bam.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['index_ref']['mem']
     log:
         "logs/{refGenome}/index_ref/log.txt"
     benchmark:

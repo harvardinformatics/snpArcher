@@ -9,22 +9,32 @@ on:
 
 jobs:
 
-  Testing:
+  Testing_local-fastq:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Local Fastq > VCF)
-      uses: snakemake/snakemake-github-action@v1.24.0
+      uses: cademirch/snakemake-github-action@v1
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
-        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba --config config_file=config/config.yaml"
+        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+  Testing_local-fastq_and_sra:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Test workflow (Local Fastq > VCF)
+      uses: cademirch/snakemake-github-action@v1
+      with:
+        directory: .test/ecoli/
+        snakefile: workflow/Snakefile
+        args: "--config samples='config/local_and_sra.csv' --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
   Testing_QC:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (QC rules)
-      uses: snakemake/snakemake-github-action@v1.24.0
+      uses: cademirch/snakemake-github-action@v1
       with:
         snakefile: workflow/modules/qc/Snakefile
         directory: .test/qc/
@@ -34,7 +44,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Postprocess)
-      uses: snakemake/snakemake-github-action@v1.24.0
+      uses: cademirch/snakemake-github-action@v1
       with:
         snakefile: workflow/modules/postprocess/Snakefile
         directory: .test/postprocess/
@@ -44,7 +54,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test workflow (Trackhubs)
-      uses: snakemake/snakemake-github-action@v1.24.0
+      uses: cademirch/snakemake-github-action@v1
       with:
         snakefile: workflow/modules/trackhub/Snakefile
         directory: .test/trackhub/

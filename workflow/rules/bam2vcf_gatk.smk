@@ -14,11 +14,6 @@ rule bam2gvcf:
     output:
         gvcf = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz",
         tbi = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz.tbi"
-    resources:
-        #!The -Xmx value the tool is run with should be less than the total amount of physical memory available by at least a few GB
-        # subtract that memory here
-        mem_mb = lambda wildcards, attempt: attempt * resources['bam2gvcf']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (resources['bam2gvcf']['mem'] - 3000)  # this is the maximum amount given to java
     log:
         "logs/{refGenome}/gatk_hc/{sample}.txt"
     benchmark:
@@ -26,14 +21,16 @@ rule bam2gvcf:
     params:
         minPrun = config['minP'],
         minDang = config['minD'],
+        ploidy = config['ploidy']
     conda:
         "../envs/bam2vcf.yml"
     shell:
         "gatk HaplotypeCaller "
-        "--java-options \"-Xmx{resources.reduced}m\" "
+        "--java-options \"-Xmx{resources.mem_mb_reduced}m\" "
         "-R {input.ref} "
         "-I {input.bam} "
         "-O {output.gvcf} "
+        "-ploidy {params.ploidy} "
         "--emit-ref-confidence GVCF --min-pruning {params.minPrun} --min-dangling-branch-length {params.minDang} &> {log}"
 
 rule create_db_mapfile:
@@ -75,9 +72,6 @@ rule gvcf2DB:
     output:
         db = temp(directory("results/{refGenome}/genomics_db_import/DB")),
         tar = temp("results/{refGenome}/genomics_db_import/DB.tar"),        
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['gvcf2DB']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: int(attempt * resources['gvcf2DB']['mem'] * 0.80) # this is the maximum amount given to java
     log:
         "logs/{refGenome}/gatk_db_import.txt"
     benchmark:
@@ -90,7 +84,7 @@ rule gvcf2DB:
         """
         export TILEDB_DISABLE_FILE_LOCKING=1
         gatk GenomicsDBImport \
-            --java-options '-Xmx{resources.reduced}m -Xms{resources.reduced}m' \
+            --java-options '-Xmx{resources.mem_mb_reduced}m -Xms{resources.mem_mb_reduced}m' \
             --genomicsdb-shared-posixfs-optimizations true \
             --batch-size 25 \
             --genomicsdb-workspace-path {output.db} \
@@ -116,9 +110,6 @@ rule DB2vcf:
     params:
         het = config['het_prior'],
         db = lambda wc, input: input.db[:-4]
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['DB2vcf']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (resources['DB2vcf']['mem'] - 3000)  # this is the maximum amount given to java
     log:
         "logs/{refGenome}/gatk_genotype_gvcfs.txt"
     benchmark:
@@ -129,7 +120,7 @@ rule DB2vcf:
         """
         tar -xf {input.db}
         gatk GenotypeGVCFs \
-            --java-options '-Xmx{resources.reduced}m -Xms{resources.reduced}m' \
+            --java-options '-Xmx{resources.mem_mb_reduced}m -Xms{resources.mem_mb_reduced}m' \
             -R {input.ref} \
             --heterozygosity {params.het} \
             --genomicsdb-shared-posixfs-optimizations true \
@@ -151,8 +142,6 @@ rule filterVcfs:
         vcfidx = temp("results/{refGenome}/vcfs/filtered.vcf.gz.tbi")
     conda:
         "../envs/bam2vcf.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['filterVcfs']['mem']   # this is the overall memory requested
     log:
         "logs/{refGenome}/gatk_filter.txt"
     benchmark:
@@ -186,9 +175,6 @@ rule sort_gatherVcfs:
         "logs/{refGenome}/sort_gather_vcfs/{prefix}_log.txt"
     benchmark:
         "benchmarks/{refGenome}/sort_gather_vcfs/{prefix}_benchmark.txt"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['gatherVcfs']['mem'],   # this is the overall memory requested
-        reduced = lambda wildcards, attempt: attempt * (resources['gatherVcfs']['mem'] - 2000)  # this is the maximum amount given to java
     shell:
         """
         bcftools sort -Oz -o {output.vcfFinal} {input.vcf} 2>> {log}

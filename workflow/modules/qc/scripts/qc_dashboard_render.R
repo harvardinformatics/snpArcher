@@ -14,8 +14,16 @@ render_qcplots <- function(prefix, nClusters, GMKey){
     
     #move the default html output to the QC folder. This is an inconvenience of knitr, and 
     #the output.file 
-    file.rename(from = script.out,
-          to = output.path)
+    copy_successful <- file.copy(script.out, output.path)
+
+    # Check if the copy was successful
+    if (copy_successful) {
+    # If the copy succeeded, delete the original file
+    file.remove(script.out)
+    } else {
+    # If the copy failed, print an error message
+    cat("snpArcher: Failed to move the qc dashboard html.\n")
+    }
 }
 
 render_qcplots(snakemake@params[[1]], snakemake@params[[2]], snakemake@params[[3]])

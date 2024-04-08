@@ -50,8 +50,11 @@ bedtools:
 process_ref:
     mem: 15000
 # custom python algo to create intervals
-create_intervals:
-    mem: 5000
+create_db_intervals:
+  mem: 5000
+
+create_gvcf_intervals:
+  mem: 5000
 
 ## Callable sites workflow
 

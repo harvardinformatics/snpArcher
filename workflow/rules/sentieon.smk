@@ -12,14 +12,10 @@ rule sentieon_map:
         lic = config['sentieon_lic']
     conda:
         "../envs/sentieon.yml"
-    threads: resources['sentieon_map']['threads']
     log:
         "logs/{refGenome}/sentieon_map/{sample}/{run}.txt"
     benchmark:
         "benchmarks/{refGenome}/sentieon_map/{sample}/{run}.txt"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['sentieon_map']['mem'],
-        machine_type = resources['sentieon_map']['machine_type']
     shell:
         """
         export MALLOC_CONF=lg_dirty_mult:-1
@@ -39,8 +35,6 @@ rule merge_bams:
         "logs/{refGenome}/merge_bams/{sample}.txt"
     benchmark:
         "benchmarks/{refGenome}/merge_bams/{sample}.txt"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['merge_bams']['mem']
     shell:
         "samtools merge {output.bam} {input} && samtools index {output.bam}"
 
@@ -60,11 +54,6 @@ rule sentieon_dedup:
         "logs/{refGenome}/sentieon_dedup/{sample}.txt"
     benchmark:
         "benchmarks/{refGenome}/sentieon_dedup/{sample}.txt"
-    threads: 
-        resources['sentieon_dedup']['threads']
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['sentieon_dedup']['mem'],
-        machine_type = resources['sentieon_dedup']['machine_type']
     shell:
         """
         export SENTIEON_LICENSE={params.lic}
@@ -80,14 +69,11 @@ rule sentieon_haplotyper:
         bam = "results/{refGenome}/bams/{sample}_final.bam",
         bai = "results/{refGenome}/bams/{sample}_final.bam.bai"
     params:
-        lic = config['sentieon_lic']
+        lic = config['sentieon_lic'],
+        ploidy = config['ploidy']
     output:
         gvcf = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz",
         gvcf_idx = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz.tbi",
-    threads: resources['sentieon_haplotyper']['threads']
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['sentieon_haplotyper']['mem'],
-        machine_type = resources['sentieon_haplotyper']['machine_type']
     conda:
         "../envs/sentieon.yml"
     log:
@@ -97,7 +83,7 @@ rule sentieon_haplotyper:
     shell:
         """
         export SENTIEON_LICENSE={params.lic}
-        sentieon driver -r {input.ref} -t {threads} -i {input.bam} --algo Haplotyper --genotype_model multinomial --emit_mode gvcf --emit_conf 30 --call_conf 30 {output.gvcf} 2> {log}
+        sentieon driver -r {input.ref} -t {threads} -i {input.bam} --algo Haplotyper --genotype_model multinomial --emit_mode gvcf --emit_conf 30 --call_conf 30 {output.gvcf} --ploidy {params.ploidy} 2> {log}
         """
 
 rule sentieon_combine_gvcf:
@@ -113,10 +99,6 @@ rule sentieon_combine_gvcf:
         glist = lambda wc, input: " ".join(["-v " + gvcf for gvcf in input['gvcfs']]),
         lic = config['sentieon_lic']
     threads: resources['sentieon_combine_gvcf']['threads']
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['sentieon_combine_gvcf']['mem'],
-        machine_type = resources['sentieon_combine_gvcf']['machine_type'],
-        disk_mb = resources['sentieon_combine_gvcf']['disk_mb']
     conda:
         "../envs/sentieon.yml"
     log:

@@ -1,8 +1,17 @@
-import pandas as pd
+import sys
 import os
+from pathlib import Path
+
+# Get utils. This is not great, but we can move to setup.py and install via pip later if want
+utils_path = (Path(workflow.main_snakefile).parent.parent.parent).resolve()
+if str(utils_path) not in sys.path:
+    sys.path.append(str(utils_path))
+
+import pandas as pd
+import snparcher_utils
 configfile: "config/config.yaml"
 
-samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+samples = snparcher_utils.parse_sample_sheet(config)
 REFGENOME = samples['refGenome'].unique().tolist()
 
 rule all:
@@ -60,6 +69,8 @@ rule update_bed:
         tmp2_bed = "results/{refGenome}/postprocess/{prefix}_tmp2.bed"
     conda:
         "envs/bed.yml"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 4000
     params:
         size_filter = config["contig_size"],
     shell:
@@ -82,6 +93,8 @@ rule strict_filter:
         miss = config["missingness"],
         maf = config["maf"],
         chr_ex = config["scaffolds_to_exclude"]
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 4000    
     shell:
         """
         if [ -z "{params.chr_ex}" ]
@@ -111,6 +124,8 @@ rule subset_indels:
         "envs/filter.yml"
     log:
         "logs/{refGenome}/postprocess/{prefix}_subset_indels.txt"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 4000
     shell:
         """
         bcftools view -v indels -O z -o {output.vcf} {input.vcf}
@@ -131,6 +146,8 @@ rule subset_snps:
         "envs/filter.yml"    
     log:
         "logs/{refGenome}/postprocess/{prefix}_subset_snps.txt"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 4000
     shell:
         """
         bcftools view -v snps -e 'TYPE ~ "indel"' -O z -o {output.vcf} {input.vcf}

@@ -1,10 +1,8 @@
-import pandas as pd
-import os
+configfile: "config/config.yaml"
 include: "common.smk"
 
-configfile: "config/config.yaml"
 
-samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+samples = snparcher_utils.parse_sample_sheet(config)
 REFGENOME = samples['refGenome'].unique().tolist()
 
 rule all:
@@ -19,6 +17,8 @@ rule check_fai:
         fai = ancient("results/{refGenome}/data/genome/{refGenome}.fna.fai"),
     output:
         faiResult = "results/{refGenome}/QC/{prefix}_fai_tmp.txt"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 1000
     run:
         check_contig_names(input.fai, output.faiResult)
 
@@ -40,13 +40,17 @@ rule vcftools_individuals:
     params:
         prefix = lambda wc, input: os.path.join(input.vcf.rsplit("/", 1)[0], "QC", wc.prefix),
         min_depth = config["min_depth"]
+    log:
+        "logs/{refGenome}/QC/vcftools_individuals/{prefix}.txt"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 4000
     shell:
         """
-        vcftools --gzvcf {input.vcf} --FILTER-summary --out {params.prefix}
-        vcftools --gzvcf {input.vcf} --out {params.prefix} --depth
-        vcftools --gzvcf {input.vcf} --out {params.prefix} --het
-        vcftools --gzvcf {input.vcf} --out {params.prefix} --missing-indv
-        tail -n +2 {output.depth} | awk '$3>{params.min_depth} {{print $1}}'> {output.samps}
+        vcftools --gzvcf {input.vcf} --FILTER-summary --out {params.prefix} &> {log}
+        vcftools --gzvcf {input.vcf} --out {params.prefix} --depth &>> {log}
+        vcftools --gzvcf {input.vcf} --out {params.prefix} --het &>> {log}
+        vcftools --gzvcf {input.vcf} --out {params.prefix} --missing-indv &>> {log}
+        tail -n +2 {output.depth} | awk '$3>{params.min_depth} {{print $1}}'> {output.samps} 2>> {log}
         """
 
 rule subsample_snps:
@@ -82,16 +86,16 @@ rule subsample_snps:
         #if the top VCF has < 150k SNPs, then just take all the SNPs
         if [[ $SITES -gt 1 ]]
         then
-            bcftools +prune -w $SITES -n 1 -N rand -O z -o {output.pruned} {output.filtered}
+            bcftools +prune -w $SITES -n 1 -N rand -O z -o {output.pruned} {output.filtered} &>> {log}
         else
-            bcftools view -O z -o {output.pruned} {output.filtered}
+            bcftools view -O z -o {output.pruned} {output.filtered} &>> {log}
         fi
 
-        bcftools query -f '%CHROM\t%POS\t%ID\t%INFO/AF\t%QUAL\t%INFO/ReadPosRankSum\t%INFO/FS\t%INFO/SOR\t%INFO/MQ\t%INFO/MQRankSum\n' {output.pruned} > {output.snpqc}
+        bcftools query -f '%CHROM\t%POS\t%ID\t%INFO/AF\t%QUAL\t%INFO/ReadPosRankSum\t%INFO/FS\t%INFO/SOR\t%INFO/MQ\t%INFO/MQRankSum\n' {output.pruned} > {output.snpqc} 2>> {log}
         
         ##copy the fai file into the QC folder for easy access
-        cp {input.fai} {output.fai}
-        cp {input.sumstats} {output.sumstats}
+        cp {input.fai} {output.fai} &>> {log}
+        cp {input.sumstats} {output.sumstats} &>> {log}
         """
 
 rule plink:
@@ -114,13 +118,15 @@ rule plink:
         king = "results/{refGenome}/QC/{prefix}.king"
     conda:
         "envs/plink.yml"
+    log:
+        "logs/{refGenome}/QC/plink/{prefix}.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * 2000
     shell:
         #plink 2 for king relatedness matrix (robust to structure) and plink 1.9 for distance matrix
         """
-        plink2 --vcf {input.vcf} --pca 10 --out {params.prefix} --allow-extra-chr --autosome-num 95 --make-bed --make-king square --const-fid --bad-freqs
-        plink --vcf {input.vcf} --out {params.prefix} --allow-extra-chr --autosome-num 95 --distance square --const-fid
+        plink2 --vcf {input.vcf} --pca 10 --out {params.prefix} --allow-extra-chr --autosome-num 95 --make-bed --make-king square --const-fid --bad-freqs &> {log}
+        plink --vcf {input.vcf} --out {params.prefix} --allow-extra-chr --autosome-num 95 --distance square --const-fid &>> {log}
         """
 
 rule setup_admixture:
@@ -151,6 +157,8 @@ rule admixture:
         admix2 = "results/{refGenome}/QC/{prefix}.2.Q"
     params:
         outdir = lambda wc, input: input.bed.rsplit("/", 1)[0]
+    log:
+        "logs/{refGenome}/QC/admixture/{prefix}.txt"
     resources:
         mem_mb = lambda wildcards, attempt: attempt * 4000
     conda:
@@ -159,11 +167,11 @@ rule admixture:
         """
         mv {input.bim_fixed} {input.bim}
 
-        admixture {input.bed} 2
-        admixture {input.bed} 3
+        admixture {input.bed} 2 &>> {log}
+        admixture {input.bed} 3 &>> {log}
 
-        mv "{wildcards.prefix}".2.* {params.outdir}
-        mv "{wildcards.prefix}".3.* {params.outdir}
+        mv "{wildcards.prefix}".2.* {params.outdir} &>> {log}
+        mv "{wildcards.prefix}".3.* {params.outdir} &>> {log}
         """
 
 rule generate_coords_file:

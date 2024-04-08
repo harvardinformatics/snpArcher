@@ -20,7 +20,7 @@ trackhub_email: "hi@website.com"
 minNmer: 500   # the minimum Nmer used to split up the genome; e.g. a value of 200 means only Nmers 200 or greater are used to define the boundaries of intervals. The minimum is 50.
 num_gvcf_intervals: 1 # The maximum number of intervals to create for GVCF generation. Note: the actual number of intervals may be less than the specified value if the reference genome has very few gaps.
 db_scatter_factor: 0.15 # Scatter factor for calculating number of intervals to create for genomics db generation. (scatter_factor * num_samples * num_gvcf_intervals) gives us number of db intervals to create. Reccomend <1
-
+ploidy: 2 # Ploidy for HaplotypeCaller and Sentieon Haplotyper
 
 ## Coverage options ##
 ## default pipeline is optimized for low coverage data - if using high coverage data (> 10x), uncomment high coverage options and comment out low coverage options
@@ -51,3 +51,6 @@ callable_merge: 100   #merge callable regions separated by this or fewer bp into
 ## QC options ##
 nClusters: 3
 GoogleAPIKey:
+
+## Filtering options ##
+scaffolds_to_exclude: "mtDNA,Y" #comma separated, no spaces list of scaffolds to exclude from final clean vcfs. Set to blank to disable.

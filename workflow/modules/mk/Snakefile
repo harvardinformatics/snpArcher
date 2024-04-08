@@ -1,9 +1,7 @@
-import pandas as pd
-import os
-include: "common.smk"
 configfile: "config/config.yaml"
+include: "common.smk"
 
-samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+
 REFGENOME = samples['refGenome'].unique().tolist()
 
 rule all:
@@ -89,5 +87,5 @@ rule degenotate:
         else
             degenotate.py --overwrite -a {input.gff} -g {input.genome} -u {input.outgroups} -d {params.delim} -o "results/{wildcards.refGenome}/mk/{wildcards.prefix}_degen_raw" -v {input.vcf}
         fi
-        cp results/{wildcards.refGenome}/mk/{wildcards.prefix}_degen_raw/mk_table.tsv {output}
+        cp results/{wildcards.refGenome}/mk/{wildcards.prefix}_degen_raw/mk.tsv {output}
         """

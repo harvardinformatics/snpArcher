@@ -42,3 +42,6 @@ tmp/
 .test/ci/results
 .test/ci/benchmarks
 .test/ci/logs
+.vscode
+.test/trackhub/*.sizes
+.test/trackhub/out.log
