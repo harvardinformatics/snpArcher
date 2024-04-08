@@ -12,8 +12,8 @@ import snparcher_utils
 from yaml import safe_load
 
 
-DEFAULT_STORAGE_PREFIX = StorageSettings.default_storage_prefix if StorageSettings.default_storage_prefix is not None else ""
-
+DEFAULT_STORAGE_PREFIX = workflow.default_remote_prefix
+GS_READS_PREFIX = config["remote_reads_prefix"]
 samples = snparcher_utils.parse_sample_sheet(config)
 
 with open(config["resource_config"], "r") as f:
@@ -204,6 +204,8 @@ def sentieon_combine_gvcf_input(wc):
 
 def get_reads(wc):
     """Returns local read files if present. Defaults to SRR if no local reads in sample sheet."""
+    if config["remote_reads"]:
+        return get_remote_reads(wc)
     row = samples.loc[samples["Run"] == wc.run]
     r1 = f"results/data/fastq/{wc.refGenome}/{wc.sample}/{wc.run}_1.fastq.gz"
     r2 = f"results/data/fastq/{wc.refGenome}/{wc.sample}/{wc.run}_2.fastq.gz"
@@ -211,10 +213,7 @@ def get_reads(wc):
         if row["fq1"].notnull().any() and row["fq2"].notnull().any():
             r1 = row.fq1.item()
             r2 = row.fq2.item()
-            if config["remote_reads"]:
-                # remote read path must have full remote prefix, eg: gs://reads_bucket/sample1/...
-                # depends on snakemake>8 to figure out proper remote provider from prefix using storage()
-                return {"r1": storage(r1), "r2": storage(r2)}
+            
             if os.path.exists(row.fq1.item()) and os.path.exists(row.fq2.item()):
                 return {"r1": r1, "r2": r2}
             else:
@@ -226,6 +225,14 @@ def get_reads(wc):
             return {"r1": r1, "r2": r2}
     else:
         return {"r1": r1, "r2": r2}
+
+def get_remote_reads(wildcards):
+    """Use this for reads on a different remote bucket than the default."""
+    # print(wildcards)
+    row = samples.loc[samples["Run"] == wildcards.run]
+    r1 = GS.remote(os.path.join(GS_READS_PREFIX, row.fq1.item()))
+    r2 = GS.remote(os.path.join(GS_READS_PREFIX, row.fq2.item()))
+    return {"r1": r1, "r2": r2}
 
 def collect_fastp_stats_input(wc):
     return expand(

@@ -1,5 +1,5 @@
 import pandas as pd
-from snakemake_interface_common.exceptions import WorkflowError
+from snakemake.exceptions import WorkflowError
 from pathlib import Path
 
 def parse_sample_sheet(config: dict) -> pd.DataFrame:
