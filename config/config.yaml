@@ -3,13 +3,12 @@
 ##############################
 
 samples: "config/samples.csv" # path to the sample metadata CSV
-resource_config: "config/resources.yaml" # path to resources yaml config
 final_prefix: "" # prefix for final output files
 intervals: True #Set to True if you want to perform variant calling using interval approach.
 sentieon: False #set to True if you want to use sentieon, False if you want GATK
 sentieon_lic: "" #set to path of sentieon license
-remote_reads: False # Set True if reads are in a Google Bucket seperate from --default-remote-prefix.
-remote_reads_prefix: "" # set to google bucket prefix where reads live
+remote_reads: False # Set True if reads are in a location seperate from --default-remote-prefix.
+remote_reads_prefix: "" # set to google bucket prefix where reads live. FOR SNAKEMAKE 7.X.X ONLY.
 bigtmp: "" #Set to a path with lots of free space to use for commands that require large amounts of temp space; defaults to system tmpdir if empty
 cov_filter: True #set to True if you want to include coverage thresholds in the callable sites bed file (default uses mappability only)
 generate_trackhub: True #Set to true if you want to generate a Genome Browser Trackhub. Dependent on postprocessing module.
@@ -17,6 +16,10 @@ trackhub_email: ""
 ##############################
 # Variables you *might* need to change
 ##############################
+
+# Set reference genome here if you would like to you use the same reference genome for all samples in sample sheet. See docs for more info.
+# refGenome:
+# refPath:
 
 # Interval approach options, only applicable if intervals is True
 minNmer: 500 # the minimum Nmer used to split up the genome; e.g. a value of 200 means only Nmers 200 or greater are used to define the boundaries of intervals. The minimum is 50.

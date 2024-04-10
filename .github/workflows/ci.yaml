@@ -14,8 +14,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Test whole workflow
-      uses: cademirch/snakemake-github-action@v1
+      uses: snakemake/snakemake-github-action@v1.25.1
       with:
         directory: .test/ci/
         snakefile: workflow/Snakefile
         args: "--use-conda --show-failed-logs -j 1 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        stagein: "conda config --set channel_priority strict"

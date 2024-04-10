@@ -5,8 +5,8 @@ rule genmap:
         bg = temp("results/{refGenome}/genmap/{refGenome}.genmap.bedgraph"),
         sorted_bg = "results/{refGenome}/genmap/sorted_mappability.bg"
     params:
-        indir = os.path.join(workflow.default_remote_prefix, "results/{refGenome}/genmap_index"),
-        outdir = os.path.join(workflow.default_remote_prefix, "results/{refGenome}/genmap"),
+        indir = os.path.join(DEFAULT_STORAGE_PREFIX, "results/{refGenome}/genmap_index"),
+        outdir = os.path.join(DEFAULT_STORAGE_PREFIX, "results/{refGenome}/genmap"),
         kmer = config['mappability_k']
     log:
         "logs/{refGenome}/genmap/log.txt"
@@ -14,10 +14,6 @@ rule genmap:
         "benchmarks/{refGenome}/genmap/benchmark.txt"
     conda:
         "../envs/mappability.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['genmap']['mem']
-    threads:
-        resources['genmap']['threads'] 
     shell:
         # snakemake creates the output directory before the shell command, but genmap doesnt like this. so we remove the directory first.
         """
@@ -36,8 +32,6 @@ rule mappability_bed:
         "../envs/mappability.yml"
     benchmark:
         "benchmarks/{refGenome}/mapbed/{prefix}_benchmark.txt"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['callable_bed']['mem']
     params:
         merge = config['mappability_merge'],
         mappability = config['mappability_min']

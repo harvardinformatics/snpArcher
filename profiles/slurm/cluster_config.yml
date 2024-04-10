@@ -1,6 +1,0 @@
-__default__:
-    partition: "holy-cow,holy-smokes"
-    time: 9000
-    nodes: 1
-    mem: 1000
-    output: "logs/slurm/slurm-%j.out"

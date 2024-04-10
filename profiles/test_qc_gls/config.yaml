@@ -1,7 +1,0 @@
-use-conda: True
-allowed-rules: ["generate_coords_file", "subsample_snps", "vcftools_individuals", "snp_filters_qc", "plink", "admixture", "qc_plots"]
-google-lifesciences: True
-google-lifesciences-region : 'us-west1'
-jobs: 1
-default-remote-prefix: 'snake-test'
-configfile: "config/test_qc_gls_config.yaml"

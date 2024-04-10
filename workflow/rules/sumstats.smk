@@ -8,8 +8,6 @@ rule bam_sumstats:
         alnSum = "results/{refGenome}/summary_stats/{sample}_AlnSumMets.txt",
     conda:
         "../envs/fastq2bam.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * resources['bam_sumstats']['mem']
     shell:
         """
         samtools coverage --output {output.cov} {input.bam}

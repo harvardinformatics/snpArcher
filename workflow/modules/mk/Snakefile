@@ -1,9 +1,7 @@
-import pandas as pd
-import os
-include: "common.smk"
 configfile: "config/config.yaml"
+include: "common.smk"
 
-samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+
 REFGENOME = samples['refGenome'].unique().tolist()
 
 rule all:

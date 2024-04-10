@@ -8,6 +8,11 @@ include: "rules/fastq.smk"
 include: "rules/reference.smk"
 include: "rules/mappability.smk"
 
+setup_curlrc()
+onerror: cleanup_curlrc()
+onsuccess: cleanup_curlrc()
+
+
 if config['sentieon']:
     include: "rules/sentieon.smk"
 else:
@@ -20,11 +25,6 @@ else:
 
 if config['cov_filter']:
     include: "rules/cov_filter.smk"
-
-if config['remote_reads']:
-    from snakemake.remote.GS import RemoteProvider as GSRemoteProvider
-    GS = GSRemoteProvider()
-    GS_READS_PREFIX = config['remote_reads_prefix']
 
 module qc:
     snakefile:

@@ -1,4 +1,4 @@
-# Setting Up snpArcher
+# Setting up snpArcher
 ## Environment Setup
 First, you will need to have [Mamba](https://mamba.readthedocs.io/en/latest/mamba-installation.html#mamba-install) installed. Follow the link and use the "Fresh Install (recommended)" directions. 
 
@@ -7,7 +7,7 @@ Mamba is a faster version of conda. Conda is a package manager that makes it eas
 Once Mamba is installed, create a conda environment with snakemake. These are the only two dependencies you need for the pipeline to work, the workflow will create mamba environments for each rule, and there is no need to install each package separately. 
 
 ```
-mamba create -c conda-forge -c bioconda -n snparcher "snakemake==7.32.4" "python==3.11.4"
+mamba create -c conda-forge -c bioconda -n snparcher "snakemake>=8" "python==3.11.4"
 mamba activate snparcher
 ```
 If you encounter issues, please see the [Snakemake docs](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html) for detailed installation instructions.
@@ -19,7 +19,7 @@ cd snpArcher
 ```
 
 ## Creating a sample sheet
-In order to determine what outputs to create, snpArcher requires sample sheet file. This comma-separated file contains the required sample metadata about your samples in order to run the workflow. At a minimum, the snpArcher pipeline requires that each sample have a unique sample name, a reference genome accession or a path to a fasta file, and an SRA accession, or path to two paired end fastq files. 
+In order to determine what outputs to create, snpArcher requires sample sheet file. This comma-separated file contains the required sample metadata about your samples in order to run the workflow. At a minimum, the snpArcher pipeline requires that each sample have a unique sample name, a reference genome accession or a path to a fasta file, and an SRA accession, or path to two paired end fastq files.
 
 Below are all of the accepted fields for a sample sheet:
 | Field | Description |
@@ -38,11 +38,13 @@ Below are all of the accepted fields for a sample sheet:
 
 ```{note}
 refGenome is always required. refPath specifying the path to a reference fasta file is optional, but when specified, a name for the assembly (in refGenome) must also be included. 
+
+If you are using the same reference genome for all samples in your sample sheet, you can omit the refGenome and/or refPath column from the sample sheet and specify these fields in the config file. See [config setup below](#configuring-snparcher) for more details.
 ```
 
-It is important to note that samples are proccessed together based on their `refGenome` metadata, so **all BioSamples that share a reference genome will ultimately end up in the same final vcf file.** If you are mapping multiple populations / species to a single reference genome, and want separate VCF files for each population / species, you will need to split your final vcf after the pipeline completes, or run multiiple indpendent sample sheets in different results directories. 
+It is important to note that samples are proccessed together based on their `refGenome` metadata, so **all BioSamples that share a reference genome will ultimately end up in the same final vcf file.** If you are mapping multiple populations / species to a single reference genome, and want separate VCF files for each population / species, you will need to split your final vcf after the pipeline completes, or run multiple indpendent sample sheets in different results directories. 
 
-If your reads (and, optionally, your local reference genome) are stored in somewhere seperate of the workflow (e.g.: a scratch disk) then you can specify the path to your reads using the `fq1` and `fq2` fields, and the location of your reference genome fasta (*note: must be uncompressed*) in the `refPath` field. 
+If your reads (and, optionally, your local reference genome) are stored in somewhere seperate of the workflow (e.g.: a scratch disk) then you can specify the path to your reads using the `fq1` and `fq2` fields, and the location of your reference genome fasta in the `refPath` field. 
 
 ### Using data from NCBI SRA
 If you'd like to reanalyze an existing NCBI SRA BioProject, please follow these instructions to quickly create a sample sheet.
@@ -57,7 +59,7 @@ If you'd like to reanalyze an existing NCBI SRA BioProject, please follow these 
 8. Save the sample sheet, it is now ready to use.
 
 ### Using local data
-A python script `workflow/write_samples.py` is included to help write the sample sheet for you. In order to use this script, you must have organized all of your fastq files in to one directory. The script requies you provide a file with one sample per name that maps uniquely to a pair of fastq files in the afformentioned directory. The script also requires either a reference genome accession or path to reference fasta. 
+A python script `workflow/snparcher_utils/write_samples.py` is included to help write the sample sheet for you. In order to use this script, you must have organized all of your fastq files in to one directory. The script requies you provide a file with one sample per name that maps uniquely to a pair of fastq files in the afformentioned directory. The script also requires either a reference genome accession or path to reference fasta. 
 
 ```{note}
 This script cannot currently handle multiple sequencing runs per sample. Please see below for how to handle this case.
@@ -92,25 +94,25 @@ For example, consider we have 2 samples: `A` and `B`. `Sample A` was sequenced 3
 
 ## Configuring snpArcher
 
-Workflow variables such as output file prefix, tool settings, and other options are set in `config/config.yaml`. Resource settings such as threads and memory are controlled per tool in the `config/resources.yaml`.
+Workflow variables such as output file prefix, tool settings, and other options are set in `config/config.yaml`. Resource settings such as threads and memory are controlled per tool in the `profiles/default/config.yaml`.
 
 ### Core configuration
 The following options in `config/config.yaml` must be set before running snpArcher:
 
-| Option | Description | Type |
-| ---- | -------------| ------ |
-| `samples` | Path to CSV sample sheet.| `str` |
-| `resource_config` | Path to resources YAML file | `str` |
-| `final_prefix` | Prefix to name final output files with (e.g. VCF) | `str` |
-| `intervals` |  Use SplitByN interval approach for GATK variant calling | `bool` |
-| `sentieon` | Use Sentieon tools instead of GATK for variant calling | `bool` |
-| `sentieon_lic` | If using Sentieon tools, provide license here | `str` |
-| `remote_reads` | Use remote storage provider (Google) for reads | `bool` |
-| `remote_reads_prefx` | The bucket where remote reads are stored | `str` |
-| `bigtmp` | Set a directory for TMP. Default is $TMPDIR env var | `str` |
-| `cov_filter` | Use coverage thresholds for filtering callable sites | `bool`|
-| `generate_trackhub` | Generate population genomics stats trackhub | `bool`|
-| `trackhub_email` | Trackhubs require an email address | `str` |
+| Option | Description | Type | Required | Default |
+| ---- | -------------| ------ |------ | ------ |
+| `samples` | Path to CSV sample sheet.| `str` | `True` | `None` |
+| `final_prefix` | Prefix to name final output files with (e.g. VCF) | `str` | `True` | `None` |
+| `intervals` |  Use SplitByN interval approach for GATK variant calling | `bool` | `True` | `True` |
+| `sentieon` | Use Sentieon tools instead of GATK for variant calling | `bool` | `True` | `False` |
+| `sentieon_lic` | If using Sentieon tools, provide license here | `str` | `True` if `sentieon==True`| `None` |
+| `remote_reads` | Use remote storage provider for reads. | `bool` | `False` | `False`|
+| `bigtmp` | Set a directory for TMP. Default is $TMPDIR env var | `str` | `False` | `None` |
+| `cov_filter` | Use coverage thresholds for filtering callable sites | `bool`| `True` | `True` |
+| `generate_trackhub` | Generate population genomics stats trackhub | `bool`| `True` | `True` |
+| `trackhub_email` | Trackhubs require an email address | `str` | `True` if `generate_trackhub==True` | `None` |
+| `refGenome` | Reference genome name or accession | `str` | `True` if not provided in sample sheet |  `None` |
+| `refPath` | Path to reference genome if not using NCBI genome accession | `str` | `False` | `None` |
 
 
 ### Other options
@@ -160,26 +162,28 @@ If `cov_filter` in the core options is set to `True`, then the following options
 In order to use one of the above coverage filtering approaches, you must set the options of the desired approach, and leave the others blank.
 ```
 
-#### QC Module Options
-For more details about this module, please see [here](./modules.md#quality-control).
+#### Module Options
+Please refer to the [modules page](./modules.md) for each module's options.
 
-| Option | Description | Type |
-| ---- | -------------| ------ |
-|`nClusters`| Number of clusters for PCA| `int`|
-|`GoogleAPIKey`| Google Maps API key (optional).| `str`|
-|`min_depth`| Samples with average depth below this will be excluded for QC analysis| `int`|
+### Resources
+Compute resources (threads, memory, etc.) as well as Snakemake arguments are set by the workflow profile located in `profiles/default/config.yaml`. This profile is used by default when running Snakemake. To specify a different profile, use the `--workflow-profile` option in your Snakemake command.
 
-#### Postprocessing Module Options
-For more details about this module, please see [here](./modules.md#postprocessing).
+In the profile you can set resources to be applied to all rules via the `default-resources` key. You can override this default per-rule by uncommenting that rule under the `set-threads` and/or `set-resources` key.
 
-| Option | Description | Type |
-| ---- | -------------| ------ |
-|`contig_size`| SNPs on contigs this size or smaller will be excluded from 'clean' VCF | `int`|
-|`maf`| SNPs with MAF below this will be excluded from clean VCF| `float`|
-|`missingness`| SNPs with missingness below this will be excluded from clean VCF| `float`|
-|`scaffolds_to_exclude` | Comma separated, no spaces list of scaffolds/contigs to exclude from clean VCF|
+#### Threads
+The profile controls how many `threads` (or CPU cores) a rule can use via the `set-thread` key. We have provided reasonable defaults, though you may need to adjust depending on the resources available on your system/cluster.
+```{note}
+Many rules can only use 1 thread, and providing more threads **will not** decrease runtime or improve performance. Please refer to the `profiles/default/config.yaml` for details.
+``` 
 
+#### Memory and other resources
+The profile controls how much memory and what other resources a rule can use via the `set-resources` key. When executing snpArcher on a cluster or the cloud, specifying memory is important as these environments will typically kill jobs that use more memory than they requested. 
 
+Other resources, such as `slurm_partition`, `runtime`, etc. can also be set here if they are required by your cluster. We have provided a SLURM profile `profiles/slurm` that has the most common SLURM resources.
+
+```{note}
+Snakemake allows you to dynamically assign resources. We use the `attempt` keyword to specify memory. For example. `attempt * 2000` will provide 2GB on the first attempt of the rule, if the rule fails (out of memory) then on the second attempt it will be provided 4GB. This behavior requires the `-T/--retries` Snakemake option.
+```
 
 
 

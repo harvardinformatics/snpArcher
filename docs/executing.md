@@ -24,14 +24,12 @@ To maintain organization across many different projects, you may consider creati
 ├── project_1/
 │   ├── config/
 │   │   ├── config.yaml
-│   │   ├── resources.yaml
 │   │   └── samples.csv
 │   ├── data
 │   └── results
 └── project_2/
     ├── config/
     │   ├── config.yaml
-    │   ├── resources.yaml
     │   └── samples.csv
     └── data
 ```
@@ -40,36 +38,36 @@ When creating a new directory for an analysis, ensure that you copy the `config`
 
 Then, to run snpArcher on `project_2` from our example, we would execute the command:
 ```
-snakemake -s ./snpArcher/workflow/Snakefile -d ./project_2 --cores <num cores to use> --use-conda
+snakemake -s ./snpArcher/workflow/Snakefile -d ./project_2 <other CLI options>
 ```
 
 ## Cluster Execution
-Snakemake [supports most cluster schedulers](https://snakemake.readthedocs.io/en/stable/executing/cluster.html). Here, we provide documentation for SLURM, however please refer to Snakemake's documentation for further details on using other schedulers.
+Snakemake [supports most cluster schedulers](https://snakemake.github.io/snakemake-plugin-catalog/) via executor plugins. Here, we provide documentation for SLURM, however please refer to Snakemake's documentation for further details on using other plugins.
 ### SLURM
-To execute snpArcher on a SLURM cluster, you will need to use the `--profile` Snakemake option. We have included a profile already in, `profiles/slurm`, you will need to edit the `config.yaml` and `cluster-config.yaml` files in this directory. 
+#### Install plugin
+To execute snpArcher on a SLURM cluster, you will need to install the [SLURM executor plugin](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html) into the snpArcher environment.
+```{shell}
+conda activate snpArcher
+pip install pip install snakemake-executor-plugin-slurm
+```
 #### Profile Setup
-1. `config.yaml` defines Snakemake arguments such as number of cores to use and number of jobs to run simulatenously. These values should be adjusted in accordance with your cluster's guidelines.
-2. `cluster-config.yaml` defines information about your cluster such as partiton names, number of nodes to use, and runtime. Please edit these for your cluster.
+To specify resources for the workflow to SLURM, you must use a workflow profile. We have provided a SLURM profile template (`profiles/slurm`) which you can modify to specify SLURM partitions, memory allocation, etc. Please refer to the [profiles setup section](./setup.md#resources) for more details. 
+
+Additionally, the SLURM profile specifies required and recommended Snakemake options:
+```{yaml}
+executor: slurm
+use-conda: True
+jobs: 100 # Have up to N jobs submitted at any given time
+latency-wait: 20 # Wait N seconds for output files due to latency
+retries: 3 # Retry jobs N times.
+```
+
 #### Running the workflow
-To submit the main snpArcher job to your cluster you will need to call Snakemake in a SLURM job script. We include an example, `run_pipeline.sh`:
+Once you have modified the SLURM profile appropriately, you can run snpArcher with the following command:
+```{shell}
+snakemake --workflow-profile profiles/slurm <other options>
 ```
-#!/bin/bash
-#SBATCH -J sm
-#SBATCH -o out
-#SBATCH -e err
-#SBATCH -p shared
-#SBATCH -n 1
-#SBATCH -t 9000
-#SBATCH --mem=10000
-
-CONDA_BASE=$(conda info --base)
-source $CONDA_BASE/etc/profile.d/conda.sh
-conda activate snakemake
-snakemake --snakefile workflow/Snakefile --profile ./profiles/slurm
-
-```
-
-
+Depending on your cluster, you can run this command on the head node and Snakemake will submit jobs to the SLURM queue. You can also submit this command via `srun` or `sbatch`.
 
 ## Cloud Execution
 Like cluster execution, Snakemake [supports a number of cloud providers](https://snakemake.readthedocs.io/en/stable/executing/cloud.html). Here we provide documentation for executing using Snakemake's Google Lifesciences integration. Please refer to Snakemake's documentation for details on using other cloud providers.
