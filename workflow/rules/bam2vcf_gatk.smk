@@ -5,11 +5,10 @@ rule bam2gvcf:
     TODO
     """
     input:
+        unpack(get_bams),
         ref = "results/{refGenome}/data/genome/{refGenome}.fna",
         indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"]),
         dictf = "results/{refGenome}/data/genome/{refGenome}.dict",
-        bam = "results/{refGenome}/bams/{sample}_final.bam",
-        bai = "results/{refGenome}/bams/{sample}_final.bam.bai",
         
     output:
         gvcf = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz",

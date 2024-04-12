@@ -13,13 +13,13 @@ bigtmp: "" #Set to a path with lots of free space to use for commands that requi
 cov_filter: True #set to True if you want to include coverage thresholds in the callable sites bed file (default uses mappability only)
 generate_trackhub: True #Set to true if you want to generate a Genome Browser Trackhub. Dependent on postprocessing module.
 trackhub_email: "hi@website.com"
-
+mark_duplicates: True
 ##############################
 # Variables you *might* need to change
 ##############################
 
-refGenome: 
-refPath:
+#refGenome: 
+#refPath:
 
 # Interval approach options, only applicable if intervals is True
 minNmer: 500 # the minimum Nmer used to split up the genome; e.g. a value of 200 means only Nmers 200 or greater are used to define the boundaries of intervals. The minimum is 50.
