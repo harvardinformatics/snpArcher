@@ -41,8 +41,8 @@ rule concat_gvcfs:
         gvcfs = get_interval_gvcfs,
         tbis = get_interval_gvcfs_idx
     output:
-        gvcf = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz",
-        tbi = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz.tbi"
+        gvcf = temp("results/{refGenome}/gvcfs/{sample}.g.vcf.gz"),
+        tbi = temp("results/{refGenome}/gvcfs/{sample}.g.vcf.gz.tbi")
     log:
         "logs/{refGenome}/concat_gvcfs/{sample}.txt"
     benchmark:
@@ -54,6 +54,26 @@ rule concat_gvcfs:
     shell:
         """
         bcftools concat -D -a -Ou {input.gvcfs} | bcftools sort -T {resources.tmpdir} -Oz -o {output.gvcf} -
+        tabix -p vcf {output.gvcf}
+        """
+
+rule bcftools_norm:
+    input:
+        gvcf = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz",
+    output:
+        gvcf = "results/{refGenome}/gvcfs_norm/{sample}.g.vcf.gz",
+        tbi = "results/{refGenome}/gvcfs_norm/{sample}.g.vcf.gz.tbi"
+    log:
+        "logs/{refGenome}/norm_gvcf/{sample}.txt"
+    benchmark:
+        "benchmarks/{refGenome}/norm_gvcf/{sample}.txt"
+    resources:
+        tmpdir = get_big_temp
+    conda:
+        "../envs/bcftools.yml"
+    shell:
+        """
+        bcftools norm -m +any -Oz -o {output.gvcf} {input.gvcf}
         tabix -p vcf {output.gvcf}
         """
 
