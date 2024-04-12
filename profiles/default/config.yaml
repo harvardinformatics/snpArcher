@@ -28,6 +28,7 @@ set-threads:
   # GVCF 
   bam2gvcf: 1 # Should be run with no more than 2 threads.
   concat_gvcfs: 1 # Does NOT use more than 1 thread.
+  bcftools_norm: 1 # Does NOT use more than 1 thread.
   create_db_mapfile: 1 # Does NOT use more than 1 thread.
   gvcf2DB: 1 # Should be run with no more than 2 threads.
   # VCF
@@ -126,6 +127,8 @@ set-threads:
 #     mem_mb: attempt * 200 # Mem allocated to the snakemake job
 #     mem_mb_reduced: (attempt * 200) * 0.9 # Mem allocated to java (tries to prevent OOM errors)
 #   concat_gvcfs:
+#     mem_mb: attempt * 200
+#   bcftools_norm:
 #     mem_mb: attempt * 200
 #   create_db_mapfile:
 #     mem_mb: attempt * 200
