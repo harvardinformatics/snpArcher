@@ -14,6 +14,7 @@ bigtmp: "" #Set to a path with lots of free space to use for commands that requi
 cov_filter: True #set to True if you want to include coverage thresholds in the callable sites bed file (default uses mappability only)
 generate_trackhub: True #Set to true if you want to generate a Genome Browser Trackhub. Dependent on postprocessing module.
 trackhub_email: "hi@website.com"
+mark_duplicates: True
 ##############################
 # Variables you *might* need to change
 ##############################
