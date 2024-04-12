@@ -292,7 +292,7 @@ def get_input_sumstats(wildcards):
 
 def get_input_for_mapfile(wildcards):
     sample_names = samples.loc[(samples["refGenome"] == wildcards.refGenome)]["BioSample"].unique().tolist()
-    return expand("results/{{refGenome}}/gvcfs/{sample}.g.vcf.gz", sample=sample_names)
+    return expand("results/{{refGenome}}/gvcfs_norm/{sample}.g.vcf.gz", sample=sample_names)
 
 
 def get_input_for_coverage(wildcards):
