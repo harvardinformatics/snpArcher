@@ -130,6 +130,15 @@ def get_ref(wildcards):
                     f"Will try to download '{wildcards.refGenome}' from NCBI. If this is a genome accession, you can ignore this warning.")
     return []
 
+def get_bams(wc):
+    out = {"bam": None, "bai": None}
+    if config["mark_duplicates"]:
+        out["bam"] = "results/{refGenome}/bams/{sample}_final.bam"
+        out["bai"] = "results/{refGenome}/bams/{sample}_final.bam.bai"
+        return out
+    else:
+        return dedup_input(wc)
+
 def sentieon_combine_gvcf_cmd_line(wc):
     gvcfs = sentieon_combine_gvcf_input(wc)["gvcfs"]
     return " ".join(["-v " + gvcf for gvcf in gvcfs])

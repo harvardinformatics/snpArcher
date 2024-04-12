@@ -1,7 +1,6 @@
 rule bam_sumstats:
     input:
-        bam = "results/{refGenome}/bams/{sample}_final.bam",
-        bai = "results/{refGenome}/bams/{sample}_final.bam.bai",
+        unpack(get_bams),
         ref = "results/{refGenome}/data/genome/{refGenome}.fna",
     output:
         cov = "results/{refGenome}/summary_stats/{sample}_coverage.txt",
@@ -16,8 +15,7 @@ rule bam_sumstats:
 
 rule sentieon_bam_stats:
     input:
-        bam = "results/{refGenome}/bams/{sample}_final.bam",
-        bai = "results/{refGenome}/bams/{sample}_final.bam.bai",
+        unpack(get_bams),
         indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"]),
         ref = "results/{refGenome}/data/genome/{refGenome}.fna"
     params:

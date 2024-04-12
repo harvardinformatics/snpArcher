@@ -1,7 +1,6 @@
 rule compute_d4:
     input:
-        bam = "results/{refGenome}/bams/{sample}_final.bam",
-        bai = "results/{refGenome}/bams/{sample}_final.bam.bai",
+        unpack(get_bams)
     output:
         "results/{refGenome}/callable_sites/{sample}.mosdepth.global.dist.txt",
         temp("results/{refGenome}/callable_sites/{sample}.per-base.d4"),
