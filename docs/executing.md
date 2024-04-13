@@ -46,7 +46,7 @@ Snakemake [supports most cluster schedulers](https://snakemake.github.io/snakema
 ### SLURM
 #### Install plugin
 To execute snpArcher on a SLURM cluster, you will need to install the [SLURM executor plugin](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html) into the snpArcher environment.
-```{shell}
+```shell
 conda activate snpArcher
 pip install pip install snakemake-executor-plugin-slurm
 ```
@@ -54,7 +54,7 @@ pip install pip install snakemake-executor-plugin-slurm
 To specify resources for the workflow to SLURM, you must use a workflow profile. We have provided a SLURM profile template (`profiles/slurm`) which you can modify to specify SLURM partitions, memory allocation, etc. Please refer to the [profiles setup section](./setup.md#resources) for more details. 
 
 Additionally, the SLURM profile specifies required and recommended Snakemake options:
-```{yaml}
+```yaml
 executor: slurm
 use-conda: True
 jobs: 100 # Have up to N jobs submitted at any given time
@@ -64,7 +64,7 @@ retries: 3 # Retry jobs N times.
 
 #### Running the workflow
 Once you have modified the SLURM profile appropriately, you can run snpArcher with the following command:
-```{shell}
+```shell
 snakemake --workflow-profile profiles/slurm <other options>
 ```
 Depending on your cluster, you can run this command on the head node and Snakemake will submit jobs to the SLURM queue. You can also submit this command via `srun` or `sbatch`.
