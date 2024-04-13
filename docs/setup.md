@@ -113,6 +113,7 @@ The following options in `config/config.yaml` must be set before running snpArch
 | `trackhub_email` | Trackhubs require an email address | `str` | `True` if `generate_trackhub==True` | `None` |
 | `refGenome` | Reference genome name or accession | `str` | `True` if not provided in sample sheet |  `None` |
 | `refPath` | Path to reference genome if not using NCBI genome accession | `str` | `False` | `None` |
+| `mark_duplicates` | Mark optical duplicates before variant calling. | `str` | `True` | `True` |
 
 
 ### Other options
