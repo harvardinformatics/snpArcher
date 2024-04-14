@@ -63,11 +63,10 @@ rule sentieon_dedup:
 
 rule sentieon_haplotyper:
     input:
+        unpack(get_bams),
         ref = "results/{refGenome}/data/genome/{refGenome}.fna",
         indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"]),
         dictf = "results/{refGenome}/data/genome/{refGenome}.dict",
-        bam = "results/{refGenome}/bams/{sample}_final.bam",
-        bai = "results/{refGenome}/bams/{sample}_final.bam.bai"
     params:
         lic = config['sentieon_lic'],
         ploidy = config['ploidy']

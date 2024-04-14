@@ -5,12 +5,12 @@ rule bam2gvcf:
     TODO
     """
     input:
+        unpack(get_bams),
         ref = "results/{refGenome}/data/genome/{refGenome}.fna",
         indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"]),
         dictf = "results/{refGenome}/data/genome/{refGenome}.dict",
-        bam = "results/{refGenome}/bams/{sample}_final.bam",
-        bai = "results/{refGenome}/bams/{sample}_final.bam.bai",
-        l = "results/{refGenome}/intervals/gvcf_intervals/{l}-scattered.interval_list"
+        l = "results/{refGenome}/intervals/gvcf_intervals/{l}-scattered.interval_list",
+        
     output:
         gvcf = "results/{refGenome}/interval_gvcfs/{sample}/{l}.raw.g.vcf.gz",
         gvcf_idx = "results/{refGenome}/interval_gvcfs/{sample}/{l}.raw.g.vcf.gz.tbi"
