@@ -22,8 +22,6 @@ else:
 
 samples = snparcher_utils.parse_sample_sheet(config)
 
-with open(config["resource_config"], "r") as f:
-    resources = safe_load(f)
 
 def get_output():
     
@@ -50,7 +48,8 @@ def get_output():
     for ref in genomes:
         # Workaround for Snakemake issue 2762. There is problem with running nested checkpoints in snakemake8. Adding mapfile in rule all forces gvcf interval checkpoint to run.
         # This is actually kind of a good thing to do since it makes dryrun more clear (shows all bam>gvcf jobs now).
-        out.extend(expand("results/{refGenome}/genomics_db_import/DB_mapfile.txt", refGenome=ref))
+        if not config["sentieon"]:
+            out.extend(expand("results/{refGenome}/genomics_db_import/DB_mapfile.txt", refGenome=ref))
         out.extend(
             expand( "results/{refGenome}/{prefix}_raw.vcf.gz",refGenome=ref, prefix=config["final_prefix"]))
         out.extend(
