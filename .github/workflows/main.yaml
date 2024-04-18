@@ -32,6 +32,17 @@ jobs:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
         args: "--config samples='config/ecoli_config_genome.csv' refGenome='ecoli' refPath='data/local_genome/local_genome.fna.gz' --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+  Testing_local-fastq-sentieon-dryrun:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Test workflow (Local Fastq > VCF)
+      uses: snakemake/snakemake-github-action@v1.25.1
+      with:
+        directory: .test/ecoli/
+        snakefile: workflow/Snakefile
+        args: "--config sentieon=True --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba --dry-run"
+        stagein: "conda config --set channel_priority strict"
   Testing_local-fastq_and_sra:
     runs-on: ubuntu-latest
     steps:
