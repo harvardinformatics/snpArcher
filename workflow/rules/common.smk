@@ -4,6 +4,7 @@ import tempfile
 import random
 import string
 import statistics
+import json
 from pathlib import Path
 from collections import defaultdict
 
@@ -397,21 +398,12 @@ def collectFastpOutput(fastpFiles):
     for fn in fastpFiles:
         sample = os.path.basename(fn)
         sample = sample.replace("_fastp.out", "")
-        unfiltered = 0
-        pass_filter = 0
-        f = open(fn, "r")
-        for line in f:
-            if "before filtering" in line:
-                line = next(f)
-                line = line.split()
-                unfiltered += int(line[2])
-
-            if "Filtering result" in line:
-                line = next(f)
-                line = line.split()
-                pass_filter += int(line[3])
-
-        f.close()
+        
+        
+        with open(fn, "r") as f:
+            data = json.load(f)
+        unfiltered = data["summary"]["before_filtering"]["total_reads"]
+        pass_filter = data["summary"]["after_filtering"]["total_reads"]
         FractionReadsPassFilter[sample] = float(pass_filter / unfiltered)
         NumReadsPassFilter[sample] = pass_filter
 
