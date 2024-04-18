@@ -22,8 +22,6 @@ else:
 
 samples = snparcher_utils.parse_sample_sheet(config)
 
-with open(config["resource_config"], "r") as f:
-    resources = safe_load(f)
 
 def get_output():
     

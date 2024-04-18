@@ -97,7 +97,6 @@ rule sentieon_combine_gvcf:
     params:
         glist = lambda wc, input: " ".join(["-v " + gvcf for gvcf in input['gvcfs']]),
         lic = config['sentieon_lic']
-    threads: resources['sentieon_combine_gvcf']['threads']
     conda:
         "../envs/sentieon.yml"
     log:
