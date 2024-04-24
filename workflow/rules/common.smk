@@ -73,8 +73,9 @@ def get_output():
                         )
                     )
                 out.append(rules.trackhub_all.input)
+            if config['ccgp']:
+                out.append(rules.ccgp_all.input)
     return out
-
 
 def merge_bams_input(wc):
     return expand(

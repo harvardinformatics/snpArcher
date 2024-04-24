@@ -1,0 +1,11 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base==4.1.1
+  - r-tidyverse==1.3.2
+  - r-gridextra==2.3
+  - r-patchwork==1.1.2
+  - r-zoo==1.8_11
+  - r-ggridges==0.5.4

@@ -1,0 +1,292 @@
+import pandas as pd
+import os
+include: "common.smk"
+
+configfile: "config/config.yaml"
+samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+REFGENOME = samples['refGenome'].unique().tolist()
+
+rule all:
+    input:
+        expand("results/{refGenome}/CCGP/{prefix}_filtered.froh", refGenome=REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}.1.windowed.pi", refGenome=REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.vcf.gz",refGenome=REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.dist", refGenome=REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}_roh_pi_ridges.pdf", refGenome=REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3_dosage.txt.gz", refGenome = REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6_dosage.txt.gz", refGenome = REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}_annotated_no_pruning_dosage.txt.gz", refGenome = REFGENOME, prefix=config['final_prefix'])
+        #expand("results/{refGenome}/CCGP/{prefix}.stat.gz", refGenome=REFGENOME, prefix=config['final_prefix']),
+        #expand("results/{refGenome}/CCGP/{prefix}.LD_decay.png", refGenome=REFGENOME, prefix=config['final_prefix'])
+
+rule roh:
+    input:
+        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
+    output:
+        roh = "results/{refGenome}/CCGP/{prefix}.roh.gz",
+        rg = "results/{refGenome}/CCGP/{prefix}.rg.roh"
+    conda:
+        "envs/roh.yml"
+    resources:
+       mem_mb = 128000,
+       threads = 10
+    shell:
+        """
+        bcftools roh --threads 10 -G30 --AF-dflt 0.4 -O z -o {output.roh} {input.vcf}
+        zgrep RG {output.roh} > {output.rg}
+        """
+
+rule froh:
+    input:
+        roh = "results/{refGenome}/CCGP/{prefix}.rg.roh",
+        fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
+    output:
+        froh = "results/{refGenome}/CCGP/{prefix}_filtered.froh",
+        top = "results/{refGenome}/CCGP/{prefix}_filtered_top.froh"
+    run:
+        calc_roh(input.roh, input.fai, output.froh)
+
+rule pi:
+    input:
+        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
+        top = "results/{refGenome}/CCGP/{prefix}_filtered_top.froh"
+    output:
+        pi1 = "results/{refGenome}/CCGP/{prefix}.1.windowed.pi",
+        pi2 = "results/{refGenome}/CCGP/{prefix}.2.windowed.pi",
+        pi3 = "results/{refGenome}/CCGP/{prefix}.3.windowed.pi",
+        pi4 = "results/{refGenome}/CCGP/{prefix}.4.windowed.pi",
+        pi5 = "results/{refGenome}/CCGP/{prefix}.5.windowed.pi",
+        pi6 = "results/{refGenome}/CCGP/{prefix}.6.windowed.pi",
+        pi7 = "results/{refGenome}/CCGP/{prefix}.7.windowed.pi",
+        pi8 = "results/{refGenome}/CCGP/{prefix}.8.windowed.pi",
+        pi9 = "results/{refGenome}/CCGP/{prefix}.9.windowed.pi",
+        pi10 = "results/{refGenome}/CCGP/{prefix}.10.windowed.pi"
+    conda:
+        "envs/vcftools_individuals.yml"
+    params:
+        prefix = lambda wc, input: input.top.replace("_filtered_top.froh", ""),
+    shell:
+        """
+        
+        for i in {{1..10}}
+        do
+            SAMPLE=$(sed -n "${{i}}p" {input.top})
+            vcftools --indv $SAMPLE --gzvcf {input.vcf} --out {params.prefix}.${{i}} --window-pi 10000
+        done
+        """
+
+
+rule qc_plots:
+    """
+    #next step is R script that reads in the rg.roh and the pi data. Then plots a couple of examples
+    """
+    input:
+        top = ancient("results/{refGenome}/CCGP/{prefix}_filtered_top.froh"),
+        roh = "results/{refGenome}/CCGP/{prefix}.rg.roh",
+        pi1 = "results/{refGenome}/CCGP/{prefix}.1.windowed.pi",
+        pi2 = "results/{refGenome}/CCGP/{prefix}.2.windowed.pi",
+        pi3 = "results/{refGenome}/CCGP/{prefix}.3.windowed.pi",
+        pi4 = "results/{refGenome}/CCGP/{prefix}.4.windowed.pi",
+        pi5 = "results/{refGenome}/CCGP/{prefix}.5.windowed.pi",
+        pi6 = "results/{refGenome}/CCGP/{prefix}.6.windowed.pi",
+        pi7 = "results/{refGenome}/CCGP/{prefix}.7.windowed.pi",
+        pi8 = "results/{refGenome}/CCGP/{prefix}.8.windowed.pi",
+        pi9 = "results/{refGenome}/CCGP/{prefix}.9.windowed.pi",
+        pi10 = "results/{refGenome}/CCGP/{prefix}.10.windowed.pi"
+    params:
+        prefix = lambda wc, input: input.roh[:-7]
+    resources:
+        mem_mb = 10000
+    output: 
+        roh1 = "results/{refGenome}/CCGP/{prefix}_all_indiv_roh.pdf",
+        roh2 = "results/{refGenome}/CCGP/{prefix}_pi_roh_top.pdf",
+        roh3 = "results/{refGenome}/CCGP/{prefix}_roh_pi_ridges.pdf"
+    conda:
+        "envs/rplots.yml"
+    script:
+        "scripts/roh_viz.R"
+
+rule annotate:
+    input:
+        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
+    output:
+        ann = "results/{refGenome}/CCGP/{prefix}_annotated.vcf.gz"
+    conda:
+        "envs/roh.yml"
+    shell:
+        """
+        bcftools annotate --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' -O z -o {output.ann} {input.vcf}
+        """
+
+rule plinkld:
+    input:
+        vcf = "results/{refGenome}/CCGP/{prefix}_annotated.vcf.gz"
+    output:
+        ld = "results/{refGenome}/CCGP/{prefix}_0.3.prune.in",
+        ld2 = "results/{refGenome}/CCGP/{prefix}_0.3.prune.out",
+        ld3 = "results/{refGenome}/CCGP/{prefix}_0.6.prune.in",
+        ld4 = "results/{refGenome}/CCGP/{prefix}_0.6.prune.out"
+    resources:
+       threads = 10,
+       mem_mb = 128000
+    params:
+        prefix1 = lambda wc, input: input.vcf.replace("_annotated.vcf.gz", "_0.3"),
+        prefix2 = lambda wc, input: input.vcf.replace("_annotated.vcf.gz", "_0.6")
+    conda:
+        "envs/plink.yml"
+    shell:
+        """
+        plink2 --vcf {input.vcf} --make-bed --indep-pairwise 50 5 0.6 --out {params.prefix1} --allow-extra-chr --autosome-num 95 --const-fid --bad-freqs
+        plink2 --vcf {input.vcf} --make-bed --indep-pairwise 50 5 0.3 --out {params.prefix2} --allow-extra-chr --autosome-num 95 --const-fid --bad-freqs 
+        """
+
+rule prunevcf:
+    input:
+        vcf = "results/{refGenome}/CCGP/{prefix}_annotated.vcf.gz",
+        ld3 = "results/{refGenome}/CCGP/{prefix}_0.3.prune.in",
+        ld6 = "results/{refGenome}/CCGP/{prefix}_0.6.prune.in"
+    output:
+        pruned3 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.vcf.gz",
+        pruned6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz",
+    resources:
+       mem_mb = 64000,
+    conda:
+        "envs/roh.yml"
+    shell:
+        """
+        bcftools view -i 'ID=@{input.ld3}' -O z -o {output.pruned3} {input.vcf}
+        bcftools view -i 'ID=@{input.ld6}' -O z -o {output.pruned6} {input.vcf}
+        """
+
+rule plink:
+    """
+    Call plink distance mat.
+    """
+    input:
+        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
+        pruned3 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.vcf.gz",
+        pruned6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz"     
+    params:
+        prefix = lambda wc, input: input.pruned3.replace("_annotated_pruned_0.3.vcf.gz", "_filtered"),
+        prefix3 = lambda wc, input: input.pruned3.replace(".vcf.gz", ""),
+        prefix6 = lambda wc, input: input.pruned6.replace(".vcf.gz", "")
+    output: 
+        dist = "results/{refGenome}/CCGP/{prefix}_filtered.dist",
+        distid = "results/{refGenome}/CCGP/{prefix}_filtered.dist.id",
+        dist3 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.dist",
+        distid3 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.dist.id",
+        dist6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.dist",
+        distid6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.dist.id"
+    resources:
+       mem_mb = 128000
+    conda:
+        "envs/plink.yml"
+    shell:
+        #plink 1.9 for distance matrix
+        """
+        plink --vcf {input.vcf} --out {params.prefix} --allow-extra-chr --autosome-num 95 --distance square --const-fid --memory 128000
+        plink --vcf {input.pruned3} --out {params.prefix3} --allow-extra-chr --autosome-num 95 --distance square --const-fid --memory 128000
+        plink --vcf {input.pruned6} --out {params.prefix6} --allow-extra-chr --autosome-num 95 --distance square --const-fid --memory 128000
+        """
+
+rule vcf2dosage:
+    input:
+        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
+    output:
+        dosage = "results/{refGenome}/CCGP/{prefix}_annotated_no_pruning_dosage.txt.gz",
+    resources:
+       mem_mb = 64000,
+    run:
+        initial_memory = get_memory_usage()
+        vcf2dosage(input.vcf, output.dosage)
+        final_memory = get_memory_usage()
+        print(f"Memory used by vcf2dosage function: {final_memory - initial_memory} bytes")
+
+rule vcf2dosage03:
+    input:
+        pruned3 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3.vcf.gz",
+    output:
+        dosage = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.3_dosage.txt.gz",
+    resources:
+       mem_mb = 64000,
+    run:
+        initial_memory = get_memory_usage()
+        vcf2dosage(input.pruned3, output.dosage)
+        final_memory = get_memory_usage()
+        print(f"Memory used by vcf2dosage function: {final_memory - initial_memory} bytes")
+
+rule vcf2dosage06:
+    input:
+        pruned6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz",
+    output:
+        dosage = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6_dosage.txt.gz",
+    resources:
+       mem_mb = 64000,
+    run:
+        initial_memory = get_memory_usage()
+        vcf2dosage(input.pruned6, output.dosage)
+        final_memory = get_memory_usage()
+        print(f"Memory used by vcf2dosage function: {final_memory - initial_memory} bytes")
+
+#generally here are the problems with running lddecay:
+#can run with a singularity docker file, but this is not allowed by google life sciences
+#so this could be run locally, in theory
+#try setting it as a local rule?
+
+#doing custom install fails, becuase there is no conda for  zlib1g-dev
+#and "zlib" alone is not enough
+
+# rule ld:
+#     input:
+#         vcf = "results/{refGenome}/QC/{prefix}_filteredQC.vcf.gz"
+#     output:
+#         decay = "results/{refGenome}/CCGP/{prefix}.stat.gz",
+#         decayplot = "results/{refGenome}/CCGP/{prefix}.LD_decay.png"
+#     conda:
+#         "envs/ld.yml"
+#     params:
+#         prefix = lambda wc, input: os.path.join(input.vcf.rsplit("/", 1)[0], "QC", wc.prefix),
+#     shell:
+#         """
+#         sudo apt-get install zlib1g-dev        
+#         if [ ! -d PopLDdecay ]; then
+#             git clone https://github.com/hewm2008/PopLDdecay.git 
+#         fi
+
+#         cd PopLDdecay; chmod 755 configure; ./configure;
+#         make;
+#         mv PopLDdecay  bin/;   
+#         cd ..
+#         ./PopLDdecay/bin/PopLDdecay -MaxDist 50 -InVCF {input.vcf} -OutStat {output.decay}
+#         ./PopLDdecay/bin/Plot_OnePop.pl -inFile {output.decay} -output {output.decayplot} -keepR
+
+#         """
+        # PopLDdecay -MaxDist 50 -InVCF {input.vcf} -OutStat {output.decay}
+        # """
+
+# rule ldplot:
+#     input:
+#         decay = "results/{refGenome}/CCGP/{prefix}.stat.gz"
+#     output:
+#         decayplot = "results/{refGenome}/CCGP/{prefix}.LD_decay.png"
+#     singularity:
+#         "shub://jlboat/BioinfoContainers:poplddecay"
+#     shell:
+#         """
+#         Plot_OnePop.pl -inFile {input.decay} -output {output.decayplot} -keepR
+#         """
+
+    # shell:
+    #     """
+    #     bcftools -h
+        
+    #     if [ ! -d PopLDdecay ]; then
+    #         git clone https://github.com/hewm2008/PopLDdecay.git 
+    #     fi
+
+    #     cd PopLDdecay; chmod 755 configure; ./configure;
+    #     make;
+    #     mv PopLDdecay  bin/;   
+    #     cd ..
+    #     ./PopLDdecay/bin/PopLDdecay -MaxDist 50 -InVCF {input.vcf} -OutStat {params.prefix}
+    #     """
