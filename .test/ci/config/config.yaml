@@ -15,6 +15,7 @@ cov_filter: True #set to True if you want to include coverage thresholds in the 
 generate_trackhub: True #Set to true if you want to generate a Genome Browser Trackhub. Dependent on postprocessing module.
 trackhub_email: "hi@website.com"
 mark_duplicates: True
+sort_reads: False
 ##############################
 # Variables you *might* need to change
 ##############################
