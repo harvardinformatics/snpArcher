@@ -50,8 +50,6 @@ rule fastp:
             sortbyname.sh in={input.r1} out={wildcards.run}_sorted_R1.fastq.gz
             sortbyname.sh in={input.r2} out={wildcards.run}_sorted_R2.fastq.gz
 
-            echo {params.sortreads}
-
             fastp --in1 {wildcards.run}_sorted_R1.fastq.gz --in2 {wildcards.run}_sorted_R2.fastq.gz \
             --out1 {output.r1} --out2 {output.r2} \
             --thread {threads} \
