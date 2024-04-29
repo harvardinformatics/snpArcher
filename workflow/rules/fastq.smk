@@ -41,10 +41,32 @@ rule fastp:
         "logs/{refGenome}/fastp/{sample}/{run}.txt"
     benchmark:
         "benchmarks/{refGenome}/fastp/{sample}_{run}.txt"
+    params:
+        sort_reads = config['sort_reads']
     shell:
-        "fastp --in1 {input.r1} --in2 {input.r2} "
-        "--out1 {output.r1} --out2 {output.r2} "
-        "--thread {threads} "
-        "--detect_adapter_for_pe "
-        "-j {output.summ} -h /dev/null "
-        " &>{log}"
+        """
+        if [ {params.sort_reads} = "True" ]; then
+        
+            sortbyname.sh in={input.r1} out={wildcards.run}_sorted_R1.fastq.gz
+            sortbyname.sh in={input.r2} out={wildcards.run}_sorted_R2.fastq.gz
+
+            echo {params.sortreads}
+
+            fastp --in1 {wildcards.run}_sorted_R1.fastq.gz --in2 {wildcards.run}_sorted_R2.fastq.gz \
+            --out1 {output.r1} --out2 {output.r2} \
+            --thread {threads} \
+            --detect_adapter_for_pe \
+            -j {output.summ} -h /dev/null \
+            &>{log}
+
+            rm {wildcards.run}_sorted_R1.fastq.gz
+            rm {wildcards.run}_sorted_R2.fastq.gz
+        else
+            fastp --in1 {input.r1} --in2 {input.r2} \
+            --out1 {output.r1} --out2 {output.r2} \
+            --thread {threads} \
+            --detect_adapter_for_pe \
+            -j {output.summ} -h /dev/null \
+            &>{log}
+        fi
+        """

@@ -114,7 +114,7 @@ The following options in `config/config.yaml` must be set before running snpArch
 | `refGenome` | Reference genome name or accession | `str` | `True` if not provided in sample sheet |  `None` |
 | `refPath` | Path to reference genome if not using NCBI genome accession | `str` | `False` | `None` |
 | `mark_duplicates` | Mark optical duplicates before variant calling. | `str` | `True` | `True` |
-
+| `sort_reads` | Sort reads by read name before running adapter trimming. | `str` | `True` | `False` |
 
 ### Other options
 The following options can be adjusted based on your needs and your dataset.
