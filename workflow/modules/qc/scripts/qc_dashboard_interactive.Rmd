@@ -59,9 +59,6 @@ tot_snps <- snps_remain + fil_snps
 
 proj_name <- basename(prefix)
 
-#rough estimate of diversity as #snps / total
-div_est <- round((tot_snps - fil_snps) / genome_size, 3)
-
 #num SNPs in pruned data
 nums.nps <- nrow(read.table(paste0(prefix, ".bim"), header = T))
 
