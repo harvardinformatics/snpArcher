@@ -36,7 +36,6 @@ Row
 -----------------------------------------------------------------------
 
 ```{r numsnps}
-
 #fai file for getting genome length
 fai_path <- paste0(prefix, ".fna.fai")
 df_fai <- read.table(fai_path, header = F)
@@ -48,25 +47,20 @@ df_sum <- read.table(sum_path, header =T)
 
 #total number of SNPs found by pipeline
 first_line <- df_sum %>% filter(FILTER == ".")
-tot_snps <- first_line[1,2]
+snps_remain <- first_line[1,2]
+snps_remain.m <- round(snps_remain / 1000000,1)
 
 #how many SNPs got filtered
 other_lines <- df_sum %>% 
   filter(FILTER!=".") %>% 
   summarise(sum_snps = sum(N_VARIANTS))
 fil_snps <- other_lines[1,1]  
+tot_snps <- snps_remain + fil_snps
 
 proj_name <- basename(prefix)
 
-#rough estimate of diversity as #snps / total
-div_est <- round((tot_snps - fil_snps) / genome_size, 3)
-
-
-snps_remain <- tot_snps - fil_snps
-snps_remain.m <- round(snps_remain / 1000000,1)
 #num SNPs in pruned data
 nums.nps <- nrow(read.table(paste0(prefix, ".bim"), header = T))
-
 
 #estimate watterson's theta:
 num.samples <- nrow(read.table(paste0(prefix, ".idepth"), header = T))
