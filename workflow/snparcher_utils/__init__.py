@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
+
 try:
     # Snakemake 8.x.x
     from snakemake_interface_common.exceptions import WorkflowError
@@ -9,7 +10,13 @@ except ImportError:
     from snakemake.exceptions import WorkflowError
 
 def parse_sample_sheet(config: dict) -> pd.DataFrame:
-    samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+    samples = (
+        pd.read_table(config["samples"], sep=",", dtype=str)
+        .replace(" ", "_", regex=True)
+        .infer_objects(
+            copy=False
+        )  # needed to maintain same behavior in future pandas versions
+    )
     config_genomes = get_config_genomes(config, samples)
     refGenome = 'refGenome' in samples.columns and samples['refGenome'].notna().any()
     refPath = 'refPath' in samples.columns and samples['refPath'].notna().any()
@@ -49,5 +56,3 @@ def check_ref_paths(samples: pd.DataFrame) -> None:
         for ref in refs:        
             if not Path(ref).exists:
                 raise WorkflowError(f"refPath: '{ref}' was specified in sample sheet, but could not be found.")
-
-
