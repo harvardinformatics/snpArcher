@@ -103,6 +103,8 @@ rule DB2vcf:
     input:
         db = "results/{refGenome}/genomics_db_import/DB.tar",
         ref = "results/{refGenome}/data/genome/{refGenome}.fna",
+        fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
+        dictf = "results/{refGenome}/data/genome/{refGenome}.dict",
     output:
         vcf = temp("results/{refGenome}/vcfs/raw.vcf.gz"),
         vcfidx = temp("results/{refGenome}/vcfs/raw.vcf.gz.tbi"),
@@ -135,7 +137,9 @@ rule filterVcfs:
     input:
         vcf = "results/{refGenome}/vcfs/raw.vcf.gz",
         vcfidx = "results/{refGenome}/vcfs/raw.vcf.gz.tbi",
-        ref = "results/{refGenome}/data/genome/{refGenome}.fna"
+        ref = "results/{refGenome}/data/genome/{refGenome}.fna",
+        fai = "results/{refGenome}/data/genome/{refGenome}.fna.fai",
+        dictf = "results/{refGenome}/data/genome/{refGenome}.dict",
     output:
         vcf = temp("results/{refGenome}/vcfs/filtered.vcf.gz"),
         vcfidx = temp("results/{refGenome}/vcfs/filtered.vcf.gz.tbi")
