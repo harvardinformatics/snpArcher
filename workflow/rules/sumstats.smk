@@ -44,8 +44,8 @@ rule collect_fastp_stats:
         collect_fastp_stats_input
     output:
         "results/{refGenome}/summary_stats/{sample}_fastp.out"
-    shell:
-        "cat {input} > {output}"
+    run:
+        combine_fastp_files(input, output)
 
 rule collect_sumstats:
     input:
