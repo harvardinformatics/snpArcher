@@ -51,7 +51,7 @@ conda activate snpArcher
 pip install pip install snakemake-executor-plugin-slurm
 ```
 #### Profile Setup
-To specify resources for the workflow to SLURM, you must use a workflow profile. We have provided a SLURM profile template (`profiles/slurm`) which you can modify to specify SLURM partitions, memory allocation, etc. Please refer to the [profiles setup section](./setup.md#resources) for more details. 
+To specify resources for the workflow to SLURM, you must use a workflow profile. We have provided a SLURM profile template (`profiles/slurm/config.yaml`) which you can modify to specify SLURM partitions, memory allocation, etc. Please refer to the [profiles setup section](./setup.md#resources) for more details. 
 
 Additionally, the SLURM profile specifies required and recommended Snakemake options:
 ```yaml
@@ -70,6 +70,9 @@ snakemake --workflow-profile profiles/slurm <other options>
 Depending on your cluster, you can run this command on the head node and Snakemake will submit jobs to the SLURM queue. You can also submit this command via `srun` or `sbatch`.
 
 ## Cloud Execution
+```{warning}
+Google Lifesciences execution is not supported by Snakemake versions >8. Please use Snakemake v7.32.4 if you would like to use this execution mode.
+```
 Like cluster execution, Snakemake [supports a number of cloud providers](https://snakemake.readthedocs.io/en/stable/executing/cloud.html). Here we provide documentation for executing using Snakemake's Google Lifesciences integration. Please refer to Snakemake's documentation for details on using other cloud providers.
 ### Google Lifesciences
 Snakemake's integration with the Google Lifesciences (GLS) API allows you to easily run snpArcher on the Google Cloud Platform (GCP). Using this execution mode allows you to take advantage of hundreds or thousands of GCP virtual machine instances. Snakemake manages deploying instances, running jobs, and deleting instances with finished jobs. Furthermore, you can use preemptible instances which are offered at a large cost discount, but can only run for a maximum of 24 hours. 
@@ -111,11 +114,11 @@ If you are using data hosted on NCBI, you do not need to upload those data to yo
 Some users may want to store their raw reads in a separate bucket from where the workflow will store files. To do so, you can specify the remote prefix in `config/config.yaml`.
 
 #### Running the workflow
-Once your credentials and data are setup, you can run snpArcher using the included profiles. If you are using the default GATK based workflow select `profiles/gls-gatk`, for Sentieon use `profiles/gls-sentieon`. These profiles are set to use preemptible instances and run a maximum of 150 jobs concurrently. These values can be adjusted based on your needs. 
+Once your credentials and data are setup, you can run snpArcher using the included profile `profiles/google_lifesciences/config.yaml`. You should modify this profile to set resources for the workflow such as instance type, threads, preemptible rules, etc.  
 
 To run the workflow, execute the following command:
 ```
-snakemake --profile <GLS profile> --default-remote-prefix <bucket name>
+snakemake --workflow-profile <GLS profile> --default-remote-prefix <bucket name>
 ```
 
 As the workflow runs, Snakemake will print out logging information to the terminal. Please refer [here](https://snakemake.readthedocs.io/en/stable/executor_tutorial/google_lifesciences.html#step-5-debugging) for further details.

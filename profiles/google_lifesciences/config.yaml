@@ -1,0 +1,432 @@
+google-lifesciences: True
+use-conda: True
+jobs: 50 # Have up to N jobs submitted at any given time
+latency-wait: 30 # Wait N seconds for output files due to latency
+retries: 0 # Retry jobs N times.
+
+# These resources will be applied to all rules. Can be overriden on a per-rule basis below.
+default-resources:
+  mem_mb: attempt * 8000
+  mem_mb_reduced: (attempt * 2000) * 0.9 # Mem allocated to java for GATK rules (tries to prevent OOM errors)
+  machine_type: "n2-standard-4"
+
+# Set preemptible rules and number of times to retry. 
+preemptible-rules: ["fastp=3"]
+
+# Control number of threads each rule will use.
+set-threads:
+  # Reference Genome Processing. Does NOT use more than 1 thread.
+  download_reference: 1
+  index_reference: 1
+  # Interval Generation. Does NOT use more than 1 thread.
+  format_interval_list: 1
+  create_gvcf_intervals: 1
+  create_db_intervals: 1
+  picard_intervals: 1
+  # Mappability
+  genmap: 1 # Can use more than 1 thread
+  mappability_bed: 1 # Does NOT use more than 1 thread
+  # Fastq Processing. Can use more than 1 thread.
+  get_fastq_pe: 1 
+  fastp: 6
+  # Alignment. Can use more than 1 thread, except merge_bams.
+  bwa_map: 16
+  dedup: 16
+  merge_bams: 1 # Does NOT use more than 1 thread.
+  # GVCF 
+  bam2gvcf: 1 # Should be run with no more than 2 threads.
+  concat_gvcfs: 1 # Does NOT use more than 1 thread.
+  bcftools_norm: 1 # Does NOT use more than 1 thread.
+  create_db_mapfile: 1 # Does NOT use more than 1 thread.
+  gvcf2DB: 1 # Should be run with no more than 2 threads.
+  # VCF
+  DB2vcf: 1 # Should be run with no more than 2 threads.
+  filterVcfs: 1 # Should be run with no more than 2 threads.
+  sort_gatherVcfs: 1 # Should be run with no more than 2 threads.
+  # Callable Bed
+  compute_d4: 1 # Can use more than 1 thread
+  create_cov_bed: 1 # Does NOT use more than 1 thread.
+  merge_d4: 1 # Does NOT use more than 1 thread.
+  # Summary Stats Does NOT use more than 1 thread.
+  bam_sumstats: 1
+  collect_covstats: 1
+  collect_fastp_stats: 1
+  collect_sumstats: 1
+  # QC Module Does NOT use more than 1 thread.
+  qc_admixture: 1
+  qc_check_fai: 1
+  qc_generate_coords_file: 1
+  qc_plink: 1
+  qc_qc_plots: 1
+  qc_setup_admixture: 1
+  qc_subsample_snps: 1
+  qc_vcftools_individuals: 1
+  # MK Module Does NOT use more than 1 thread.
+  mk_degenotate: 1
+  mk_prep_genome: 1
+  mk_split_samples: 1
+  # Postprocess Module Does NOT use more than 1 thread.
+  postprocess_strict_filter: 1
+  postprocess_basic_filter: 1
+  postprocess_filter_individuals: 1
+  postprocess_subset_indels: 1
+  postprocess_subset_snps: 1
+  postprocess_update_bed: 1
+  # Trackhub Module Does NOT use more than 1 thread.
+  trackhub_bcftools_depth: 1
+  trackhub_bedgraph_to_bigwig: 1
+  trackhub_calc_pi: 1
+  trackhub_calc_snpden: 1
+  trackhub_calc_tajima: 1
+  trackhub_chrom_sizes: 1
+  trackhub_convert_to_bedgraph: 1
+  trackhub_strip_vcf: 1
+  trackhub_vcftools_freq: 1
+  trackhub_write_hub_files: 1
+  # Sentieon Tools. Can use more than 1 thread, except sentieon_bam_stats.
+  sentieon_map: 1
+  sentieon_dedup: 1
+  sentieon_haplotyper: 1
+  sentieon_combine_gvcf: 1
+  sentieon_bam_stats: 1 # Does NOT use more than 1 thread.
+
+# Control other resources used by each rule.
+set-resources:
+#   # Reference Genome Processing
+#   copy_reference:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   download_reference:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   index_reference:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+
+#   # Interval Generation
+#   format_interval_list:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   create_gvcf_intervals:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   create_db_intervals:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   picard_intervals:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+
+#   # Mappability
+#   genmap:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   mappability_bed:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+  
+#   # Fastq Processing
+#   get_fastq_pe:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   fastp:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+
+#   # Alignment  
+  bwa_map:
+    machine_type: "n2-standard-16"
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+  dedup:
+    machine_type: "n2-standard-16"
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   merge_bams:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+
+#   # GVCF  
+#   bam2gvcf: # HaplotypeCaller
+#     mem_mb: attempt * 2000
+#     mem_mb_reduced: (attempt * 2000) * 0.9 # Mem allocated to java (tries to prevent OOM errors)
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task: # Mem allocated to the snakemake job
+#   concat_gvcfs:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   bcftools_norm:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   create_db_mapfile:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   gvcf2DB: # GenomicsDBImport
+#     mem_mb: attempt * 2000
+#     mem_mb_reduced: (attempt * 2000) * 0.9 # Mem allocated to java (tries to prevent OOM errors)
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+    
+#   # VCF
+#   DB2vcf: # GenotypeGVCFs
+#     mem_mb: attempt * 2000
+#     mem_mb_reduced: (attempt * 2000) * 0.9 # Mem allocated to java (tries to prevent OOM errors)
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+
+#   filterVcfs:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   sort_gatherVcfs:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+
+#   # Callable Bed  
+#   compute_d4:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   create_cov_bed:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   merge_d4:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+
+#   # Summary Stats
+#   bam_sumstats:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   collect_covstats:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   collect_fastp_stats:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   collect_sumstats:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+
+#   # QC Module
+#   qc_admixture:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   qc_check_fai:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   qc_generate_coords_file:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   qc_plink:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   qc_qc_plots:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   qc_setup_admixture:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   qc_subsample_snps:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   qc_vcftools_individuals:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+
+#   # MK Module
+#   mk_degenotate:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   mk_prep_genome:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   mk_split_samples:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+
+#   # Postprocess Module
+#   postprocess_strict_filter:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   postprocess_basic_filter:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   postprocess_filter_individuals:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   postprocess_subset_indels:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   postprocess_subset_snps:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   postprocess_update_bed:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+
+#   # Trackhub Module
+#   trackhub_bcftools_depth:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   trackhub_bedgraph_to_bigwig:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   trackhub_calc_pi:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   trackhub_calc_snpden:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   trackhub_calc_tajima:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   trackhub_chrom_sizes:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   trackhub_convert_to_bedgraph:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   trackhub_strip_vcf:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   trackhub_vcftools_freq:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   trackhub_write_hub_files:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+
+#   # Sentieon Tools
+#   sentieon_map:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   sentieon_dedup:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   sentieon_haplotyper:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   sentieon_combine_gvcf:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
+#   sentieon_bam_stats:
+#     mem_mb: attempt * 2000
+#     slurm_partition:
+#     runtime:
+#     cpus_per_task:
