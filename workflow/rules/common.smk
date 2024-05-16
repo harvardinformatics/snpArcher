@@ -417,6 +417,17 @@ def collectFastpOutput(fastpFiles):
 
     return (FractionReadsPassFilter, NumReadsPassFilter)
 
+def combine_fastp_files(fastpFiles, outputfile):
+    unfiltered = 0
+    pass_filter = 0
+    for fn in fastpFiles:
+        with open(fn, "r") as f:
+            data = json.load(f)
+        unfiltered += data["summary"]["before_filtering"]["total_reads"]
+        pass_filter += data["summary"]["after_filtering"]["total_reads"]
+    out = {"summary": {"before_filtering":{"total_reads": unfiltered}, "after_filtering":{"total_reads": pass_filter}}}
+    with open(outputfile[0], "w") as f:
+        json.dump(out, f)
 
 def collectAlnSumMets(alnSumMetsFiles):
     aln_metrics = defaultdict(dict)
