@@ -90,21 +90,20 @@ rule strict_filter:
     params:
         miss = config["missingness"],
         maf = config["maf"],
-        chr_ex = config["scaffolds_to_exclude"]
+        upper_bound = lambda wildcards: 1 - float(config["maf"]),
+        chr_ex = config["scaffolds_to_exclude"],
     resources:
         mem_mb = lambda wildcards, attempt: attempt * 4000    
     shell:
         """
-        upper_bound=$(echo "scale=2; 1 - {params.maf}" | bc)
-
         if [ -z "{params.chr_ex}" ]
         then
             bcftools view -R {input.bed} -m2 -M2 \
-            -e 'F_MISSING > {params.miss} | AF<{params.maf} | AF>$upper_bound' \
+            -e 'F_MISSING > {params.miss} | AF<{params.maf} | AF>{params.upper_bound}' \
             {input.vcf} -O u -o {output.vcf}
         else
             bcftools view -t ^{params.chr_ex} -R {input.bed} -m2 -M2 \
-            -e 'F_MISSING > {params.miss} | AF<{params.maf} | AF>$upper_bound' \
+            -e 'F_MISSING > {params.miss} | AF<{params.maf} | AF>{params.upper_bound}' \
             {input.vcf} -O u -o {output.vcf} 
         fi
         bcftools index {output.vcf}
@@ -140,8 +139,8 @@ rule subset_snps:
         vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
         idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi"
     output: 
-        vcf = temp("results/{refGenome}/{prefix}_clean_snps_1.vcf.gz"),
-        idx = temp("results/{refGenome}/{prefix}_clean_snps_1.vcf.gz.tbi")
+        vcf = temp("results/{refGenome}/postprocess/{prefix}_clean_snps_1.vcf.gz"),
+        idx = temp("results/{refGenome}/postprocess/{prefix}_clean_snps_1.vcf.gz.tbi")
     conda:
         "envs/filter.yml"    
     log:
@@ -159,10 +158,10 @@ rule drop_indel_SNPs:
     identify and remove SNPs that overlapped with indels and are coded as genotype length > 1
     """
     input: 
-        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
-        idx = "results/{refGenome}/{prefix}_clean_snps.vcf.gz.tbi"
+        vcf = "results/{refGenome}/postprocess/{prefix}_clean_snps_1.vcf.gz",
+        idx = "results/{refGenome}/postprocess/{prefix}_clean_snps_1.vcf.gz.tbi"
     output:
-        indel_snps = temp("results/{refGenome}/{prefix}_indel_snp_positions.txt"),
+        indel_snps = temp("results/{refGenome}/postprocess/{prefix}_indel_snp_positions.txt"),
         vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
         idx = "results/{refGenome}/{prefix}_clean_snps.vcf.gz.tbi"
     conda:
