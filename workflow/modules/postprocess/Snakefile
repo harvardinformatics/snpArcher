@@ -95,14 +95,16 @@ rule strict_filter:
         mem_mb = lambda wildcards, attempt: attempt * 4000    
     shell:
         """
+        upper_bound=$(echo "scale=2; 1 - {params.maf}" | bc)
+
         if [ -z "{params.chr_ex}" ]
         then
             bcftools view -R {input.bed} -m2 -M2 \
-            -e 'F_MISSING > {params.miss} | AF<{params.maf}' \
+            -e 'F_MISSING > {params.miss} | AF<{params.maf} | AF>$upper_bound' \
             {input.vcf} -O u -o {output.vcf}
         else
             bcftools view -t ^{params.chr_ex} -R {input.bed} -m2 -M2 \
-            -e 'F_MISSING > {params.miss} | AF<{params.maf}' \
+            -e 'F_MISSING > {params.miss} | AF<{params.maf} | AF>$upper_bound' \
             {input.vcf} -O u -o {output.vcf} 
         fi
         bcftools index {output.vcf}
@@ -138,8 +140,8 @@ rule subset_snps:
         vcf = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz",
         idx = "results/{refGenome}/postprocess/{prefix}_filtered.TEMP.vcf.gz.csi"
     output: 
-        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
-        idx = "results/{refGenome}/{prefix}_clean_snps.vcf.gz.tbi"
+        vcf = temp("results/{refGenome}/{prefix}_clean_snps_1.vcf.gz"),
+        idx = temp("results/{refGenome}/{prefix}_clean_snps_1.vcf.gz.tbi")
     conda:
         "envs/filter.yml"    
     log:
@@ -149,5 +151,29 @@ rule subset_snps:
     shell:
         """
         bcftools view -v snps -e 'TYPE ~ "indel"' -O z -o {output.vcf} {input.vcf}
+        bcftools index -t {output.vcf}
+        """
+
+rule drop_indel_SNPs:
+    """
+    identify and remove SNPs that overlapped with indels and are coded as genotype length > 1
+    """
+    input: 
+        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
+        idx = "results/{refGenome}/{prefix}_clean_snps.vcf.gz.tbi"
+    output:
+        indel_snps = temp("results/{refGenome}/{prefix}_indel_snp_positions.txt"),
+        vcf = "results/{refGenome}/{prefix}_clean_snps.vcf.gz",
+        idx = "results/{refGenome}/{prefix}_clean_snps.vcf.gz.tbi"
+    conda:
+        "envs/filter.yml"    
+    log:
+        "logs/{refGenome}/postprocess/{prefix}_drop_indel_snps.txt"
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 4000
+    shell:
+        """
+        bcftools query -f '%CHROM\t%POS\t%REF\n' {input.vcf} | awk 'length($3) == 1 {{print $1"\t"$2}}' > {output.indel_snps}
+        bcftools view -R {output.indel_snps} {input.vcf} -Oz -o {output.vcf}
         bcftools index -t {output.vcf}
         """
