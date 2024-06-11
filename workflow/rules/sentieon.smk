@@ -125,15 +125,14 @@ rule filter_vcf:
     conda:
         "../envs/bam2vcf.yml"
     log:
-        "logs/{refGenome}/sentieon_combine_gvcf/{prefix}_log.txt"
+        "logs/{refGenome}/sentieon_filter_vcfs/{prefix}_log.txt"
+    shadow: "minimal"
     benchmark:
         "benchmarks/{refGenome}/sentieon_filter_vcfs/{prefix}_benchmark.txt"
     shell:
         """
         # get the contig names from the .fai index
         contigs=$(cut -f1 {input.indexes[5]})
-        
-        mkdir -p temp_vcfs
         
         # create a function that will be passed to gnu parallel
         filter_contig() {{
@@ -142,7 +141,7 @@ rule filter_vcf:
             gatk VariantFiltration \
                 -R {input.ref} \
                 -V {input.vcf} \
-                --output temp_vcfs/{wildcards.refGenome}_{wildcards.prefix}_raw_${{contig}}.vcf.gz \
+                --output {wildcards.refGenome}_{wildcards.prefix}_raw_${{contig}}.vcf.gz \
                 -L ${{contig}} \
                 --filter-name "RPRS_filter" \
                 --filter-expression "(vc.isSNP() && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -8.0)) || ((vc.isIndel() || vc.isMixed()) && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -20.0)) || (vc.hasAttribute('QD') && QD < 2.0)" \
@@ -160,9 +159,6 @@ rule filter_vcf:
         # pass each contig to gnu parallel
         parallel -j {threads} filter_contig ::: ${{contigs}}
         
-        bcftools concat -D -a -Ou temp_vcfs/{wildcards.refGenome}_{wildcards.prefix}_raw_*.vcf.gz 2> {log}| bcftools sort -T {threads} -Oz -o {output.vcf} - 2>> {log}
+        bcftools concat -D -a -Ou {wildcards.refGenome}_{wildcards.prefix}_raw_*.vcf.gz 2> {log}| bcftools sort -T {threads} -Oz -o {output.vcf} - 2>> {log}
         tabix -p vcf {output.vcf} 2>> {log}
-        
-        # Clean up
-        rm -rf temp_vcfs
         """
