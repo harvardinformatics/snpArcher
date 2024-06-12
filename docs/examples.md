@@ -90,14 +90,18 @@ refPath: "/storage/data/bird.fa.gz"
 ```
 
 ## Profile setup
-Snakemake uses profile YAML files to specify commonly used command line arguments, so you don't have to remember all of the arguments you need. Read more about profiles [here](https://snakemake.readthedocs.io/en/stable/executing/cli.html#profiles). To specify a profile, you can use the `--workflow-profile` option when running Snakemake. snpArcher comes with two profiles, `default` and `slurm`, found in the `profiles` directory of the repository. The default profile will be used automatically when running Snakemake, even without the flag `--workflow-profile`. 
+Snakemake uses profile YAML files to specify commonly used command line arguments, so you don't have to remember all of the arguments you need. Read more about profiles [here](https://snakemake.readthedocs.io/en/stable/executing/cli.html#profiles). To specify a profile, you can use the `--workflow-profile` option when running Snakemake. snpArcher comes with two profiles, `default` and `slurm`, found in the `profiles` directory of the repository. We suggest that you copy the `profiles` directory to your project directory for reproducibility:
+
+```
+cp -r snpArcher/profiles projects/secretarybird_reseq
+```
 
 The profile also enables you to specify the compute resources any of snpArcher's rules can use. This is done via the YAML keys `default-resources`, `set-resources`, and `set-threads`. `default-resources` will apply to all rules, and `set-resources` can be applied to indiviudal rules, overriding what the default was set to. There is no way to set a default thread value. 
 
 First, we will specify how many threads each rule can use. This is the same using the default or SLURM profile. Both profiles come with reasonable default thread values, but you may need to adjust based on your system or cluster. 
 
 Let's say we wanted the alignment step (bwa mem) to use more threads:
-```{yaml}
+```
 # ...
 set-threads:
   bwa_map: 16 # Changed from 8 to 16.
@@ -108,7 +112,7 @@ Next, we will specify memory and other resources. This step only applies if you 
 In our example cluster, we have two compute partitions, "short" and "long". So we want to put long running jobs on the "long" partition, and the rest on "short". Additionally, the "short" partition has a timelimit of 1 hour and "long" 10 hours, so we will specify that. 
 
 First, lets specify the default resources:
-```{yaml}
+```
 default-resources:
   mem_mb: attempt * 2000
   mem_mb_reduced: (attempt * 2000) * 0.9 # Mem allocated to java for GATK rules (tries to prevent OOM errors)
@@ -117,7 +121,7 @@ default-resources:
   runtime: 60 # In minutes 
 ```
 Then, lets modify the specific resources for the GATK HaplotypeCaller step:
-```{yaml}
+```
 set-resources:
 # ... other rules
    bam2gvcf: # HaplotypeCaller <--- This line was uncommented
@@ -130,11 +134,11 @@ set-resources:
 ## Running the workflow
 We are now ready to run the workflow! From our working directory we can run the command:
 ```
-snakemake -s snpArcher/workflow/Snakefile -d projects/secretarybird_reseq
+snakemake -s snpArcher/workflow/Snakefile -d projects/secretarybird_reseq --workflow-profile projects/secretarybird_reseq/profiles/default
 ```
-This instructs Snakemake to use snpArcher's workflow file, and to run in the project directory we setup using the config and sample sheet we setup there. This will also use the default profile found in `snpArcher/profiles/default`. 
+This instructs Snakemake to use snpArcher's workflow file, and to run in the project directory we setup using the config and sample sheet we setup there.
 
 If we were on a SLURM cluster, we would specify the slurm profile:
 ```
-snakemake -s snpArcher/workflow/Snakefile -d projects/secretarybird_reseq --workflow-profile snpArcher/profiles/slurm
+snakemake -s snpArcher/workflow/Snakefile -d projects/secretarybird_reseq --workflow-profile projects/secretarybird_reseqprofiles/slurm
 ```
