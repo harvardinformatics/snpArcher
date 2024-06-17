@@ -46,8 +46,6 @@ rule basic_filter:
         filtered_idx = "results/{refGenome}/{prefix}_filtered.vcf.gz.csi"
     conda:
         "envs/filter.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * 4000
     shell:
         """
         bcftools view -S {input.include} -f .,PASS {input.vcf} -a -U -O u | bcftools +fill-tags -Ou |
@@ -67,8 +65,6 @@ rule update_bed:
         tmp_bed = temp("results/{refGenome}/postprocess/{prefix}_tmp.bed")
     conda:
         "envs/bed.yml"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * 4000
     params:
         size_filter = config["contig_size"],
     shell:
@@ -91,9 +87,7 @@ rule strict_filter:
         miss = config["missingness"],
         maf = config["maf"],
         upper_bound = lambda wildcards: 1 - float(config["maf"]),
-        chr_ex = config["scaffolds_to_exclude"],
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * 4000    
+        chr_ex = config["scaffolds_to_exclude"],   
     shell:
         """
         if [ -z "{params.chr_ex}" ]
@@ -123,8 +117,6 @@ rule subset_indels:
         "envs/filter.yml"
     log:
         "logs/{refGenome}/postprocess/{prefix}_subset_indels.txt"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * 4000
     shell:
         """
         bcftools view -v indels -O z -o {output.vcf} {input.vcf}
@@ -145,8 +137,6 @@ rule subset_snps:
         "envs/filter.yml"    
     log:
         "logs/{refGenome}/postprocess/{prefix}_subset_snps.txt"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * 4000
     shell:
         """
         bcftools view -v snps -e 'TYPE ~ "indel"' -O z -o {output.vcf} {input.vcf}
@@ -168,8 +158,6 @@ rule drop_indel_SNPs:
         "envs/filter.yml"    
     log:
         "logs/{refGenome}/postprocess/{prefix}_drop_indel_snps.txt"
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * 4000
     shell:
         """
         bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\n' {input.vcf} | awk 'length($3) == 1 {{print $1"\t"$2}}' | bgzip -c > {output.keep_snps} 
