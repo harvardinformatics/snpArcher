@@ -138,11 +138,12 @@ rule filter_vcf:
         filter_contig() {{
             contig=$1
             echo $contig
-            gatk VariantFiltration \
+
+            gatk --java-options "-Xmx4g" VariantFiltration \
                 -R {input.ref} \
-                -V {input.vcf} \
-                --output {wildcards.refGenome}_{wildcards.prefix}_raw_${{contig}}.vcf.gz \
                 -L ${{contig}} \
+                -V {input.vcf} \
+                --output {wildcards.refGenome}_{wildcards.prefix}_filter_${{contig}}.vcf.gz \
                 --filter-name "RPRS_filter" \
                 --filter-expression "(vc.isSNP() && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -8.0)) || ((vc.isIndel() || vc.isMixed()) && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -20.0)) || (vc.hasAttribute('QD') && QD < 2.0)" \
                 --filter-name "FS_SOR_filter" \
@@ -157,8 +158,8 @@ rule filter_vcf:
         export -f filter_contig
         
         # pass each contig to gnu parallel
-        parallel -j {threads} filter_contig ::: ${{contigs}}
+        parallel -j {threads} filter_contig ::: ${{contigs}} 2> {log}
         
-        bcftools concat -D -a -Ou {wildcards.refGenome}_{wildcards.prefix}_raw_*.vcf.gz 2> {log}| bcftools sort -T {threads} -Oz -o {output.vcf} - 2>> {log}
+        bcftools concat {wildcards.refGenome}_{wildcards.prefix}_filter_*.vcf.gz --threads {threads} -Oz -o {output.vcf} 2>> {log}
         tabix -p vcf {output.vcf} 2>> {log}
         """
