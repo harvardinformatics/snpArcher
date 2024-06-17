@@ -111,7 +111,7 @@ rule sentieon_combine_gvcf:
 
 rule filter_vcf:
     """
-    This rule applies filters to the raw vcf.
+    This rule applies filters to the raw vcf using GNU Parallel.
     """
     input:
         vcf = "results/{refGenome}/vcfs/raw.vcf.gz",
@@ -125,20 +125,41 @@ rule filter_vcf:
     conda:
         "../envs/bam2vcf.yml"
     log:
-        "logs/{refGenome}/sentieon_combine_gvcf/{prefix}_log.txt"
+        "logs/{refGenome}/sentieon_filter_vcfs/{prefix}_log.txt"
+    shadow: "minimal"
     benchmark:
-        "benchmarks/{refGenome}/sentieon_combine_gvcf/{prefix}_benchmark.txt"
+        "benchmarks/{refGenome}/sentieon_filter_vcfs/{prefix}_benchmark.txt"
     shell:
-        "gatk VariantFiltration "
-        "-R {input.ref} "
-        "-V {input.vcf} "
-        "--output {output.vcf} "
-        "--filter-name \"RPRS_filter\" "
-        "--filter-expression \"(vc.isSNP() && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -8.0)) || ((vc.isIndel() || vc.isMixed()) && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -20.0)) || (vc.hasAttribute('QD') && QD < 2.0)\" "
-        "--filter-name \"FS_SOR_filter\" "
-        "--filter-expression \"(vc.isSNP() && ((vc.hasAttribute('FS') && FS > 60.0) || (vc.hasAttribute('SOR') &&  SOR > 3.0))) || ((vc.isIndel() || vc.isMixed()) && ((vc.hasAttribute('FS') && FS > 200.0) || (vc.hasAttribute('SOR') &&  SOR > 10.0)))\" "
-        "--filter-name \"MQ_filter\" "
-        "--filter-expression \"vc.isSNP() && ((vc.hasAttribute('MQ') && MQ < 40.0) || (vc.hasAttribute('MQRankSum') && MQRankSum < -12.5))\" "
-        "--filter-name \"QUAL_filter\" "
-        "--filter-expression \"QUAL < 30.0\" "
-        "--invalidate-previous-filters true &> {log}"
+        """
+        # get the contig names from the .fai index
+        contigs=$(cut -f1 {input.indexes[5]})
+        
+        # create a function that will be passed to gnu parallel
+        filter_contig() {{
+            contig=$1
+            echo $contig
+
+            gatk --java-options "-Xmx4g" VariantFiltration \
+                -R {input.ref} \
+                -L ${{contig}} \
+                -V {input.vcf} \
+                --output {wildcards.refGenome}_{wildcards.prefix}_filter_${{contig}}.vcf.gz \
+                --filter-name "RPRS_filter" \
+                --filter-expression "(vc.isSNP() && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -8.0)) || ((vc.isIndel() || vc.isMixed()) && (vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -20.0)) || (vc.hasAttribute('QD') && QD < 2.0)" \
+                --filter-name "FS_SOR_filter" \
+                --filter-expression "(vc.isSNP() && ((vc.hasAttribute('FS') && FS > 60.0) || (vc.hasAttribute('SOR') &&  SOR > 3.0))) || ((vc.isIndel() || vc.isMixed()) && ((vc.hasAttribute('FS') && FS > 200.0) || (vc.hasAttribute('SOR') &&  SOR > 10.0)))" \
+                --filter-name "MQ_filter" \
+                --filter-expression "vc.isSNP() && ((vc.hasAttribute('MQ') && MQ < 40.0) || (vc.hasAttribute('MQRankSum') && MQRankSum < -12.5))" \
+                --filter-name "QUAL_filter" \
+                --filter-expression "QUAL < 30.0" \
+                --invalidate-previous-filters true
+        }}
+        
+        export -f filter_contig
+        
+        # pass each contig to gnu parallel
+        parallel -j {threads} filter_contig ::: ${{contigs}} 2> {log}
+        
+        bcftools concat {wildcards.refGenome}_{wildcards.prefix}_filter_*.vcf.gz --threads {threads} -Oz -o {output.vcf} 2>> {log}
+        tabix -p vcf {output.vcf} 2>> {log}
+        """
