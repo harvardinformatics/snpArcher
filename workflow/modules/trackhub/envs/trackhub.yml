@@ -8,3 +8,4 @@ dependencies:
   - vcftools==0.1.16
   - ucsc-bedgraphtobigwig==377
   - ucsc-bedtobigbed==377
+  - ucsc-bedsort==466
