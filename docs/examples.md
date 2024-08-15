@@ -69,7 +69,7 @@ Now that we've created our sample sheet, we need to edit the config file we copi
 
 In our example we are using all of the default options. This will configure snpArcher to perform variant calling using GATK with the scatter-by-intervals approach. Also, we have set our reference genome name and path since we want to use the same genome for all samples in our sample sheet.
 
-```{yaml}
+```
 samples: "config/samples.csv" # path to the sample metadata CSV
 final_prefix: "" # prefix for final output files
 intervals: True #Set to True if you want to perform variant calling using interval approach.
