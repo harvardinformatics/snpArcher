@@ -53,8 +53,8 @@ rule concat_gvcfs:
         "../envs/bcftools.yml"
     shell:
         """
-        bcftools concat -D -a -Ou {input.gvcfs} | bcftools sort -T {resources.tmpdir} -Oz -o {output.gvcf} -
-        tabix -p vcf {output.gvcf}
+        bcftools concat -D -a -Ou {input.gvcfs} 2> {log} | bcftools sort -T {resources.tmpdir} -Oz -o {output.gvcf} - 2>> {log}
+        tabix -p vcf {output.gvcf} 2>> {log}
         """
 
 rule bcftools_norm:
@@ -73,8 +73,8 @@ rule bcftools_norm:
         "../envs/bcftools.yml"
     shell:
         """
-        bcftools norm -m +any -Oz -o {output.gvcf} {input.gvcf}
-        tabix -p vcf {output.gvcf}
+        bcftools norm -m +any -Oz -o {output.gvcf} {input.gvcf} 2> {log}
+        tabix -p vcf {output.gvcf} 2>> {log}
         """
 
 rule create_db_mapfile:
