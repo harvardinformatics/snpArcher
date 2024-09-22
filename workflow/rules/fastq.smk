@@ -47,8 +47,8 @@ rule fastp:
         """
         if [ {params.sort_reads} = "True" ]; then
         
-            sortbyname.sh in={input.r1} out={wildcards.run}_sorted_R1.fastq.gz
-            sortbyname.sh in={input.r2} out={wildcards.run}_sorted_R2.fastq.gz
+            sortbyname.sh -Xmx4g overwrite=true in={input.r1} out={wildcards.run}_sorted_R1.fastq.gz
+            sortbyname.sh -Xmx4g overwrite=true in={input.r2} out={wildcards.run}_sorted_R2.fastq.gz
 
             fastp --in1 {wildcards.run}_sorted_R1.fastq.gz --in2 {wildcards.run}_sorted_R2.fastq.gz \
             --out1 {output.r1} --out2 {output.r2} \
