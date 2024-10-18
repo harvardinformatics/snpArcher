@@ -28,9 +28,27 @@ rule get_fastq_pe:
         rm -rf {wildcards.run}
         """
 
-rule fastp:
+rule sort_reads:
     input:
         unpack(get_reads)
+    output:
+        r1 = temp("results/{refGenome}/sorted_reads/{sample}/{run}_1.fastq.gz"),
+        r2 = temp("results/{refGenome}/sorted_reads/{sample}/{run}_2.fastq.gz"),
+    conda:
+        "../envs/fastq2bam.yml"
+    log:
+        "logs/{refGenome}/sort_reads/{sample}/{run}.txt"
+    benchmark:
+         "benchmarks/{refGenome}/sort_reads/{sample}_{run}.txt"
+    shell:
+        """
+        sortbyname.sh in={input.r1} out={output.r1} &> {log}
+        sortbyname.sh in={input.r2} out={output.r2} &>> {log}
+        """
+
+rule fastp:
+    input:
+        unpack(get_reads_fastp) 
     output:
         r1 = "results/{refGenome}/filtered_fastqs/{sample}/{run}_1.fastq.gz",
         r2 = "results/{refGenome}/filtered_fastqs/{sample}/{run}_2.fastq.gz",
@@ -41,30 +59,12 @@ rule fastp:
         "logs/{refGenome}/fastp/{sample}/{run}.txt"
     benchmark:
         "benchmarks/{refGenome}/fastp/{sample}_{run}.txt"
-    params:
-        sort_reads = config['sort_reads']
     shell:
         """
-        if [ {params.sort_reads} = "True" ]; then
-        
-            sortbyname.sh in={input.r1} out={wildcards.run}_sorted_R1.fastq.gz
-            sortbyname.sh in={input.r2} out={wildcards.run}_sorted_R2.fastq.gz
-
-            fastp --in1 {wildcards.run}_sorted_R1.fastq.gz --in2 {wildcards.run}_sorted_R2.fastq.gz \
-            --out1 {output.r1} --out2 {output.r2} \
-            --thread {threads} \
-            --detect_adapter_for_pe \
-            -j {output.summ} -h /dev/null \
-            &>{log}
-
-            rm {wildcards.run}_sorted_R1.fastq.gz
-            rm {wildcards.run}_sorted_R2.fastq.gz
-        else
-            fastp --in1 {input.r1} --in2 {input.r2} \
-            --out1 {output.r1} --out2 {output.r2} \
-            --thread {threads} \
-            --detect_adapter_for_pe \
-            -j {output.summ} -h /dev/null \
-            &>{log}
-        fi
+        fastp --in1 {input.r1} --in2 {input.r2} \
+        --out1 {output.r1} --out2 {output.r2} \
+        --thread {threads} \
+        --detect_adapter_for_pe \
+        -j {output.summ} -h /dev/null \
+        &>{log}
         """
