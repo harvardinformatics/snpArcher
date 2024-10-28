@@ -8,7 +8,7 @@ shortLabel {genome} snpArcher Track Hub
 longLabel {genome} snpArcher Track Hub
 useOneFile on
 descriptionUrl index.html
-email {email}
+email {email}\n
 genome {genome}\n"""
 
 vcf_track_txt = """track VCF
