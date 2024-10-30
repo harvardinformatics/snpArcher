@@ -8,7 +8,7 @@ shortLabel {genome} snpArcher Track Hub
 longLabel {genome} snpArcher Track Hub
 useOneFile on
 descriptionUrl index.html
-email {email}
+email {email}\n
 genome {genome}\n"""
 
 vcf_track_txt = """track VCF
@@ -112,7 +112,7 @@ html = """<!DOCTYPE html>
   <h2>Introduction</h2>
   <p>To facilitate downstream data exploration and as an example of the module development components of this work, we
     developed a module to generate UCSC Genome Browser track files to explore population variation data (<a
-        href="https://www.biorxiv.org/content/10.1101/2023.06.22.546168v1">see preprint for details</a>).</p>
+        href="https://doi.org/10.1093/molbev/msad270">see paper for details</a>).</p>
   
   <h2>Track Descriptions</h2>
   
@@ -185,9 +185,9 @@ def main():
                 label = f"{file}_{human_format(window)}_bp bins"
                 url = f"{file}_{window}.bw"
                 if window == 1000:
-                    vis = "True"
+                    vis = "full"
                 else:
-                    vis = "False"
+                    vis = "hide"
                 print(
                     window_track_txt.format(
                         track_name=track_name,
