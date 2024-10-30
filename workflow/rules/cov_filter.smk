@@ -42,14 +42,12 @@ rule collect_covstats:
             for chrom in covStats:
                 print(chrom, covStats[chrom]['mean'], covStats[chrom]['stdev'], sep="\t", file=f)
 
-rule create_cov_bed:
+rule create_cov_thresholds:
     input:
         stats = "results/{refGenome}/summary_stats/all_cov_sumstats.txt",
-        d4 = "results/{refGenome}/callable_sites/all_samples.d4"
     output:
-        covbed = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed"
-    benchmark:
-        "benchmarks/{refGenome}/covbed/{prefix}_benchmark.txt"
+        thresholds = "results/{refGenome}/callable_sites/{prefix}_callable_sites_thresholds.tsv"
+    
     params:
         cov_threshold_stdev = config["cov_threshold_stdev"],
         cov_threshold_lower = config["cov_threshold_lower"],
@@ -58,8 +56,21 @@ rule create_cov_bed:
     conda:
         "../envs/cov_filter.yml"
     script:
-        "../scripts/create_coverage_bed.py"
+        "../scripts/create_coverage_thresholds.py"
 
+rule clam:
+    input:
+        d4 = "results/{refGenome}/callable_sites/all_samples.d4",
+        thresholds = "results/{refGenome}/callable_sites/{prefix}_callable_sites_thresholds.tsv"
+    output:
+        cov = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed",
+    threads: 8
+    log: 
+        "logs/{refGenome}/covbed/{prefix}.txt"
+    benchmark:
+        "benchmarks/{refGenome}/covbed/{prefix}_benchmark.txt"
+    shell:
+        "clam loci -t {threads} --thresholds-file {input.thresholds} {input.d4} {output.cov} 2> {log}"
 rule callable_bed:
     input:
         cov = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed",
