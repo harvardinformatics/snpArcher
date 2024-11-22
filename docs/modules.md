@@ -19,7 +19,7 @@ The quality control module aggregates various statistics from the workflow and p
 |`min_depth`| Samples with average depth below this will be excluded for QC analysis| `int`|
 
 ```{note}
-To generate the QC dashboard, you must have at least 2 samples specified in your sample sheet.
+To generate the QC dashboard, you must have at least 3 samples specified in your sample sheet.
 ```
 ```{note}
 The output of the QC module should not be considered a final analysis and is solely intended to direct quality control of the dataset.
