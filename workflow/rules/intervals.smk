@@ -14,7 +14,7 @@ rule picard_intervals:
     benchmark:
         "benchmarks/{refGenome}/picard_intervals/benchmark.txt"
     shell:
-        "picard ScatterIntervalsByNs REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} OUTPUT_TYPE=ACGT &> {log}\n"
+        "picard ScatterIntervalsByNs -Xmx{resources.mem_mb_reduced}m REFERENCE={input.ref} OUTPUT={output.intervals} MAX_TO_MERGE={params.minNmer} OUTPUT_TYPE=ACGT &> {log}\n"
 
 rule format_interval_list:
     input:
@@ -50,7 +50,7 @@ checkpoint create_db_intervals:
         '../envs/bam2vcf.yml'
     shell:
         """
-        gatk SplitIntervals -L {input.intervals} \
+        gatk -Xmx{resources.mem_mb_reduced}m SplitIntervals -L {input.intervals} \
         -O {output.out_dir} -R {input.ref} -scatter {params} \
         -mode INTERVAL_SUBDIVISION \
         --interval-merging-rule OVERLAPPING_ONLY &> {log}
@@ -76,7 +76,7 @@ checkpoint create_gvcf_intervals:
         '../envs/bam2vcf.yml'
     shell:
         """
-        gatk SplitIntervals -L {input.intervals} \
+        gatk -Xmx{resources.mem_mb_reduced}m SplitIntervals -L {input.intervals} \
         -O {output.out_dir} -R {input.ref} -scatter {params} \
         -mode BALANCING_WITHOUT_INTERVAL_SUBDIVISION \
         --interval-merging-rule OVERLAPPING_ONLY  &> {log}
