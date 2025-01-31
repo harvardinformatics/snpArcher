@@ -97,6 +97,7 @@ rule sentieon_combine_gvcf:
     params:
         glist = lambda wc, input: " ".join(["-v " + gvcf for gvcf in input['gvcfs']]),
         lic = config['sentieon_lic']
+        emit_mode = "ALL" if not config["allsites"] else "VARIANT" 
     conda:
         "../envs/sentieon.yml"
     log:
@@ -106,7 +107,45 @@ rule sentieon_combine_gvcf:
     shell:
         """
         export SENTIEON_LICENSE={params.lic}
-        sentieon driver -r {input.ref} -t {threads} --algo GVCFtyper --emit_mode VARIANT {output.vcf} {params.glist} 2> {log}
+        sentieon driver -r {input.ref} -t {threads} --algo GVCFtyper --emit_mode {params.emit_mode} {output.vcf} {params.glist} 2> {log}
+        """
+
+rule extract_invariant_records:
+    input:
+        vcf = temp("results/{refGenome}/vcfs/raw.vcf.gz"),
+        tbi = temp("results/{refGenome}/vcfs/raw.vcf.gz.tbi")
+    output:
+        vcf = temp("results/{refGenome}/vcfs/invar.vcf.gz"),
+        tbi = temp("results/{refGenome}/vcfs/invar.vcf.gz.tbi")
+    conda:
+        "../envs/bam2vcf.yml"
+    log:
+        "logs/{refGenome}/extract_invariant_records/log.txt"
+    benchmark:
+        "benchmarks/{refGenome}/extract_invariant_records/benchmark.txt"
+    shell:
+        """
+        bcftools view --max-ac 0 -Oz -o {output.vcf} {input.vcf}
+        tabix -p vcf {output.vcf} 
+        """
+
+rule extract_variant_records:
+    input:
+        vcf = temp("results/{refGenome}/vcfs/raw.vcf.gz"),
+        tbi = temp("results/{refGenome}/vcfs/raw.vcf.gz.tbi")
+    output:
+        vcf = temp("results/{refGenome}/vcfs/varonly.vcf.gz"),
+        tbi = temp("results/{refGenome}/vcfs/varonly.vcf.gz.tbi")
+    conda:
+        "../envs/bam2vcf.yml"
+    log:
+        "logs/{refGenome}/extract_variant_records/log.txt"
+    benchmark:
+        "benchmarks/{refGenome}/extract_variant_records/benchmark.txt"
+    shell:
+        """
+        bcftools view --min-ac 1 -Oz -o {output.vcf} {input.vcf}
+        tabix -p vcf {output.vcf} 
         """
 
 rule filter_vcf:
@@ -114,8 +153,8 @@ rule filter_vcf:
     This rule applies filters to the raw vcf using GNU Parallel.
     """
     input:
-        vcf = "results/{refGenome}/vcfs/raw.vcf.gz",
-        tbi = "results/{refGenome}/vcfs/raw.vcf.gz.tbi",
+        vcf = lambda wc: "results/{refGenome}/vcfs/raw.vcf.gz" if not config.get("allsites", False) else "results/{refGenome}/vcfs/varonly.vcf.gz",
+        tbi = lambda wc: "results/{refGenome}/vcfs/raw.vcf.gz.tbi" if not config.get("allsites", False) else "results/{refGenome}/vcfs/varonly.vcf.gz.tbi",
         ref = "results/{refGenome}/data/genome/{refGenome}.fna",
         indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"]),
         dictf = "results/{refGenome}/data/genome/{refGenome}.dict"
