@@ -71,6 +71,7 @@ rule clam:
         "benchmarks/{refGenome}/covbed/{prefix}_benchmark.txt"
     shell:
         "clam loci -t {threads} --thresholds-file {input.thresholds} {input.d4} {output.cov} 2> {log}"
+        
 rule callable_bed:
     input:
         cov = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed",

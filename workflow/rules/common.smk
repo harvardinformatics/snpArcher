@@ -164,7 +164,7 @@ def get_interval_gvcfs(wc):
 
 
 def get_interval_gvcfs_idx(wc):
-    tbis = [f + ".tbi" for f in get_interval_gvcfs(wc)]
+    tbis = [f"{f}.tbi" for f in get_interval_gvcfs(wc)]
     return tbis
 
 
@@ -192,7 +192,7 @@ def get_interval_vcfs(wc):
 
 
 def get_interval_vcfs_idx(wc):
-    tbis = [f + ".tbi" for f in get_interval_vcfs(wc)]
+    tbis = [f"{f}.tbi" for f in get_interval_vcfs(wc)]
     return tbis
 
 
