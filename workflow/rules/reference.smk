@@ -1,5 +1,5 @@
 ruleorder: download_reference > index_reference
-# localrules: copy_reference, download_reference
+localrules: download_reference
 
 # This does not work with SLURM as of 4/3/24. See here for more info:https://github.com/snakemake/snakemake-executor-plugin-slurm/issues/60
 # rule copy_reference:
@@ -35,7 +35,7 @@ rule download_reference:
         if [ -z "{input.ref}" ]  # check if this is empty
         then
             mkdir -p {params.outdir}
-            datasets download genome accession --exclude-gff3 --exclude-protein --exclude-rna --filename {params.dataset} {wildcards.refGenome} \
+            datasets download genome accession {wildcards.refGenome} --include genome --filename {params.dataset} \
             && (7z x {params.dataset} -aoa -o{params.outdir} || unzip -o {params.dataset} -d {params.outdir}) \
             && cat {params.outdir}/ncbi_dataset/data/{wildcards.refGenome}/*.fna > {output.ref}
         else
