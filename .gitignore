@@ -1,4 +1,6 @@
 .DS_Store
+pixi.lock
+pixi.toml
 data_preparation/
 .snakemake*
 template_slurm.sh
@@ -45,3 +47,6 @@ tmp/
 .vscode
 .test/trackhub/*.sizes
 .test/trackhub/out.log
+# pixi environments
+.pixi
+*.egg-info
