@@ -50,7 +50,7 @@ checkpoint create_db_intervals:
         '../envs/bam2vcf.yml'
     shell:
         """
-        gatk -Xmx{resources.mem_mb_reduced}m SplitIntervals -L {input.intervals} \
+        gatk SplitIntervals --java-options '-Xmx{resources.mem_mb_reduced}m -Xms{resources.mem_mb_reduced}m' -L {input.intervals} \
         -O {output.out_dir} -R {input.ref} -scatter {params} \
         -mode INTERVAL_SUBDIVISION \
         --interval-merging-rule OVERLAPPING_ONLY &> {log}
@@ -76,7 +76,7 @@ checkpoint create_gvcf_intervals:
         '../envs/bam2vcf.yml'
     shell:
         """
-        gatk -Xmx{resources.mem_mb_reduced}m SplitIntervals -L {input.intervals} \
+        gatk SplitIntervals --java-options '-Xmx{resources.mem_mb_reduced}m -Xms{resources.mem_mb_reduced}m' -L {input.intervals} \
         -O {output.out_dir} -R {input.ref} -scatter {params} \
         -mode BALANCING_WITHOUT_INTERVAL_SUBDIVISION \
         --interval-merging-rule OVERLAPPING_ONLY  &> {log}
