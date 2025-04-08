@@ -2,8 +2,9 @@ rule compute_d4:
     input:
         unpack(get_bams)
     output:
-        "results/{refGenome}/callable_sites/{sample}.mosdepth.global.dist.txt",
-        temp("results/{refGenome}/callable_sites/{sample}.per-base.d4"),
+        dist = "results/{refGenome}/callable_sites/{sample}.mosdepth.global.dist.txt",
+        d4= temp("results/{refGenome}/callable_sites/{sample}.per-base.d4.gz"),
+        d4gzi = temp("results/{refGenome}/callable_sites/{sample}.per-base.d4.gz.gzi"),
         summary="results/{refGenome}/callable_sites/{sample}.mosdepth.summary.txt"
     conda:
         "../envs/cov_filter.yml"
@@ -12,9 +13,13 @@ rule compute_d4:
     benchmark:
         "benchmarks/{refGenome}/compute_d4/{sample}.txt"
     params:
-        prefix = os.path.join(DEFAULT_STORAGE_PREFIX, "results/{refGenome}/callable_sites/{sample}")
+        prefix = subpath(output.summary, strip_suffix=".mosdepth.summary.txt"),
+        d4 = subpath(output.d4, strip_suffix=".gz")
     shell:
-        "mosdepth --d4 -t {threads} {params.prefix} {input.bam} &> {log}"
+        """
+        mosdepth --d4 -t {threads} {params.prefix} {input.bam} &> {log}
+        bgzip --index {params.d4}
+        """
 
 rule merge_d4:
     input:
@@ -58,22 +63,26 @@ rule create_cov_thresholds:
     script:
         "../scripts/create_coverage_thresholds.py"
 
-rule clam:
+rule clam_loci:
     input:
-        d4 = "results/{refGenome}/callable_sites/all_samples.d4",
+        d4 = get_input_for_coverage,
         thresholds = "results/{refGenome}/callable_sites/{prefix}_callable_sites_thresholds.tsv"
     output:
-        cov = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed",
-    threads: 8
+        cov = "results/{refGenome}/callable_sites/{prefix}/callable_sites.d4",
+        bed = "results/{refGenome}/callable_sites/{prefix}/callable_sites.bed"
+    params:
+        outdir = subpath(output.cov, parent=True)
+    conda:
+        "../envs/cov_filter.yml"
     log: 
         "logs/{refGenome}/covbed/{prefix}.txt"
     benchmark:
         "benchmarks/{refGenome}/covbed/{prefix}_benchmark.txt"
     shell:
-        "clam loci -t {threads} --thresholds-file {input.thresholds} {input.d4} {output.cov} 2> {log}"
+        "clam loci -t {threads} --bed --thresholds-file {input.thresholds} -o {params.outdir} {input.d4} 2> {log}"
 rule callable_bed:
     input:
-        cov = "results/{refGenome}/callable_sites/{prefix}_callable_sites_cov.bed",
+        cov = "results/{refGenome}/callable_sites/{prefix}/callable_sites.bed",
         map = "results/{refGenome}/callable_sites/{prefix}_callable_sites_map.bed"
     output:
         callable_sites = "results/{refGenome}/{prefix}_callable_sites.bed",
