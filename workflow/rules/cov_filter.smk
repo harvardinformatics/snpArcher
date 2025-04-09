@@ -3,8 +3,8 @@ rule compute_d4:
         unpack(get_bams)
     output:
         dist = "results/{refGenome}/callable_sites/{sample}.mosdepth.global.dist.txt",
-        d4= temp("results/{refGenome}/callable_sites/{sample}.per-base.d4.gz"),
-        d4gzi = temp("results/{refGenome}/callable_sites/{sample}.per-base.d4.gz.gzi"),
+        d4="results/{refGenome}/callable_sites/{sample}.per-base.d4.gz",
+        d4gzi ="results/{refGenome}/callable_sites/{sample}.per-base.d4.gz.gzi",
         summary="results/{refGenome}/callable_sites/{sample}.mosdepth.summary.txt"
     conda:
         "../envs/cov_filter.yml"
@@ -21,19 +21,7 @@ rule compute_d4:
         bgzip --index {params.d4}
         """
 
-rule merge_d4:
-    input:
-        unpack(get_input_for_coverage)
-    output:
-        "results/{refGenome}/callable_sites/all_samples.d4"
-    conda:
-        "../envs/cov_filter.yml"
-    log:
-        "logs/{refGenome}/merge_d4/log.txt"
-    benchmark:
-        "benchmarks/{refGenome}/merge_d4/benchmark.txt"
-    shell:
-        "d4tools merge {input.d4files} {output} &> {log}"
+
 
 rule collect_covstats:
     input:
@@ -65,7 +53,7 @@ rule create_cov_thresholds:
 
 rule clam_loci:
     input:
-        d4 = get_input_for_coverage,
+        unpack(get_input_for_coverage),
         thresholds = "results/{refGenome}/callable_sites/{prefix}_callable_sites_thresholds.tsv"
     output:
         cov = "results/{refGenome}/callable_sites/{prefix}/callable_sites.d4",
