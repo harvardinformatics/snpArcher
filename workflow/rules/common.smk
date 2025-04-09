@@ -323,7 +323,8 @@ def get_input_for_coverage(wildcards):
     _samples = samples.loc[(samples["refGenome"] == wildcards.refGenome)]["BioSample"].unique().tolist()
     
     d4files = expand("results/{{refGenome}}/callable_sites/{sample}.per-base.d4.gz", sample=_samples)
-    return d4files
+    d4gzifiles = expand("results/{{refGenome}}/callable_sites/{sample}.per-base.d4.gz.gzi", sample=_samples)
+    return {"d4":d4files, "d4gzi":d4gzifiles}
 
 
 def get_input_covstats(wildcards):
