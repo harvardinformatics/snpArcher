@@ -90,10 +90,10 @@ refPath: "/storage/data/bird.fa.gz"
 ```
 
 ## Profile setup
-Snakemake uses profile YAML files to specify commonly used command line arguments, so you don't have to remember all of the arguments you need. Read more about profiles [here](https://snakemake.readthedocs.io/en/stable/executing/cli.html#profiles). To specify a profile, you can use the `--workflow-profile` option when running Snakemake. snpArcher comes with two profiles, `default` and `slurm`, found in the `profiles` directory of the repository. We suggest that you copy the `profiles` directory to your project directory for reproducibility:
+Snakemake uses profile YAML files to specify commonly used command line arguments, so you don't have to remember all of the arguments you need. Read more about profiles [here](https://snakemake.readthedocs.io/en/stable/executing/cli.html#profiles). To specify a profile, you can use the `--workflow-profile` option when running Snakemake.
 
 ```
-cp -r snpArcher/profiles projects/secretarybird_reseq
+cp -r snpArcher/workflow-profiles projects/secretarybird_reseq
 ```
 
 The profile also enables you to specify the compute resources any of snpArcher's rules can use. This is done via the YAML keys `default-resources`, `set-resources`, and `set-threads`. `default-resources` will apply to all rules, and `set-resources` can be applied to indiviudal rules, overriding what the default was set to. There is no way to set a default thread value. 
@@ -134,11 +134,10 @@ set-resources:
 ## Running the workflow
 We are now ready to run the workflow! From our working directory we can run the command:
 ```
-snakemake -s snpArcher/workflow/Snakefile -d projects/secretarybird_reseq --workflow-profile projects/secretarybird_reseq/profiles/default
+snakemake -s snpArcher/workflow/Snakefile -d projects/secretarybird_reseq --workflow-profile projects/secretarybird_reseq/workflow-profiles/default
 ```
 This instructs Snakemake to use snpArcher's workflow file, and to run in the project directory we setup using the config and sample sheet we setup there.
 
-If we were on a SLURM cluster, we would specify the slurm profile:
-```
-snakemake -s snpArcher/workflow/Snakefile -d projects/secretarybird_reseq --workflow-profile projects/secretarybird_reseqprofiles/slurm
+If we were on a SLURM cluster, we would add `--executor slurm` to our command
+snakemake --executor slurm -s snpArcher/workflow/Snakefile -d projects/secretarybird_reseq --workflow-profile projects/secretarybird_reseq/workflow-profiles/default
 ```
