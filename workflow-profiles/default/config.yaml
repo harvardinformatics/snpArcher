@@ -1,0 +1,61 @@
+use-conda: True
+
+# These resources will be applied to all rules. Can be overriden on a per-rule basis below.
+default-resources:
+  mem_mb: attempt * 2000
+  mem_mb_reduced: (attempt * 2000) * 0.9 # Mem allocated to java for GATK rules (tries to prevent OOM errors)
+  # Uncomment and edit following options for slurm execution:
+  # slurm_partition: ""
+  # slurm_account: # Same as sbatch -A. Not all clusters use this.
+  # runtime: 720 # In minutes
+
+# Control number of threads each rule will use.
+set-threads:
+  # Mappability
+  genmap: 1
+
+  # Fastq Processing
+  get_fastq_pe: 6
+  fastp: 6
+  # Alignment
+  bwa_map: 16
+  dedup: 16
+
+  # GVCF
+  bam2gvcf: 1 # Does not benefit from more than 2 threads
+  gvcf2DB: 1 # Does not benefit from more than 2 threads
+
+  # VCF
+  DB2vcf: 1 # Does not benefit from more than 2 threads
+  filterVcfs: 1 # Does not benefit from more than 2 threads
+  sort_gatherVcfs: 1 # Does not benefit from more than 2 threads
+
+  # Callable Bed
+  compute_d4: 6
+  clam_loci: 6
+
+  # Sentieon Tools
+  sentieon_map: 16
+  sentieon_dedup: 16
+  sentieon_haplotyper: 32
+  sentieon_combine_gvcf: 32
+# Control/overwrite resources per rule.
+# To use this feature, uncomment "set-resources:" below and add rules you want to customize.
+# Examples:
+#
+# set-resources:
+#   # Example 1: Increase memory for bam2gvcf rule
+#   bam2gvcf:
+#     mem_mb: attempt * 64000  # Customize memory allocation
+#     mem_mb_reduced: (attempt * 64000) * 0.9  # Customize Java memory allocation
+#
+#   # Example 2: Set slurm parameters for a resource-intensive rule
+#   sentieon_haplotyper:
+#     mem_mb: attempt * 8000
+#     mem_mb_reduced: (attempt * 8000) * 0.9
+#     slurm_partition: high-mem
+#     runtime: "24:00:00"
+#     cpus_per_task: 32
+#
+# To customize a rule, copy one of the example blocks above, paste it under "set-resources:",
+# replace the rule name with your target rule, and adjust the resource parameters as needed.
