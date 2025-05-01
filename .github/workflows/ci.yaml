@@ -18,5 +18,5 @@ jobs:
       with:
         directory: .test/ci/
         snakefile: workflow/Snakefile
-        args: "--use-conda --show-failed-logs -j 1 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        args: "--use-conda --show-failed-logs -j 1 --conda-cleanup-pkgs cache --conda-frontend mamba --workflow-profile workflow-profiles/default"
         stagein: "conda config --set channel_priority strict"
