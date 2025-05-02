@@ -20,7 +20,7 @@ jobs:
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
-        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba --workflow-profile workflow-profiles/default"
         stagein: "conda config --set channel_priority strict"
   Testing_config-genomes:
     runs-on: ubuntu-latest
@@ -31,7 +31,7 @@ jobs:
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
-        args: "--config samples='config/ecoli_config_genome.csv' refGenome='ecoli' refPath='data/local_genome/local_genome.fna.gz' --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        args: "--config samples='config/ecoli_config_genome.csv' refGenome='ecoli' refPath='data/local_genome/local_genome.fna.gz' --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba --workflow-profile workflow-profiles/default"
   Testing_local-fastq-sentieon-dryrun:
     runs-on: ubuntu-latest
     steps:
@@ -41,7 +41,7 @@ jobs:
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
-        args: "--config sentieon=True --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba --dry-run"
+        args: "--config sentieon=True --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba --workflow-profile workflow-profiles/default --dry-run"
         stagein: "conda config --set channel_priority strict"
   Testing_local-fastq_and_sra:
     runs-on: ubuntu-latest
@@ -52,7 +52,7 @@ jobs:
       with:
         directory: .test/ecoli/
         snakefile: workflow/Snakefile
-        args: "--config samples='config/local_and_sra.csv' --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        args: "--config samples='config/local_and_sra.csv' --use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba --workflow-profile workflow-profiles/default"
   Testing_QC:
     runs-on: ubuntu-latest
     steps:
@@ -62,7 +62,7 @@ jobs:
       with:
         snakefile: workflow/modules/qc/Snakefile
         directory: .test/qc/
-        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba --workflow-profile workflow-profiles/default"
         # stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
   Testing_Postprocess:
     runs-on: ubuntu-latest
@@ -73,7 +73,7 @@ jobs:
       with:
         snakefile: workflow/modules/postprocess/Snakefile
         directory: .test/postprocess/
-        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba --workflow-profile workflow-profiles/default"
         # stagein: "mamba install -y -c conda-forge 'python==3.11.4'"
   Testing_Trackhub:
     runs-on: ubuntu-latest
@@ -84,5 +84,5 @@ jobs:
       with:
         snakefile: workflow/modules/trackhub/Snakefile
         directory: .test/trackhub/
-        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba"
+        args: "--use-conda --show-failed-logs -j 10 --conda-cleanup-pkgs cache --conda-frontend mamba --workflow-profile workflow-profiles/default"
         # stagein: "mamba install -y -c conda-forge 'python==3.11.4'"

@@ -167,9 +167,13 @@ In order to use one of the above coverage filtering approaches, you must set the
 Please refer to the [modules page](./modules.md) for each module's options.
 
 ### Resources
-Compute resources (threads, memory, etc.) as well as Snakemake arguments are set by the workflow profile located in `profiles/default/config.yaml`. This profile is used by default when running Snakemake. To specify a different profile, use the `--workflow-profile` option in your Snakemake command.
+Compute resources (threads, memory, etc.) as well as Snakemake arguments are set by the workflow profile located in `workflow-profiles/default/config.yaml`. This profile is used by default when running Snakemake. To specify a different profile, use the `--workflow-profile` option in your Snakemake command.
 
 In the profile you can set resources to be applied to all rules via the `default-resources` key. You can override this default per-rule by uncommenting that rule under the `set-threads` and/or `set-resources` key.
+
+```{note}
+We recommend you use `--workflow-profile` to set resources for the workflow run. To set Snakemake options such as executor, retries, etc, use `--profile`. Read [here](https://snakemake.readthedocs.io/en/stable/executing/cli.html#profiles) for more info.
+```
 
 #### Threads
 The profile controls how many `threads` (or CPU cores) a rule can use via the `set-thread` key. We have provided reasonable defaults, though you may need to adjust depending on the resources available on your system/cluster.

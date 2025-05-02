@@ -51,9 +51,9 @@ conda activate snparcher
 pip install snakemake-executor-plugin-slurm
 ```
 #### Profile Setup
-To specify resources for the workflow to SLURM, you must use a workflow profile. We have provided a SLURM profile template (`profiles/slurm/config.yaml`) which you can modify to specify SLURM partitions, memory allocation, etc. Please refer to the [profiles setup section](./setup.md#resources) for more details. 
+To specify resources for the workflow to SLURM, you must use a workflow profile. We have provided a SLURM profile template (`workflow-profiles/slurm/config.yaml`) which you can modify to specify SLURM partitions, memory allocation, etc. Please refer to the [profiles setup section](./setup.md#resources) for more details. Also see the [Snakemake documentation on profiles](https://snakemake.readthedocs.io/en/stable/executing/cli.html#profiles) for more info.
 
-Additionally, the SLURM profile specifies required and recommended Snakemake options:
+An example SLURM profile specifies required and recommended Snakemake options:
 ```yaml
 executor: slurm
 use-conda: True
@@ -65,7 +65,7 @@ retries: 3 # Retry jobs N times.
 #### Running the workflow
 Once you have modified the SLURM profile appropriately, you can run snpArcher with the following command:
 ```shell
-snakemake --workflow-profile profiles/slurm <other options>
+snakemake --workflow-profile <path/to/profile-directory> <other options>
 ```
 Depending on your cluster, you can run this command on the head node and Snakemake will submit jobs to the SLURM queue. You can also submit this command via `srun` or `sbatch`.
 
