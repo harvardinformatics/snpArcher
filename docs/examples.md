@@ -138,6 +138,7 @@ snakemake -s snpArcher/workflow/Snakefile -d projects/secretarybird_reseq --work
 ```
 This instructs Snakemake to use snpArcher's workflow file, and to run in the project directory we setup using the config and sample sheet we setup there.
 
-If we were on a SLURM cluster, we would add `--executor slurm` to our command
+If we were on a SLURM cluster, we would add `--executor slurm` to our command:
+```
 snakemake --executor slurm -s snpArcher/workflow/Snakefile -d projects/secretarybird_reseq --workflow-profile projects/secretarybird_reseq/workflow-profiles/default
 ```
