@@ -2,8 +2,8 @@ use-conda: True
 
 # These resources will be applied to all rules. Can be overriden on a per-rule basis below.
 default-resources:
-  mem_mb: attempt * 2000
-  mem_mb_reduced: (attempt * 2000) * 0.9 # Mem allocated to java for GATK rules (tries to prevent OOM errors)
+  mem_mb: attempt * 16000
+  mem_mb_reduced: (attempt * 16000) * 0.9 # Mem allocated to java for GATK rules (tries to prevent OOM errors)
   # Uncomment and edit following options for slurm execution:
   # slurm_partition: ""
   # slurm_account: # Same as sbatch -A. Not all clusters use this.
