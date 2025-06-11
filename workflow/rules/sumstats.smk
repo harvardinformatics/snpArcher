@@ -9,8 +9,8 @@ rule bam_sumstats:
         "../envs/fastq2bam.yml"
     shell:
         """
-        samtools coverage --output {output.cov} {input.bam}
-        samtools flagstat -O tsv {input.bam} > {output.alnSum}
+        samtools coverage --output {output.cov} {input.cram}
+        samtools flagstat -O tsv {input.cram} > {output.alnSum}
         """
 
 rule sentieon_bam_stats:
@@ -32,7 +32,7 @@ rule sentieon_bam_stats:
         """
         export SENTIEON_LICENSE={params.lic}
         sentieon driver -r {input.ref} \
-        -t {threads} -i {input.bam} \
+        -t {threads} -i {input.cram} \
         --algo MeanQualityByCycle {output.mq} \
         --algo QualDistribution {output.qd} \
         --algo GCBias --summary {output.gc_summary} {output.gc} \
