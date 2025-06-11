@@ -83,7 +83,7 @@ def get_output():
 
 def merge_bams_input(wc):
     return expand(
-        "results/{{refGenome}}/bams/preMerge/{{sample}}/{run}.bam",
+        "results/{{refGenome}}/bams/preMerge/{{sample}}/{run}.cram",
         run=samples.loc[samples["BioSample"] == wc.sample]["Run"].tolist(),
     )
 
@@ -136,10 +136,10 @@ def get_ref(wildcards):
     return []
 
 def get_bams(wc):
-    out = {"bam": None, "bai": None}
+    out = {"cram": None, "crai": None}
     if config["mark_duplicates"]:
-        out["bam"] = "results/{refGenome}/bams/{sample}_final.bam"
-        out["bai"] = "results/{refGenome}/bams/{sample}_final.bam.bai"
+        out["cram"] = "results/{refGenome}/bams/{sample}_final.cram"
+        out["crai"] = "results/{refGenome}/bams/{sample}_final.cram.crai"
         return out
     else:
         return dedup_input(wc)
@@ -207,18 +207,18 @@ def dedup_input(wc):
     runs = samples.loc[samples["BioSample"] == wc.sample]["Run"].tolist()
 
     if len(runs) == 1:
-        bam = expand("results/{{refGenome}}/bams/preMerge/{{sample}}/{run}.bam", run=runs)
-        bai = expand("results/{{refGenome}}/bams/preMerge/{{sample}}/{run}.bam.bai", run=runs)
+        cram = expand("results/{{refGenome}}/bams/preMerge/{{sample}}/{run}.cram", run=runs)
+        crai = expand("results/{{refGenome}}/bams/preMerge/{{sample}}/{run}.cram.crai", run=runs)
     else:
-        bam = "results/{refGenome}/bams/postMerge/{sample}.bam"
-        bai = "results/{refGenome}/bams/postMerge/{sample}.bam.bai"
-    return {"bam": bam, "bai": bai}
+        cram = "results/{refGenome}/bams/postMerge/{sample}.cram"
+        crai = "results/{refGenome}/bams/postMerge/{sample}.cram.crai"
+    return {"cram": cram, "crai": crai}
 
 
 def sentieon_combine_gvcf_input(wc):
     _samples = samples["BioSample"].unique().tolist()
     gvcfs = expand("results/{{refGenome}}/gvcfs/{sample}.g.vcf.gz", sample=_samples)
-    tbis = expand("results/{{refGenome}}/gvcfs/{sample}.g.vcf.gz.tbi", sample=_samples)
+    tbis = expand("results/{{refGenome}}/gvcfs/{sample}.g.vcf.gz.csi", sample=_samples)
     return {"gvcfs": gvcfs, "tbis": tbis}
 
 

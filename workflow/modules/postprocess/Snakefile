@@ -49,7 +49,7 @@ rule basic_filter:
     shell:
         """
         bcftools view -S {input.include} -f .,PASS {input.vcf} -a -U -O u | bcftools +fill-tags -Ou |
-        bcftools view -m2 -e 'AF==0 | ref="N" | ALT="."' -O z -o {output.filtered}
+        bcftools view -m2 -e 'AF==0 | ref="N" | ALT="."' --threads {threads} -O z -o {output.filtered}
         bcftools index {output.filtered}
         """
 
@@ -93,12 +93,12 @@ rule strict_filter:
         if [ -z "{params.chr_ex}" ]
         then
             bcftools view -R {input.bed} -m2 -M2 \
-            -e 'F_MISSING > {params.miss} | AF<{params.maf} | AF>{params.upper_bound}' \
-            {input.vcf} -O u -o {output.vcf}
+            -e 'F_MISSING > {params.miss} | AF<{params.maf} | AF>{params.upper_bound}' --threads {threads} \
+            {input.vcf} -O z -o {output.vcf}
         else
             bcftools view -t ^{params.chr_ex} -R {input.bed} -m2 -M2 \
-            -e 'F_MISSING > {params.miss} | AF<{params.maf} | AF>{params.upper_bound}' \
-            {input.vcf} -O u -o {output.vcf} 
+            -e 'F_MISSING > {params.miss} | AF<{params.maf} | AF>{params.upper_bound}' --threads {threads} \
+            {input.vcf} -O z -o {output.vcf} 
         fi
         bcftools index {output.vcf}
         """
@@ -119,7 +119,7 @@ rule subset_indels:
         "logs/{refGenome}/postprocess/{prefix}_subset_indels.txt"
     shell:
         """
-        bcftools view -v indels -O z -o {output.vcf} {input.vcf}
+        bcftools view -v indels --threads {threads} -O z -o {output.vcf} {input.vcf}
         bcftools index -t {output.vcf}
         """
 
@@ -139,7 +139,7 @@ rule subset_snps:
         "logs/{refGenome}/postprocess/{prefix}_subset_snps.txt"
     shell:
         """
-        bcftools view -v snps -e 'TYPE ~ "indel"' -O z -o {output.vcf} {input.vcf}
+        bcftools view -v snps -e 'TYPE ~ "indel"' --threads {threads} -O z -o {output.vcf} {input.vcf}
         bcftools index -t {output.vcf}
         """
 
@@ -162,6 +162,6 @@ rule drop_indel_SNPs:
         """
         bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\n' {input.vcf} | awk 'length($3) == 1 {{print $1"\t"$2}}' | bgzip -c > {output.keep_snps} 
         tabix -s1 -b2 -e2 {output.keep_snps}
-        bcftools view -T {output.keep_snps} {input.vcf} -Oz -o {output.vcf}
+        bcftools view -T {output.keep_snps} {input.vcf} --threads {threads} -Oz -o {output.vcf}
         bcftools index -t {output.vcf}
         """

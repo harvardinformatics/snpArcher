@@ -5,8 +5,8 @@ rule sentieon_map:
         r2 = "results/{refGenome}/filtered_fastqs/{sample}/{run}_2.fastq.gz",
         indexes = expand("results/{{refGenome}}/data/genome/{{refGenome}}.fna.{ext}", ext=["sa", "pac", "bwt", "ann", "amb", "fai"])
     output: 
-        bam = temp("results/{refGenome}/bams/preMerge/{sample}/{run}.bam"),
-        bai = temp("results/{refGenome}/bams/preMerge/{sample}/{run}.bam.bai"),
+        cram = temp("results/{refGenome}/bams/preMerge/{sample}/{run}.cram"),
+        crai = temp("results/{refGenome}/bams/preMerge/{sample}/{run}.cram.crai")
     params:
         rg = get_read_group,
         lic = config['sentieon_lic']
@@ -20,15 +20,14 @@ rule sentieon_map:
         """
         export MALLOC_CONF=lg_dirty_mult:-1
         export SENTIEON_LICENSE={params.lic}
-        sentieon bwa mem -M -R {params.rg} -t {threads} -K 10000000 {input.ref} {input.r1} {input.r2} | sentieon util sort --bam_compression 1 -r {input.ref} -o {output.bam} -t {threads} --sam2bam -i -
-        samtools index {output.bam} {output.bai}
+        sentieon bwa mem -M -R {params.rg} -t {threads} -K 10000000 {input.ref} {input.r1} {input.r2} | sentieon util sort --cram_write_options version=3.0,compressor=rans -r {input.ref} -o {output.cram} -t {threads} --sam2bam -i -
         """
 rule merge_bams:
     input:
         merge_bams_input
     output:
-        bam = temp("results/{refGenome}/bams/postMerge/{sample}.bam"),
-        bai = temp("results/{refGenome}/bams/postMerge/{sample}.bam.bai")
+        cram = temp("results/{refGenome}/bams/postMerge/{sample}.cram"),
+        crai = temp("results/{refGenome}/bams/postMerge/{sample}.cram.crai")
     conda:
         "../envs/fastq2bam.yml"
     log:
@@ -36,14 +35,15 @@ rule merge_bams:
     benchmark:
         "benchmarks/{refGenome}/merge_bams/{sample}.txt"
     shell:
-        "samtools merge {output.bam} {input} && samtools index {output.bam}"
+        "samtools merge {output.cram} {input} && samtools index {output.cram}"
 
 rule sentieon_dedup:
     input:
         unpack(dedup_input),
+        ref = "results/{refGenome}/data/genome/{refGenome}.fna"
     output:
-        dedupBam = "results/{refGenome}/bams/{sample}_final.bam",
-        dedupBai = "results/{refGenome}/bams/{sample}_final.bam.bai",
+        dedupBam = "results/{refGenome}/bams/{sample}_final.cram",
+        dedupBai = "results/{refGenome}/bams/{sample}_final.cram.crai",
         score = temp("results/{refGenome}/summary_stats/{sample}/sentieon_dedup_score.txt"),
         metrics = temp("results/{refGenome}/summary_stats/{sample}/sentieon_dedup_metrics.txt")
     params:
@@ -57,8 +57,8 @@ rule sentieon_dedup:
     shell:
         """
         export SENTIEON_LICENSE={params.lic}
-        sentieon driver -t {threads} -i {input.bam} --algo LocusCollector --fun score_info {output.score}
-        sentieon driver -t {threads} -i {input.bam} --algo Dedup --score_info {output.score} --metrics {output.metrics} --bam_compression 1 {output.dedupBam}
+        sentieon driver -r {input.ref} -t {threads} -i {input.cram} --algo LocusCollector --fun score_info {output.score}
+        sentieon driver -r {input.ref} -t {threads} -i {input.cram} --algo Dedup --score_info {output.score} --metrics {output.metrics} --cram_write_options version=3.0,compressor=rans {output.dedupBam}
         """
 
 rule sentieon_haplotyper:
@@ -72,7 +72,7 @@ rule sentieon_haplotyper:
         ploidy = config['ploidy']
     output:
         gvcf = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz",
-        gvcf_idx = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz.tbi",
+        gvcf_idx = "results/{refGenome}/gvcfs/{sample}.g.vcf.gz.csi",
     conda:
         "../envs/sentieon.yml"
     log:
@@ -82,7 +82,7 @@ rule sentieon_haplotyper:
     shell:
         """
         export SENTIEON_LICENSE={params.lic}
-        sentieon driver -r {input.ref} -t {threads} -i {input.bam} --algo Haplotyper --genotype_model multinomial --emit_mode gvcf --emit_conf 30 --call_conf 30 {output.gvcf} --ploidy {params.ploidy} 2> {log}
+        sentieon driver -r {input.ref} -t {threads} -i {input.cram} --algo Haplotyper --genotype_model multinomial --emit_mode gvcf --emit_conf 30 --call_conf 30 {output.gvcf} --ploidy {params.ploidy} 2> {log}
         """
 
 rule sentieon_combine_gvcf:

@@ -1,0 +1,12 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - pymongo==3.12.0
+  - pandas==2.1.4
+  - python-dotenv==1.0.1
+  - dnspython==2.5.0
+  - pip:
+     - pyOpenSSL==24.1.0
+

@@ -3,6 +3,6 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - sentieon
+  - sentieon==202308.02=h5ca1c30_1
   - python==3.11.4
   - samtools>=1.12

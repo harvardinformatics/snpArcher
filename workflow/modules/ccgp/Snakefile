@@ -1,0 +1,266 @@
+import pandas as pd
+import os
+include: "common.smk"
+
+configfile: "config/config.yaml"
+samples = pd.read_table(config["samples"], sep=",", dtype=str).replace(' ', '_', regex=True)
+REFGENOME = samples['refGenome'].unique().tolist()
+
+rule all:
+    input:
+        #expand("results/{refGenome}/CCGP/{prefix}_roh_pi_ridges.pdf",refGenome=REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/trackhub/index.html", refGenome=REFGENOME),
+        expand("results/{refGenome}/CCGP/{prefix}_dist_done.txt", refGenome = REFGENOME, prefix=config['final_prefix']),
+        expand("results/{refGenome}/CCGP/{prefix}_pruned_mil.vcf.gz", refGenome = REFGENOME, prefix=config['final_prefix']),
+        
+# rule roh:
+#     input:
+#         vcf = ancient("results/{refGenome}/{prefix}_clean_snps.vcf.gz"),
+#     output:
+#         roh = "results/{refGenome}/CCGP/{prefix}.roh.gz",
+#         rg = "results/{refGenome}/CCGP/{prefix}.rg.roh"
+#     conda:
+#         "envs/roh.yml"
+#     resources:
+#        mem_mb = 128000,
+#        threads = 10
+#     shell:
+#         """
+#         bcftools roh --threads 10 -G30 --AF-dflt 0.4 -O z -o {output.roh} {input.vcf}
+#         zgrep -E '^RG[[:space:]]|# RG' {output.roh} > {output.rg}
+#         """
+
+# rule froh:
+#     input:
+#         roh = "results/{refGenome}/CCGP/{prefix}.rg.roh",
+#         fai = ancient("results/{refGenome}/data/genome/{refGenome}.fna.fai"),
+#     output:
+#         froh = "results/{refGenome}/CCGP/{prefix}_filtered.froh",
+#         top = "results/{refGenome}/CCGP/{prefix}_filtered_top.froh"
+#     run:
+#         calc_roh(input.roh, input.fai, output.froh)
+
+# rule pi:
+#     input:
+#         vcf = ancient("results/{refGenome}/{prefix}_clean_snps.vcf.gz"),
+#         top = "results/{refGenome}/CCGP/{prefix}_filtered_top.froh"
+#     output:
+#         pi1 = "results/{refGenome}/CCGP/{prefix}.1.windowed.pi",
+#         pi2 = "results/{refGenome}/CCGP/{prefix}.2.windowed.pi",
+#         pi3 = "results/{refGenome}/CCGP/{prefix}.3.windowed.pi",
+#         pi4 = "results/{refGenome}/CCGP/{prefix}.4.windowed.pi",
+#         pi5 = "results/{refGenome}/CCGP/{prefix}.5.windowed.pi",
+#         pi6 = "results/{refGenome}/CCGP/{prefix}.6.windowed.pi",
+#         pi7 = "results/{refGenome}/CCGP/{prefix}.7.windowed.pi",
+#         pi8 = "results/{refGenome}/CCGP/{prefix}.8.windowed.pi",
+#         pi9 = "results/{refGenome}/CCGP/{prefix}.9.windowed.pi",
+#         pi10 = "results/{refGenome}/CCGP/{prefix}.10.windowed.pi"
+#     conda:
+#         "envs/vcftools_individuals.yml"
+#     params:
+#         prefix = lambda wc, input: input.top.replace("_filtered_top.froh", ""),
+#     shell:
+#         """
+        
+#         for i in {{1..10}}
+#         do
+#             SAMPLE=$(sed -n "${{i}}p" {input.top})
+#             vcftools --indv $SAMPLE --gzvcf {input.vcf} --out {params.prefix}.${{i}} --window-pi 10000
+#         done
+#         """
+
+# #next step is R script that reads in the rg.roh and the pi data. Then plots a couple of examples
+
+# rule qc_plots:
+#     """
+#     Call plotting script
+#     """
+#     input:
+#         top = "results/{refGenome}/CCGP/{prefix}_filtered_top.froh",
+#         roh = "results/{refGenome}/CCGP/{prefix}.rg.roh",
+#         pi1 = "results/{refGenome}/CCGP/{prefix}.1.windowed.pi",
+#         pi2 = "results/{refGenome}/CCGP/{prefix}.2.windowed.pi",
+#         pi3 = "results/{refGenome}/CCGP/{prefix}.3.windowed.pi",
+#         pi4 = "results/{refGenome}/CCGP/{prefix}.4.windowed.pi",
+#         pi5 = "results/{refGenome}/CCGP/{prefix}.5.windowed.pi",
+#         pi6 = "results/{refGenome}/CCGP/{prefix}.6.windowed.pi",
+#         pi7 = "results/{refGenome}/CCGP/{prefix}.7.windowed.pi",
+#         pi8 = "results/{refGenome}/CCGP/{prefix}.8.windowed.pi",
+#         pi9 = "results/{refGenome}/CCGP/{prefix}.9.windowed.pi",
+#         pi10 = "results/{refGenome}/CCGP/{prefix}.10.windowed.pi"
+#     params:
+#         prefix = lambda wc, input: input.roh[:-7]
+#     resources:
+#         mem_mb = lambda wildcards, attempt: attempt * 2000
+#     output: 
+#         roh1 = "results/{refGenome}/CCGP/{prefix}_all_indiv_roh.pdf",
+#         roh2 = "results/{refGenome}/CCGP/{prefix}_pi_roh_top.pdf",
+#         roh3 = "results/{refGenome}/CCGP/{prefix}_roh_pi_ridges.pdf"
+#     conda:
+#         "envs/rplots.yml"
+#     script:
+#         "scripts/roh_viz.R"
+
+
+rule CCGP_annotate:
+    input:
+        vcf = ancient("results/{refGenome}/{prefix}_clean_snps.vcf.gz"),
+    output:
+        ann = "results/{refGenome}/CCGP/{prefix}_annotated.vcf.gz"
+    conda:
+        "envs/roh.yml"
+    shell:
+        """
+        bcftools annotate --set-id '%CHROM\_%POS\_%REF\_%FIRST_ALT' -O z -o {output.ann} {input.vcf}
+        """
+
+rule CCGP_get_vcf_samples:
+    input:
+        vcf = ancient("results/{refGenome}/CCGP/{prefix}_annotated.vcf.gz"),
+    output:
+        samps = "results/{refGenome}/CCGP/{prefix}.samps4coords.txt"
+    conda:
+        "envs/bcftools.yml"
+    shell:
+        "bcftools query -l {input.vcf} > {output.samps}"
+
+rule CCGP_create_coords_sheet:
+    input:
+        vcf = ancient("results/{refGenome}/CCGP/{prefix}_annotated.vcf.gz"),
+        samps = "results/{refGenome}/CCGP/{prefix}.samps4coords.txt"
+    output:
+        samps_w_coord = "results/{refGenome}/CCGP/{prefix}.coords.txt",
+        exclude_samps = "results/{refGenome}/CCGP/{prefix}.no_coords.txt"
+    conda:
+        "envs/mongo.yml"
+    params:
+        project_id = "{prefix}",
+        ref_genome = "{refGenome}",
+        sample_id = config["sample_id"]
+    script:
+        "scripts/create_coord_sheet_revised.py"
+
+rule CCGP_remove_samps_no_coords_full:
+    input:
+        vcf = "results/{refGenome}/CCGP/{prefix}_annotated.vcf.gz",
+        vcfidx = "results/{refGenome}/CCGP/{prefix}_annotated.vcf.gz.csi",
+        excluded_samps = "results/{refGenome}/CCGP/{prefix}.no_coords.txt"
+    output:
+        filtered_no_coords = "results/{refGenome}/CCGP/{prefix}_complete_coords_annotated.vcf.gz",
+        filtidx_no_coords = "results/{refGenome}/CCGP/{prefix}_complete_coords_annotated.vcf.gz.csi"
+    conda:
+        "envs/bcftools.yml"
+    shell:
+        """
+        if [ ! -s {input.excluded_samps} ]; then
+            cp {input.vcf} {output.filtered_no_coords}
+            cp {input.vcfidx} {output.filtidx_no_coords}
+        else
+            bcftools view -S ^{input.excluded_samps} -f .,PASS {input.vcf} -a -U -O u | bcftools +fill-tags -Ou |
+            bcftools view -m2 -e 'AF==0 | ref="N" | ALT="."' -O z -o {output.filtered_no_coords}
+            bcftools index {output.filtered_no_coords}
+        fi
+        """
+
+rule CCGP_plinkld:
+    input:
+        #vcf = ancient("results/{refGenome}/CCGP/{prefix}_annotated.vcf.gz")
+        vcf = "results/{refGenome}/CCGP/{prefix}_complete_coords_annotated.vcf.gz",
+    output:
+        ld3 = "results/{refGenome}/CCGP/{prefix}_0.6.prune.in",
+        ld4 = "results/{refGenome}/CCGP/{prefix}_0.6.prune.out"
+    resources:
+       threads = 10,
+       mem_mb = 128000
+    params:
+        prefix2 = lambda wc, input: input.vcf.replace("_complete_coords_annotated.vcf.gz", "_0.6")
+    conda:
+        "envs/plink.yml"
+    shell:
+        """
+        plink2 --vcf {input.vcf} --make-bed --indep-pairwise 50kb 0.6 --out {params.prefix2} --allow-extra-chr --autosome-num 95 --const-fid --bad-freqs
+        """
+
+rule CCGP_prunevcf:
+    input:
+        vcf = "results/{refGenome}/CCGP/{prefix}_complete_coords_annotated.vcf.gz",
+        ld6 = "results/{refGenome}/CCGP/{prefix}_0.6.prune.in"
+    output:
+        pruned6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz",
+        idx = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz.csi",
+    conda:
+        "envs/roh.yml"
+    shell:
+        """
+        bcftools view -i 'ID=@{input.ld6}' -O z -o {output.pruned6} {input.vcf}
+        bcftools index {output.pruned6}
+        """
+
+rule CCGP_plink:
+    """
+    Call plink distance mat.
+    """
+    input:
+        vcf = "results/{refGenome}/CCGP/{prefix}_complete_coords_annotated.vcf.gz",
+        pruned6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz"     
+    params:
+        prefix = lambda wc, input: input.pruned6.replace("_annotated_pruned_0.6.vcf.gz", "_filtered"),
+        prefix6 = lambda wc, input: input.pruned6.replace(".vcf.gz", "")
+    output: 
+        dist = "results/{refGenome}/CCGP/{prefix}_filtered.dist",
+        distid = "results/{refGenome}/CCGP/{prefix}_filtered.dist.id",
+        dist6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.dist",
+        distid6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.dist.id"
+    resources:
+       mem_mb = 64000
+    conda:
+        "envs/plink.yml"
+    shell:
+        #plink 1.9 for distance matrix
+        """
+        plink --vcf {input.vcf} --out {params.prefix} --allow-extra-chr --autosome-num 95 --distance square --const-fid
+        plink --vcf {input.pruned6} --out {params.prefix6} --allow-extra-chr --autosome-num 95 --distance square --const-fid
+        """
+
+rule CCGP_dist_complete:
+    input:
+        dist = "results/{refGenome}/CCGP/{prefix}_filtered.dist",
+        distid = "results/{refGenome}/CCGP/{prefix}_filtered.dist.id",
+        dist6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.dist",
+        distid6 = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.dist.id"
+    output:
+        touch("results/{refGenome}/CCGP/{prefix}_dist_done.txt")
+
+rule CCGP_mil_subsample_snps:
+    input:
+        vcf = "results/{refGenome}/CCGP/{prefix}_annotated_pruned_0.6.vcf.gz",
+    output:
+        filtered = "results/{refGenome}/CCGP/{prefix}_0.6_filtered.vcf.gz",
+        filtered_idx = "results/{refGenome}/CCGP/{prefix}_0.6_filtered.vcf.gz.csi",
+        pruned = "results/{refGenome}/CCGP/{prefix}_pruned_mil.vcf.gz",
+        pruned_idx = "results/{refGenome}/CCGP/{prefix}_pruned_mil.vcf.gz.csi",
+    conda:
+        "envs/roh.yml"
+    shell:
+        """
+        ## first remove filtered sites and retain only biallelic SNPs
+        ## make sure high missingness isnt present, could have snuck through in old versions of datasets
+        ## for this dataset, setting a stronger filter of MAF > 0.05
+        bcftools view -e 'ALT="*" | F_MISSING > 0.25 | ref="N" | AF< 0.05 | AF > 0.95' {input.vcf} -O z -o {output.filtered}
+        bcftools index {output.filtered}
+
+        #figure out how many SNPs are left, then identify how big of SNP window size to get down to 1mil snps      
+        ALLSITES=`bcftools query -f '%CHROM\t%POS\n' {output.filtered} | wc -l`
+        SITES=`echo $(( ${{ALLSITES}} / 1000000 ))`
+
+        #if the top VCF has < 1mil SNPs, then just take all the SNPs
+        if [[ $SITES -gt 1 ]]
+        then
+            bcftools +prune -w $SITES -n 1 -N rand -O z -o {output.pruned} {output.filtered}
+        else
+            bcftools view -O z -o {output.pruned} {output.filtered}
+        fi
+
+        bcftools index {output.pruned}
+
+        """
