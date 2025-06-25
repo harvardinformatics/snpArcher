@@ -71,7 +71,7 @@ rule clam_loci:
         """
         clam loci -t {threads} --bed --thresholds-file {input.thresholds} -o {params.outdir} {input.d4} 2> {log}
         bedtk merge {output.bed} > {output.tmp_bed} 2>> {log}
-        mv {output.tmp_bed} {output.bed} 2>> {log}
+        cp {output.tmp_bed} {output.bed} 2>> {log}
         """
 
 rule callable_bed:
