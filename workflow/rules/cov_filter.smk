@@ -57,8 +57,8 @@ rule clam_loci:
         thresholds = "results/{refGenome}/callable_sites/{prefix}_callable_sites_thresholds.tsv"
     output:
         cov = "results/{refGenome}/callable_sites/{prefix}/callable_sites.d4",
-        tmpbed = temp("results/{refGenome}/callable_sites/{prefix}/callable_sites.bed"),
-        mergedbed = "results/{refGenome}/callable_sites/{prefix}/merged_callable_sites.bed" # temp fix until clam produces better bed files cm
+        bed = "results/{refGenome}/callable_sites/{prefix}/callable_sites.bed",
+        tmp_bed = temp("results/{refGenome}/callable_sites/{prefix}/callable_sites_temp.bed") # temp fix until clam produces better bed files cm
     params:
         outdir = subpath(output.cov, parent=True)
     conda:
@@ -70,12 +70,13 @@ rule clam_loci:
     shell:
         """
         clam loci -t {threads} --bed --thresholds-file {input.thresholds} -o {params.outdir} {input.d4} 2> {log}
-        bedtk merge {output.tmpbed} > {output.mergedbed} 2>> {log}
+        bedtk merge {output.bed} > {output.tmp_bed} 2>> {log}
+        mv {output.tmp_bed} {output.bed}
         """
 
 rule callable_bed:
     input:
-        mergedbed = "results/{refGenome}/callable_sites/{prefix}/merged_callable_sites.bed",
+        
         cov = "results/{refGenome}/callable_sites/{prefix}/callable_sites.bed",
         map = "results/{refGenome}/callable_sites/{prefix}_callable_sites_map.bed"
     output:
@@ -89,6 +90,6 @@ rule callable_bed:
         merge = config['cov_merge']
     shell:
         """
-        bedtools merge -d {params.merge} -i {input.mergedbed} > {output.tmp_cov}
+        bedtools merge -d {params.merge} -i {input.cov} > {output.tmp_cov}
         bedtools intersect -a {output.tmp_cov} -b {input.map} | bedtools sort -i - | bedtools merge -i - > {output.callable_sites}
         """
