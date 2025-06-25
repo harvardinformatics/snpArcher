@@ -76,7 +76,6 @@ rule clam_loci:
 
 rule callable_bed:
     input:
-        
         cov = "results/{refGenome}/callable_sites/{prefix}/callable_sites.bed",
         map = "results/{refGenome}/callable_sites/{prefix}_callable_sites_map.bed"
     output:
