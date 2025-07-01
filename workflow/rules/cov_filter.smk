@@ -1,7 +1,6 @@
 rule compute_d4:
     input:
-        unpack(get_bams),
-        ref = "results/{refGenome}/data/genome/{refGenome}.fna",
+        unpack(get_bams)
     output:
         dist = "results/{refGenome}/callable_sites/{sample}.mosdepth.global.dist.txt",
         d4="results/{refGenome}/callable_sites/{sample}.per-base.d4.gz",
@@ -18,7 +17,7 @@ rule compute_d4:
         d4 = subpath(output.d4, strip_suffix=".gz")
     shell:
         """
-        mosdepth --d4 -f {input.ref} -t {threads} {params.prefix} {input.cram} &> {log}
+        mosdepth --d4 -t {threads} {params.prefix} {input.bam} &> {log}
         bgzip --index {params.d4}
         """
 
@@ -58,7 +57,8 @@ rule clam_loci:
         thresholds = "results/{refGenome}/callable_sites/{prefix}_callable_sites_thresholds.tsv"
     output:
         cov = "results/{refGenome}/callable_sites/{prefix}/callable_sites.d4",
-        bed = "results/{refGenome}/callable_sites/{prefix}/callable_sites.bed"
+        bed = "results/{refGenome}/callable_sites/{prefix}/callable_sites.bed",
+        tmp_bed = temp("results/{refGenome}/callable_sites/{prefix}/callable_sites_temp.bed") # temp fix until clam produces better bed files cm
     params:
         outdir = subpath(output.cov, parent=True)
     conda:
@@ -68,7 +68,12 @@ rule clam_loci:
     benchmark:
         "benchmarks/{refGenome}/covbed/{prefix}_benchmark.txt"
     shell:
-        "clam loci -t {threads} --bed --thresholds-file {input.thresholds} -o {params.outdir} {input.d4} 2> {log}"
+        """
+        clam loci -t {threads} --bed --thresholds-file {input.thresholds} -o {params.outdir} {input.d4} 2> {log}
+        bedtk merge {output.bed} > {output.tmp_bed} 2>> {log}
+        cp {output.tmp_bed} {output.bed} 2>> {log}
+        """
+
 rule callable_bed:
     input:
         cov = "results/{refGenome}/callable_sites/{prefix}/callable_sites.bed",
@@ -84,6 +89,6 @@ rule callable_bed:
         merge = config['cov_merge']
     shell:
         """
-        bedtools sort -i {input.cov} | bedtools merge -d {params.merge} -i - > {output.tmp_cov}
+        bedtools merge -d {params.merge} -i {input.cov} > {output.tmp_cov}
         bedtools intersect -a {output.tmp_cov} -b {input.map} | bedtools sort -i - | bedtools merge -i - > {output.callable_sites}
         """
