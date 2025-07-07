@@ -4,7 +4,7 @@ Please refer to our [setup instructions](./setup.md) to prepare the snpArcher en
 ## Test datasets
 To test that your environment is properly setup, you can run a quick test with the following command:
 ```
-snakemake -d .test/ecoli --cores 1 --use-conda
+snakemake -d .test/ecoli --cores 1 --use-conda --workflow-profile workflow-profiles/default
 ```
 If this runs without errors, you are ready to go!
 ## Using the Dry-run option
@@ -12,7 +12,7 @@ Snakemake offers the `--dry-run (-n)` CLI option to perform a dry-run of the wor
 ## Local Execution
 Once you have setup the requisite configuration files and sample sheet, executing snpArcher on your local machine is as simple as running the Snakemake command with the number of cores you would like to use. For example, to use 8 cores you would run:
 ```
-snakemake --cores 8 --use-conda
+snakemake --cores 8 --use-conda --workflow-profile workflow-profiles/default
 ```
 
 ### Optional directory setup 
