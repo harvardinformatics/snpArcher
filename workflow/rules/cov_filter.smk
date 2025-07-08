@@ -1,6 +1,7 @@
 rule compute_d4:
     input:
-        unpack(get_bams)
+        unpack(get_bams),
+        ref = "results/{refGenome}/data/genome/{refGenome}.fna",
     output:
         dist = "results/{refGenome}/callable_sites/{sample}.mosdepth.global.dist.txt",
         d4="results/{refGenome}/callable_sites/{sample}.per-base.d4.gz",
@@ -17,7 +18,7 @@ rule compute_d4:
         d4 = subpath(output.d4, strip_suffix=".gz")
     shell:
         """
-        mosdepth --d4 -t {threads} {params.prefix} {input.bam} &> {log}
+        mosdepth -f {input.ref} --d4 -t {threads} {params.prefix} {input.cram} &> {log}
         bgzip --index {params.d4}
         """
 

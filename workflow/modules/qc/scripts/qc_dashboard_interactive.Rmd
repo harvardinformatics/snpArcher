@@ -46,7 +46,7 @@ sum_path <- paste0(prefix, ".FILTER.summary")
 df_sum <- read.table(sum_path, header =T)
 
 #total number of SNPs found by pipeline
-first_line <- df_sum %>% filter(FILTER == ".")
+first_line <- df_sum[1,]
 snps_remain <- first_line[1,2]
 snps_remain.m <- round(snps_remain / 1000000,1)
 
