@@ -1,4 +1,5 @@
 import re
+import subprocess
 import tempfile
 from pathlib import Path
 
@@ -450,3 +451,45 @@ def test_download_sra_completeness(request):
             r"completeness: emitted=(\d+) expected=(\d+)", log
         ).groups()
         assert emitted == expected, f"emitted {emitted} != expected {expected}"
+
+
+@pytest.mark.unit
+def test_csra_expected_reads():
+    """The cSRA census predicts what sam-dump | collate | fastq emits.
+
+    Each spot is one vdb-dump tab line: READ_LEN, PRIMARY_ALIGNMENT_ID and
+    ALIGNMENT_COUNT, one comma-separated value per read. The layouts are the
+    ones found in ficAlb's ERR2167036 and ERR2167049, where the prediction
+    matched the extracted counts exactly.
+    """
+    script = Path(__file__).parents[1] / "workflow" / "scripts" / "csra_expected_reads.awk"
+    spots = [
+        "151, 151\t12, 9\t1, 3",  # both primary: a pair
+        "151, 151\t5, 0\t1, 0",  # half-aligned: the unaligned mate is emitted
+        "151, 151\t0, 0\t0, 0",  # fully unaligned: a pair
+        "151, 151\t0, 0\t0, 2",  # secondary-only beside unaligned: still visited
+        "151, 151\t7, 0\t1, 2",  # secondary-only mate of a primary: a singleton
+        "151, 151\t0, 0\t2, 1",  # both secondary-only: nothing emitted
+        "151, 0\t8, 0\t1, 0",  # mate-less BAM record: unpaired
+        "0, 151\t0, 0\t0, 0",  # mate-less and unaligned: unpaired
+        "151\t3\t1",  # one-read spot: not modelled
+    ]
+    result = subprocess.run(
+        ["awk", "-f", str(script)],
+        input="\n".join(spots) + "\n",
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    census = dict(line.split("=") for line in result.stdout.split())
+    assert census == {
+        "spots": "9",
+        "spots_unmodelled": "1",
+        "lines_malformed": "0",
+        "reads_primary": "5",
+        "reads_zero_length": "2",
+        "reads_lost_secondary_only": "3",
+        "pairs": "4",
+        "singletons": "1",
+        "unpaired": "2",
+    }
