@@ -40,6 +40,7 @@ rule download_sra:
         r2=temp("results/fastqs/{sample}/{library}/{input_unit}/{accession}_2.fastq.gz"),
     params:
         outdir="results/fastqs/{sample}/{library}/{input_unit}",
+        csra_census=Path(workflow.basedir) / "scripts" / "csra_expected_reads.awk",
     threads: 4
     conda:
         "../envs/sra.yaml"
@@ -69,6 +70,10 @@ rule download_sra:
         ALIGNED=0
         EXPECTED=""
         EXPECTED_SOURCE=""
+        # Reads the extractor legitimately leaves outside the pair. Only the
+        # aligned path produces them, and it sets both from the archive.
+        EXPECTED_NU=0
+        EXPECTED_NS=0
         ENA_PATH=0
 
         if prefetch --max-size 1T -O "$WORK" {wildcards.accession} 2>> {log}; then
@@ -118,24 +123,69 @@ rule download_sra:
                 SAMTOOLS_THREADS=$(( ({threads} - 1) / 2 ))
                 [ "$SAMTOOLS_THREADS" -lt 0 ] && SAMTOOLS_THREADS=0
 
+                # 2 x SEQ is not what this pipe emits. Reads stored with only
+                # secondary alignments never get a primary or unaligned
+                # record from sam-dump, so their mates come out as singletons,
+                # and a mate-less BAM record is stored beside a zero-length
+                # read, so it comes out unpaired. Both are properties of the
+                # archive, so the archive predicts them exactly: read the
+                # SEQUENCE table's per-read lengths and alignment state before
+                # extracting (minutes, against hours for sam-dump), and fail
+                # fast on a layout the prediction does not model. See the
+                # script for the rules it encodes.
+                if ! vdb-dump -T SEQUENCE -C READ_LEN,PRIMARY_ALIGNMENT_ID,ALIGNMENT_COUNT \
+                        -f tab "$SRA" 2>> {log} \
+                    | awk -f {params.csra_census} > "$WORK/census.txt"; then
+                    echo "ERROR: {wildcards.accession}: could not read the SEQUENCE table" \
+                         "to predict what sam-dump will emit." >> {log}
+                    exit 1
+                fi
+                sed 's/^/census: /' "$WORK/census.txt" >> {log}
+                census() {{ awk -F= -v k="$1" '$1 == k {{print $2}}' "$WORK/census.txt"; }}
+
+                # The census must describe the same run vdb-dump --info did;
+                # a disagreement means the table was misread, not that reads
+                # are missing. String comparisons, so a missing value fails
+                # the check instead of erroring inside it.
+                if [ "$(census spots)" != "$SEQ" ] || [ "$(census reads_primary)" != "$PRIM" ]; then
+                    echo "ERROR: {wildcards.accession}: census saw $(census spots) spots and" \
+                         "$(census reads_primary) primary alignments; the run reports SEQ=$SEQ" \
+                         "and PRIM=$PRIM." >> {log}
+                    exit 1
+                fi
+                if [ "$(census spots_unmodelled)" != 0 ] || [ "$(census lines_malformed)" != 0 ]; then
+                    echo "ERROR: {wildcards.accession}: $(census spots_unmodelled) spots do not hold" \
+                         "exactly two reads ($(census lines_malformed) unparseable), so what" \
+                         "sam-dump emits for them cannot be predicted." >> {log}
+                    exit 1
+                fi
+
                 # collate gets -u. Without it, collate compresses its stdout and
                 # samtools fastq immediately decompresses it again, burning CPU
                 # on both sides of the pipe for nothing.
-                sam-dump -u "$SRA" 2>> {log} \
+                #
+                # A failure anywhere in the pipe already ends the job through
+                # pipefail; testing it here only puts the cause in the log.
+                if ! sam-dump -u "$SRA" 2>> {log} \
                     | samtools collate -u -O -@ "$SAMTOOLS_THREADS" - "$WORK/collate" 2>> {log} \
                     | samtools fastq -F 0x900 -@ "$SAMTOOLS_THREADS" \
                         -1 {output.r1} \
                         -2 {output.r2} \
                         -0 "$WORK/unpaired.fastq.gz" \
                         -s "$WORK/singleton.fastq.gz" \
-                        - 2>> {log}
+                        - 2>> {log}; then
+                    echo "ERROR: {wildcards.accession}: the sam-dump | collate | fastq pipe" \
+                         "failed, so the FASTQs are incomplete." >> {log}
+                    exit 1
+                fi
 
-                # sam-dump emits every stored read and -F 0x900 removes only
-                # the secondary/supplementary copies, so the archive's own spot
-                # count is the expectation. cSRA submissions are paired
-                # alignments, two reads per spot.
-                EXPECTED=$(( SEQ * 2 ))
-                EXPECTED_SOURCE="2 x SEQ"
+                # -F 0x900 removes only the secondary/supplementary copies, so
+                # every read the census predicts must arrive exactly once:
+                # two per complete pair, plus the singletons and unpaired reads.
+                EXPECTED_NS=$(census singletons)
+                EXPECTED_NU=$(census unpaired)
+                EXPECTED=$(( 2 * $(census pairs) + EXPECTED_NS + EXPECTED_NU ))
+                EXPECTED_SOURCE="archive census"
             else
                 # No alignment table: there is no reference to walk, so
                 # fasterq-dump's multi-threaded read of the SEQUENCE table is
@@ -270,13 +320,23 @@ rule download_sra:
             exit 1
         fi
 
-        # Reads the pipeline extracted but no downstream rule consumes. On the
-        # aligned path these should never appear: a cSRA run's mates are both
-        # present, so anything here means collate failed to pair them.
-        if [ "$NU" -ne 0 ] || [ "$NS" -ne 0 ]; then
+        # Reads the pipeline extracted but no downstream rule consumes. Only
+        # the aligned path produces them, and only as many as the archive
+        # predicts; the total above cannot tell a split pair from two
+        # singletons, so any surplus here means collate failed to pair mates.
+        if [ "$NU" -ne "$EXPECTED_NU" ] || [ "$NS" -ne "$EXPECTED_NS" ]; then
             echo "ERROR: {wildcards.accession}: $NU unpaired and $NS singleton reads" \
-                 "were extracted but nothing downstream consumes them." >> {log}
+                 "were extracted; the archive predicts $EXPECTED_NU and $EXPECTED_NS," \
+                 "so mates were not paired as stored." >> {log}
             exit 1
+        fi
+
+        if [ "$ALIGNED" -eq 1 ]; then
+            echo "discarded: $NS singleton reads (mate stored only as a secondary" \
+                 "alignment) and $NU unpaired reads (the spot's other read is" \
+                 "zero-length); r1/r2 carry every complete pair." >> {log}
+            echo "not extracted: $(census reads_lost_secondary_only) reads stored with" \
+                 "only secondary alignments; sam-dump writes no primary record for them." >> {log}
         fi
         """
 
